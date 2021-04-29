@@ -1,0 +1,18 @@
+{
+  "name": "earley",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node parser.js",
+    "gen": "nearleyc ./grammar.ne -o ./grammar.js",
+    "test": "nearley-test ./grammar.js -i",
+    "railroad": "nearley-railroad grammar.ne -o grammar.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "nearley": "^2.20.1"
+  }
+}
