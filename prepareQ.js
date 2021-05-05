@@ -1,3 +1,29 @@
+function isMatchingBrackets(q) {
+  const stack = [];
+  const map = {
+    "(": ")",
+    "[": "]",
+  };
+
+  for (let i = 0; i < q.length; i++) {
+    if (q[i] === "(" || q[i] === "[") {
+      stack.push(q[i]);
+    } else if (q[i] === ")" || q[i] === "]") {
+      const last = stack.pop();
+
+      if (q[i] !== map[last]) {
+        return false;
+      }
+    }
+  }
+
+  if (stack.length !== 0) {
+    return false;
+  }
+
+  return true;
+}
+
 function todeduct(q, start, end) {
   const original = start;
 
@@ -22,10 +48,14 @@ function todeduct(q, start, end) {
 }
 
 function prepareQ(q) {
-  // ASSUMPTIONS: 
+  // ASSUMPTIONS:
   // circular brackets are only used as a grouping construct and not as part of value.
-  // square brackets are only used in date fields. 
+  // square brackets are only used in date fields.
   // field regex signature dosen't occur in value.
+
+  if (!isMatchingBrackets(q)) {
+    throw new Error("Unbalanced Parenthesis");
+  }
 
   q = q
     .replace(/\(\s+/g, "(")
@@ -98,7 +128,7 @@ function prepareQ(q) {
       startFieldIndices = startFieldIndices.map((val, idx) => {
         if (idx < k) return val;
         else if (idx === k) return val + 1;
-        else if (idx > k) return val + 2;
+        else return val + 2;
       });
 
       const deduction = todeduct(q, currentFieldIndex + 1, posInsertClose + 1);
@@ -134,7 +164,7 @@ function prepareQ(q) {
 }
 
 function fillDefaultOperator(q, startIndices, endIndices) {
-  if (startIndices.length === 0 && endIndices.length === 0) {
+  if (q.length > 0 && startIndices.length === 0 && endIndices.length === 0) {
     startIndices.push(0);
     endIndices.push(q.length - 1);
   }

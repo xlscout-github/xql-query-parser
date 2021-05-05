@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node parser.js",
+    "test": "jest --watchAll --verbose --coverage",
+    "start": "node index.js",
     "gen": "nearleyc ./grammar.ne -o ./grammar.js",
-    "test": "nearley-test ./grammar.js -i",
+    "test:gram": "nearley-test ./grammar.js -i",
     "railroad": "nearley-railroad grammar.ne -o grammar.html"
   },
   "keywords": [],
@@ -14,5 +15,8 @@
   "license": "ISC",
   "dependencies": {
     "nearley": "^2.20.1"
+  },
+  "devDependencies": {
+    "jest": "^26.6.3"
   }
 }

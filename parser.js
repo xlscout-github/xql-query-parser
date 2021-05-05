@@ -3,27 +3,23 @@ const grammar = require("./grammar");
 const prepareQ = require("./prepareQ");
 const transform = require("./transform");
 
-const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
-
 // EXAMPLE
 // ((desc:(DETECT* near5 (CONNECT* near6 SOURCE*)))) OR pn:US7420295B2
 
-try {
-  parser.feed(
-    prepareQ(
-      `((desc:(DETECT* near5 (CONNECT* near6 SOURCE*)))) OR pn:US7420295B2`
-    )
-  );
+function parse(q) {
+  const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+
+  parser.feed(prepareQ(q));
 
   const res = parser.results;
 
   if (res.length === 0) {
     throw new Error("NO parsings found"); // incomplete grouping
   } else if (res.length === 1) {
-    console.dir(transform(res[0]), { depth: null });
+    return transform(res[0]);
   } else {
-    throw new Error("MULTIPLE parsings found"); // unintended recursion
+    throw new Error("MULTIPLE parsings found, unintended recursion");
   }
-} catch (error) {
-  console.log(error);
 }
+
+module.exports = { parse };
