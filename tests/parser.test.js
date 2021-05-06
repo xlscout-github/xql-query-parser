@@ -11,7 +11,7 @@ test("should throw error is empty string is passed, no parsing in found", () => 
   }
 });
 
-test("should throw error if capitalize operators passed", () => {
+test("should throw error if anything other than uppercase or lowercase operators passed", () => {
   expect.assertions(1);
 
   try {
@@ -23,7 +23,7 @@ test("should throw error if capitalize operators passed", () => {
   }
 });
 
-test("should throw error if capitalize to seperator for date field is passed", () => {
+test("should throw error if anything other than uppercase or lowercase to seperator for date field is passed", () => {
   expect.assertions(1);
 
   try {
@@ -33,6 +33,19 @@ test("should throw error if capitalize to seperator for date field is passed", (
   } catch (error) {
     expect(error).toBeInstanceOf(Error);
   }
+})
+
+test("should throw error if invalid field seperators are passed", () => {
+  expect.assertions(1)
+
+  try {
+    parse(
+      `desc--en:DETECT*`
+    );
+  } catch (error) {
+    expect(error).toBeInstanceOf(Error);
+  }
+
 })
 
 test("should correctly parse query provided, operators in lowercase", () => {
