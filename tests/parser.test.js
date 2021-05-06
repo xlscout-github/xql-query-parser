@@ -11,7 +11,7 @@ test("should throw error is empty string is passed, no parsing in found", () => 
   }
 });
 
-test("should throw error if capitalize operators not allowed either lowercase or ippercase", () => {
+test("should throw error if capitalize operators passed", () => {
   expect.assertions(1);
 
   try {
@@ -23,7 +23,7 @@ test("should throw error if capitalize operators not allowed either lowercase or
   }
 });
 
-test("should throw error if capitalize to seperator for date field is passed should be either lowercase or uppercase", () => {
+test("should throw error if capitalize to seperator for date field is passed", () => {
   expect.assertions(1);
 
   try {
