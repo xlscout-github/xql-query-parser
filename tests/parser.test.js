@@ -11,37 +11,140 @@ test("should throw error is empty string is passed, no parsing in found", () => 
   }
 });
 
-test("should correctly parse query provided", () => {
-  const query = `((desc:(DETECT* near5 (CONNECT* near6 SOURCE*)))) OR pn:US7420295B2`;
+test("should throw error if capitalize operators not allowed either lowercase or ippercase", () => {
+  expect.assertions(1);
+
+  try {
+    parse(
+      `((desc:("DETECT OBSTACLE" Near5 ('FEELING PAIN' Pre6 XXXTENTACION))))`
+    );
+  } catch (error) {
+    expect(error).toBeInstanceOf(Error);
+  }
+});
+
+test("should throw error if capitalize to seperator for date field is passed should be either lowercase or uppercase", () => {
+  expect.assertions(1);
+
+  try {
+    parse(
+      `pd:[16990101 To 20010316]`
+    );
+  } catch (error) {
+    expect(error).toBeInstanceOf(Error);
+  }
+})
+
+test("should correctly parse query provided, operators in lowercase", () => {
+  const query = `((desc:(DETECT* near5 (CONNECT* pre6 SOURCE*)))) and (abs: ALPHA* or pn:US7420295B2) not text: ALPHA*`;
 
   expect(parse(query)).toEqual({
     key: "multi",
-    opt: "OR",
+    opt: "NOT",
     child: [
       {
-        key: "desc",
-        val: "multi",
-        opt: "NEAR5",
+        key: "multi",
+        opt: "AND",
         child: [
-          { key: "desc", val: "DETECT*" },
           {
             key: "desc",
             val: "multi",
-            opt: "NEAR6",
+            opt: "NEAR5",
             child: [
-              { key: "desc", val: "CONNECT*" },
-              { key: "desc", val: "SOURCE*" },
+              { key: "desc", val: "DETECT*" },
+              {
+                key: "desc",
+                val: "multi",
+                opt: "PRE6",
+                child: [
+                  { key: "desc", val: "CONNECT*" },
+                  { key: "desc", val: "SOURCE*" },
+                ],
+              },
+            ],
+          },
+          {
+            key: "multi",
+            opt: "OR",
+            child: [
+              { key: "abs", val: "ALPHA*" },
+              { key: "pn", val: "US7420295B2" },
             ],
           },
         ],
       },
-      { key: "pn", val: "US7420295B2" },
+      { key: "text", val: "ALPHA*" },
+    ],
+  });
+});
+
+test("should correctly parse query provided if operators are in uppercase", () => {
+  const query = `((desc:(DETECT* NEAR5 (CONNECT* PRE6 SOURCE*)))) AND (abs: ALPHA* OR pn:US7420295B2) NOT text: ALPHA*`;
+
+  expect(parse(query)).toEqual({
+    key: "multi",
+    opt: "NOT",
+    child: [
+      {
+        key: "multi",
+        opt: "AND",
+        child: [
+          {
+            key: "desc",
+            val: "multi",
+            opt: "NEAR5",
+            child: [
+              { key: "desc", val: "DETECT*" },
+              {
+                key: "desc",
+                val: "multi",
+                opt: "PRE6",
+                child: [
+                  { key: "desc", val: "CONNECT*" },
+                  { key: "desc", val: "SOURCE*" },
+                ],
+              },
+            ],
+          },
+          {
+            key: "multi",
+            opt: "OR",
+            child: [
+              { key: "abs", val: "ALPHA*" },
+              { key: "pn", val: "US7420295B2" },
+            ],
+          },
+        ],
+      },
+      { key: "text", val: "ALPHA*" },
+    ],
+  });
+});
+
+test("should correctly parse string enclosed in quotations", () => {
+  const query = `((desc:("DETECT OBSTACLE" near5 ('FEELING PAIN' pre6 XXXTENTACION))))`;
+
+  expect(parse(query)).toEqual({
+    key: "desc",
+    val: "multi",
+    opt: "NEAR5",
+    child: [
+      { key: "desc", val: '"DETECT OBSTACLE"' },
+      {
+        key: "desc",
+        val: "multi",
+        opt: "PRE6",
+        child: [
+          { key: "desc", val: "'FEELING PAIN'" },
+          { key: "desc", val: "XXXTENTACION" },
+        ],
+      },
     ],
   });
 });
 
 test("should correctly parse date query", () => {
-  const query = `pd:[16990101 to 20010316] OR ab:[16990101 to 20010316] OR abs:[16990101 to 20010316]`;
+  const query = `pd:[16990101 TO 20010316] OR ab:[16990101 to 20010316] OR ab-s:[16990101 to 20010316]`;
 
   expect(parse(query)).toEqual({
     key: "multi",
@@ -55,7 +158,7 @@ test("should correctly parse date query", () => {
           { key: "ab", from: "16990101", to: "20010316" },
         ],
       },
-      { key: "abs", from: "16990101", to: "20010316" },
+      { key: "ab-s", from: "16990101", to: "20010316" },
     ],
   });
 });

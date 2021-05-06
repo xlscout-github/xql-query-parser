@@ -54,7 +54,7 @@ function prepareQ(q) {
   // field regex signature dosen't occur in value.
 
   if (!isMatchingBrackets(q)) {
-    throw new Error("Unbalanced Parenthesis");
+    throw new Error("Unbalanced Brackets");
   }
 
   q = q

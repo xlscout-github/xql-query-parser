@@ -14,13 +14,13 @@ function setField(field, value) {
 }
 
 function setDefaultField(value, field = "text") {
-  if (typeof value === "string") {
-    return { field, value }
-  } else if (typeof value === "object" && value !== null && value.type === "DATE") {
+  // DATE VALUE
+  if (typeof value === "object" && value !== null && value.type === "DATE") {
     return {...value, field}
   }
 
-  return value;
+  // STRING VALUE
+  return { field, value };
 }
 
 %}

@@ -45,7 +45,7 @@ test("should throw error in case of unbalanced circular brackets", () => {
     prepareQ(query);
   } catch(error) {
     expect(error).toBeInstanceOf(Error);
-    expect(error).toHaveProperty("message", "Unbalanced Parenthesis")
+    expect(error).toHaveProperty("message", "Unbalanced Brackets")
   }
 })
 
@@ -58,7 +58,7 @@ test("should throw error in case of mismatched brackets", () => {
     prepareQ(query);
   } catch(error) {
     expect(error).toBeInstanceOf(Error);
-    expect(error).toHaveProperty("message", "Unbalanced Parenthesis")
+    expect(error).toHaveProperty("message", "Unbalanced Brackets")
   }
 })
 
@@ -72,6 +72,6 @@ test("should throw error in case of unbalanced square brackets", () => {
     prepareQ(query);
   } catch(error) {
     expect(error).toBeInstanceOf(Error);
-    expect(error).toHaveProperty("message", "Unbalanced Parenthesis")
+    expect(error).toHaveProperty("message", "Unbalanced Brackets")
   }
 })
