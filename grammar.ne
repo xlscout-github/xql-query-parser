@@ -47,8 +47,8 @@ F -> FIELD _ ":" _ V {% d => setField(d[0], d[4]) %}
 OP -> AND {% id %} |
       OR {% id %} |
       NOT {% id %} |
-      NEAR NUM {% d => d[0] + d[1] %} |
-      PRE NUM {% d => d[0] + d[1] %}
+      NEAR NUM {% d => ({type: d[0], span: d[1]}) %} |
+      PRE NUM {% d => ({type: d[0], span: d[1]}) %}
 
 AND -> "and" {% id %} |
        "AND" {% id %}
@@ -68,11 +68,20 @@ PRE -> "pre" {% id %} |
 # Value
 V -> V __ OP __ P 
       {% 
-      d => ({
+      d => {
+        if (typeof d[2] === "object" && d[2] !== null && d[2].type && d[2].span) {
+          return {
+            operator: d[2].type.toUpperCase(),
+            span: d[2].span,
+            leftOperand: d[0],
+            rightOperand: d[4]
+          }
+        }
+        return {
           operator: d[2].toUpperCase(),
           leftOperand: d[0],
           rightOperand: d[4]
-        })
+        }}
       %} |
       P {% id %}
 

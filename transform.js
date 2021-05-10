@@ -20,6 +20,10 @@ function transform(lrObj) {
       res["key"] = "multi";
     }
 
+    if (lrObj.span) {
+      res["span"] = lrObj.span;
+    }
+
     res["opt"] = lrObj.operator;
     res["child"] = [
       transform(lrObj.leftOperand),

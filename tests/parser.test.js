@@ -27,26 +27,45 @@ test("should throw error if anything other than uppercase or lowercase to sepera
   expect.assertions(1);
 
   try {
-    parse(
-      `pd:[16990101 To 20010316]`
-    );
+    parse(`pd:[16990101 To 20010316]`);
   } catch (error) {
     expect(error).toBeInstanceOf(Error);
   }
-})
+});
 
 test("should throw error if invalid field seperators are passed", () => {
-  expect.assertions(1)
+  expect.assertions(1);
 
   try {
-    parse(
-      `desc--en:DETECT*`
-    );
+    parse(`desc--en:DETECT*`);
   } catch (error) {
     expect(error).toBeInstanceOf(Error);
   }
+});
 
-})
+test("should parse as text field if no field is provided explicitly", () => {
+  const query = `(DETECT* near5 (CONNECT* pre6 SOURCE*))`;
+
+  expect(parse(query)).toEqual({
+    key: "text",
+    val: "multi",
+    opt: "NEAR",
+    span: "5",
+    child: [
+      { key: "text", val: "DETECT*" },
+      {
+        key: "text",
+        val: "multi",
+        opt: "PRE",
+        span: "6",
+        child: [
+          { key: "text", val: "CONNECT*" },
+          { key: "text", val: "SOURCE*" },
+        ],
+      },
+    ],
+  });
+});
 
 test("should correctly parse query provided, operators in lowercase", () => {
   const query = `((desc:(DETECT* near5 (CONNECT* pre6 SOURCE*)))) and (abs: ALPHA* or pn:US7420295B2) not text: ALPHA*`;
@@ -62,13 +81,15 @@ test("should correctly parse query provided, operators in lowercase", () => {
           {
             key: "desc",
             val: "multi",
-            opt: "NEAR5",
+            opt: "NEAR",
+            span: "5",
             child: [
               { key: "desc", val: "DETECT*" },
               {
                 key: "desc",
                 val: "multi",
-                opt: "PRE6",
+                opt: "PRE",
+                span: "6",
                 child: [
                   { key: "desc", val: "CONNECT*" },
                   { key: "desc", val: "SOURCE*" },
@@ -105,13 +126,15 @@ test("should correctly parse query provided if operators are in uppercase", () =
           {
             key: "desc",
             val: "multi",
-            opt: "NEAR5",
+            opt: "NEAR",
+            span: "5",
             child: [
               { key: "desc", val: "DETECT*" },
               {
                 key: "desc",
                 val: "multi",
-                opt: "PRE6",
+                opt: "PRE",
+                span: "6",
                 child: [
                   { key: "desc", val: "CONNECT*" },
                   { key: "desc", val: "SOURCE*" },
@@ -140,13 +163,15 @@ test("should correctly parse string enclosed in quotations", () => {
   expect(parse(query)).toEqual({
     key: "desc",
     val: "multi",
-    opt: "NEAR5",
+    opt: "NEAR",
+    span: "5",
     child: [
       { key: "desc", val: '"DETECT OBSTACLE"' },
       {
         key: "desc",
         val: "multi",
-        opt: "PRE6",
+        opt: "PRE",
+        span: "6",
         child: [
           { key: "desc", val: "'FEELING PAIN'" },
           { key: "desc", val: "XXXTENTACION" },
