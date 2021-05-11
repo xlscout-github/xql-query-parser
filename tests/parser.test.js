@@ -11,28 +11,6 @@ test("should throw error is empty string is passed, no parsing in found", () => 
   }
 });
 
-test("should throw error if anything other than uppercase or lowercase operators passed", () => {
-  expect.assertions(1);
-
-  try {
-    parse(
-      `((desc:("DETECT OBSTACLE" Near5 ('FEELING PAIN' Pre6 XXXTENTACION))))`
-    );
-  } catch (error) {
-    expect(error).toBeInstanceOf(Error);
-  }
-});
-
-test("should throw error if anything other than uppercase or lowercase to seperator for date field is passed", () => {
-  expect.assertions(1);
-
-  try {
-    parse(`pd:[16990101 To 20010316]`);
-  } catch (error) {
-    expect(error).toBeInstanceOf(Error);
-  }
-});
-
 test("should throw error if invalid field seperators are passed", () => {
   expect.assertions(1);
 
