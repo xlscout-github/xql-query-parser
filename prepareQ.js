@@ -57,12 +57,6 @@ function prepareQ(q) {
     throw new Error("Unbalanced Brackets");
   }
 
-  q = q
-    .replace(/\(\s+/g, "(")
-    .replace(/\s+\)/g, ")")
-    .replace(/\[\s+/g, "[")
-    .replace(/\s+\]/g, "]");
-
   let interQuery = q;
 
   const foundwords = q.match(/[a-zA-Z]+[a-zA-Z.-]*(?<![.-])\s*:\s*/g);
@@ -100,8 +94,8 @@ function prepareQ(q) {
           operator.toLowerCase() === "ro" ||
           operator.toLowerCase() === "dna" ||
           operator.toLowerCase() === "ton" ||
-          operator.toLowerCase().match(/[0-9]+raen/) ||
-          operator.toLowerCase().match(/[0-9]+erp/)
+          /[0-9]+raen/.test(operator.toLowerCase()) ||
+          /[0-9]+erp/.test(operator.toLowerCase())
         ) {
           break;
         }
@@ -163,6 +157,21 @@ function prepareQ(q) {
   return fillDefaultOperator(q, startValIndices, endValIndices);
 }
 
+function isfirstCloseBracket(s, i) {
+  let truct = "";
+  let char;
+  let explicit = false;
+  for (char = i; char < s.length; char++) {
+    if (s[char] === " " || s[char] === ")") {
+      truct += s[char];
+    } else {
+      explicit = true;
+      break;
+    }
+  }
+  return { truct, char, explicit };
+}
+
 function fillDefaultOperator(q, startIndices, endIndices) {
   if (q.length > 0 && startIndices.length === 0 && endIndices.length === 0) {
     startIndices.push(0);
@@ -170,44 +179,138 @@ function fillDefaultOperator(q, startIndices, endIndices) {
   }
 
   for (let i = 0; i < startIndices.length; i++) {
-    const inter = q.substring(startIndices[i], endIndices[i] + 1);
+    let inter = q.substring(startIndices[i], endIndices[i] + 1);
 
-    const interArr = inter.match(/(?:[^\s"']+|["'][^"']*["'])+/g);
+    let isDate = true;
+    let datePart = "";
+    let dateParams = [];
+    for (let ch = 0; ch < inter.length; ch++) {
+      if (inter[ch] === "[") {
+        dateParams.push("[");
+      } else if (inter[ch] === "]") {
+        if (isNaN(Number(datePart))) {
+          isDate = false;
+          break;
+        }
+        if (datePart !== "") dateParams.push(datePart);
+        datePart = "";
+        dateParams.push("]");
+      } else if (inter[ch] !== " ") {
+        datePart += inter[ch];
+      } else if (inter[ch] === " " && datePart !== "") {
+        if (isNaN(Number(datePart)) && datePart.toLowerCase() !== "to") {
+          isDate = false;
+          break;
+        }
+        dateParams.push(datePart);
+        datePart = "";
+      }
+    }
 
     // ignore for date
     if (
-      interArr.length === 3 &&
-      interArr[0].match(/\[\s*\d+/) &&
-      interArr[1].toLowerCase() === "to" &&
-      interArr[2].match(/\d+\s*\]/)
+      isDate &&
+      dateParams.length === 5 &&
+      dateParams[0] === "[" &&
+      !isNaN(dateParams[1]) &&
+      dateParams[2].toLowerCase() === "to" &&
+      !isNaN(dateParams[3]) &&
+      dateParams[4] === "]"
     ) {
       continue;
     }
 
     let toggle = false;
     let count = 0;
-    for (let j = 0; j < interArr.length; j++) {
-      if (toggle) {
-        if (
-          interArr[j].toLowerCase() !== "and" &&
-          interArr[j].toLowerCase() !== "or" &&
-          interArr[j].toLowerCase() !== "not" &&
-          !interArr[j].toLowerCase().match(/near[0-9]+/) &&
-          !interArr[j].toLowerCase().match(/pre[0-9]+/)
-        ) {
-          interArr.splice(j, 0, "AND");
-          count++;
+    let start = false;
+    let index = 0;
+    let construct = "";
+    let onlyBracket = false;
+    let sQuote = false;
+    let eQuote = false;
+    for (let ch = 0; ch < inter.length; ch++) {
+      if (inter[ch] === '"' || inter[ch] === "'") {
+        if (sQuote) eQuote = true;
+        sQuote = true;
+        construct += inter[ch];
+        if (!start) {
+          index = ch;
+          start = true;
+        }
+      } else if (inter[ch] === "(") {
+        onlyBracket = true;
+        construct += inter[ch];
+        if (!start) {
+          index = ch;
+          start = true;
+        }
+      } else if (inter[ch] !== " ") {
+        onlyBracket = false;
+        construct += inter[ch];
+        if (!start) {
+          index = ch;
+          start = true;
+        }
+      } else if (inter[ch] === " ") {
+        if (sQuote === eQuote) {
+          if (onlyBracket) {
+            construct += inter[ch];
+          } else {
+            const { truct, char, explicit } = isfirstCloseBracket(inter, ch);
+            if (truct === " " && char === ch + 1) {
+              if (toggle) {
+                if (
+                  construct.toLowerCase() !== "and" &&
+                  construct.toLowerCase() !== "or" &&
+                  construct.toLowerCase() !== "not" &&
+                  !/near[0-9]+/.test(construct.toLowerCase()) &&
+                  !/pre[0-9]+/.test(construct.toLowerCase())
+                ) {
+                  inter = [
+                    inter.slice(0, index),
+                    "AND ",
+                    inter.slice(index),
+                  ].join("");
+                  count++;
+                  ch = ch + 4;
+                  toggle = true;
+                } else toggle = !toggle;
+              } else {
+                toggle = !toggle;
+              }
+              construct = "";
+              start = false;
+              index = 0;
+              sQuote = false;
+              eQuote = false;
+            } else {
+              construct += truct.trimEnd();
+              if (explicit) ch = char - 2;
+              else break;
+            }
+          }
+        } else {
+          construct += inter[ch];
         }
       }
-
-      toggle = !toggle;
     }
 
-    q = [
-      q.slice(0, startIndices[i]),
-      interArr.join(" "),
-      q.slice(endIndices[i] + 1),
-    ].join("");
+    if (toggle) {
+      if (
+        construct.toLowerCase() !== "and" &&
+        construct.toLowerCase() !== "or" &&
+        construct.toLowerCase() !== "not" &&
+        !/near[0-9]+/.test(construct.toLowerCase()) &&
+        !/pre[0-9]+/.test(construct.toLowerCase())
+      ) {
+        inter = [inter.slice(0, index), "AND ", inter.slice(index)].join("");
+        count++;
+      }
+    }
+
+    q = [q.slice(0, startIndices[i]), inter, q.slice(endIndices[i] + 1)].join(
+      ""
+    );
 
     startIndices = startIndices.map((val, idx) => {
       if (idx <= i) return val;

@@ -50,20 +50,15 @@ OP -> AND {% id %} |
       NEAR NUM {% d => ({type: d[0], span: d[1]}) %} |
       PRE NUM {% d => ({type: d[0], span: d[1]}) %}
 
-AND -> "and" {% id %} |
-       "AND" {% id %}
+AND -> "and"i {% id %}
 
-OR -> "or" {% id %} |
-       "OR" {% id %}
+OR -> "or"i {% id %}
 
-NOT -> "not" {% id %} |
-       "NOT" {% id %}
+NOT -> "not"i {% id %}
 
-NEAR -> "near" {% id %} |
-       "NEAR" {% id %}
+NEAR -> "near"i {% id %}
 
-PRE -> "pre" {% id %} |
-       "PRE" {% id %}
+PRE -> "pre"i {% id %}
 
 # Value
 V -> V __ OP __ P 
@@ -96,8 +91,7 @@ NVAL -> [-+\w.?*/\\]:+ {% d => d[0].join("") %}
 
 SVAL -> [-+\w.?*\s/\\]:+ {% d => d[0].join("") %}
 
-TO -> "to" {% id %} | 
-      "TO" {% id %}                           
+TO -> "to"i {% id %}
 
 # Field Content
 FIELD ->
