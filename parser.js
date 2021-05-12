@@ -15,10 +15,8 @@ function parse(q) {
 
   if (res.length === 0) {
     throw new Error("NO parsings found"); // incomplete grouping
-  } else if (res.length === 1) {
-    return transform(res[0]);
   } else {
-    throw new Error("MULTIPLE parsings found, unintended recursion");
+    return transform(res[0]);
   }
 }
 

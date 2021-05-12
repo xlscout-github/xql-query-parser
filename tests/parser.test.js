@@ -178,3 +178,101 @@ test("should correctly parse date query", () => {
     ],
   });
 });
+
+test("should correctly parse the query containing asterix character", () => {
+  const query = `((desc.*:(DETECT* near5 (CONNECT* near6 SOURCE*)))) OR pn:US7420295B2`;
+
+  expect(parse(query)).toEqual({
+    key: "multi",
+    opt: "OR",
+    child: [
+      {
+        key: "desc.*",
+        val: "multi",
+        span: "5",
+        opt: "NEAR",
+        child: [
+          { key: "desc.*", val: "DETECT*" },
+          {
+            key: "desc.*",
+            val: "multi",
+            span: "6",
+            opt: "NEAR",
+            child: [
+              { key: "desc.*", val: "CONNECT*" },
+              { key: "desc.*", val: "SOURCE*" },
+            ],
+          },
+        ],
+      },
+      { key: "pn", val: "US7420295B2" },
+    ],
+  });
+});
+
+test("should correctly parse the query if field signature occur inside quotations", () => {
+  const query = `((desc:("DETECT:" near5 (CONNECT* near6 'SOURCE:')))) OR pn:US7420295B2`;
+
+  expect(parse(query)).toEqual({
+    key: "multi",
+    opt: "OR",
+    child: [
+      {
+        key: "desc",
+        val: "multi",
+        span: "5",
+        opt: "NEAR",
+        child: [
+          { key: "desc", val: '"DETECT:"' },
+          {
+            key: "desc",
+            val: "multi",
+            span: "6",
+            opt: "NEAR",
+            child: [
+              { key: "desc", val: "CONNECT*" },
+              { key: "desc", val: "'SOURCE:'" },
+            ],
+          },
+        ],
+      },
+      { key: "pn", val: "US7420295B2" },
+    ],
+  });
+});
+
+test("should correctly parse the regex query values", () => {
+  const query = `name:/joh?n(ath[oa]n)/ jhon OR desc: /78909/ 89/20 AND abs: none/*`;
+
+  expect(parse(query)).toEqual({
+    key: "multi",
+    opt: "AND",
+    child: [
+      {
+        key: "multi",
+        opt: "OR",
+        child: [
+          {
+            key: "name",
+            val: "multi",
+            opt: "AND",
+            child: [
+              { key: "name", val: "/joh?n(ath[oa]n)/" },
+              { key: "name", val: "jhon" },
+            ],
+          },
+          {
+            key: "desc",
+            val: "multi",
+            opt: "AND",
+            child: [
+              { key: "desc", val: "/78909/" },
+              { key: "desc", val: "89/20" },
+            ],
+          },
+        ],
+      },
+      { key: "abs", val: "none/*" },
+    ],
+  });
+});

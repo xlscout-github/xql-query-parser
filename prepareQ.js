@@ -47,36 +47,75 @@ function todeduct(q, start, end) {
   return countBefore - count;
 }
 
-function prepareQ(q) {
-  // ASSUMPTIONS:
-  // circular brackets are only used as a grouping construct and not as part of value.
-  // square brackets are only used in date fields.
-  // field regex signature dosen't occur in value.
+function evalSpaces(q, i) {
+  let count = 0;
+  for (let ch = i; ch <= q.length; ch++) {
+    if (q[ch] === " ") count++;
+    else break;
+  }
 
+  return " ".repeat(count);
+}
+
+function prepareQ(q) {
   if (!isMatchingBrackets(q)) {
     throw new Error("Unbalanced Brackets");
   }
 
-  let interQuery = q;
-
-  const foundwords = q.match(/[a-zA-Z]+[a-zA-Z.-]*(?<![.-])\s*:\s*/g);
-
+  const foundwords = [];
   let startFieldIndices = [];
   let startValIndices = [];
   let endValIndices = [];
 
-  if (foundwords) {
-    for (let i = 0; i < foundwords.length; i++) {
-      const originalFieldIndex =
-        interQuery.indexOf(foundwords[i]) + q.length - interQuery.length;
+  let construct = "";
+  let start = false;
+  let index = 0;
+  let sQuote = false;
+  let eQuote = false;
+  let sFSlash = false;
+  let eFSlash = false;
 
-      const currInterIndex = interQuery.search(
-        /[a-zA-Z]+[a-zA-Z.-]*(?<![.-])\s*:\s*/
-      );
-
-      interQuery = interQuery.substring(currInterIndex + foundwords[i].length);
-
-      startFieldIndices.push(originalFieldIndex);
+  for (let ch = 0; ch < q.length; ch++) {
+    if (q[ch] === "/") {
+      if (!start) {
+        if (sFSlash) eFSlash = true;
+        sFSlash = true;
+      }
+    } else if (q[ch] === '"' || q[ch] === "'") {
+      if (sQuote) eQuote = true;
+      sQuote = true;
+    } else if (q[ch] !== " " && q[ch] !== "(" && q[ch] !== ")") {
+      if (sQuote === eQuote && sFSlash === eFSlash) {
+        if (q[ch] === ":" && construct !== "") {
+          construct += q[ch];
+          construct += evalSpaces(q, ch + 1);
+          foundwords.push(construct);
+          startFieldIndices.push(index);
+          construct = "";
+          start = false;
+          index = 0;
+          sQuote = false;
+          eQuote = false;
+          sFSlash = false;
+          eFSlash = false;
+        } else {
+          construct += q[ch];
+          if (!start) {
+            index = ch;
+            start = true;
+          }
+        }
+      }
+    } else if (q[ch] === " ") {
+      if (sQuote === eQuote && sFSlash === eFSlash) {
+        construct = "";
+        start = false;
+        index = 0;
+        sQuote = false;
+        eQuote = false;
+        sFSlash = false;
+        eFSlash = false;
+      }
     }
   }
 
@@ -228,8 +267,19 @@ function fillDefaultOperator(q, startIndices, endIndices) {
     let onlyBracket = false;
     let sQuote = false;
     let eQuote = false;
+    let sFSlash = false;
+    let eFSlash = false;
+
     for (let ch = 0; ch < inter.length; ch++) {
-      if (inter[ch] === '"' || inter[ch] === "'") {
+      if (inter[ch] === "/") {
+        construct += inter[ch];
+        if (start && sFSlash) eFSlash = true;
+        if (!start) {
+          sFSlash = true;
+          index = ch;
+          start = true;
+        }
+      } else if (!sFSlash && (inter[ch] === '"' || inter[ch] === "'")) {
         if (sQuote) eQuote = true;
         sQuote = true;
         construct += inter[ch];
@@ -237,7 +287,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
           index = ch;
           start = true;
         }
-      } else if (inter[ch] === "(") {
+      } else if (!sFSlash && inter[ch] === "(") {
         onlyBracket = true;
         construct += inter[ch];
         if (!start) {
@@ -252,7 +302,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
           start = true;
         }
       } else if (inter[ch] === " ") {
-        if (sQuote === eQuote) {
+        if (sQuote === eQuote && sFSlash == eFSlash) {
           if (onlyBracket) {
             construct += inter[ch];
           } else {
@@ -283,6 +333,8 @@ function fillDefaultOperator(q, startIndices, endIndices) {
               index = 0;
               sQuote = false;
               eQuote = false;
+              sFSlash = false;
+              eFSlash = false;
             } else {
               construct += truct.trimEnd();
               if (explicit) ch = char - 2;
