@@ -276,3 +276,111 @@ test("should correctly parse the regex query values", () => {
     ],
   });
 });
+
+test("should correctly parse the regex query values containing spaces", () => {
+  const query = `name:/joh?n(ath[ oa]n)/ jhon OR desc: /78909/ 89/20 AND abs: none/*`;
+
+  expect(parse(query)).toEqual({
+    key: "multi",
+    opt: "AND",
+    child: [
+      {
+        key: "multi",
+        opt: "OR",
+        child: [
+          {
+            key: "name",
+            val: "multi",
+            opt: "AND",
+            child: [
+              { key: "name", val: "/joh?n(ath[ oa]n)/" },
+              { key: "name", val: "jhon" },
+            ],
+          },
+          {
+            key: "desc",
+            val: "multi",
+            opt: "AND",
+            child: [
+              { key: "desc", val: "/78909/" },
+              { key: "desc", val: "89/20" },
+            ],
+          },
+        ],
+      },
+      { key: "abs", val: "none/*" },
+    ],
+  });
+});
+
+test("should correctly parse if quotations containing forward slashes", () => {
+  const query = `name:/joh?n(ath[oa]n)/ "jh/on" OR desc: /78909/ 89/20 AND abs: none/*`;
+
+  expect(parse(query)).toEqual({
+    key: "multi",
+    opt: "AND",
+    child: [
+      {
+        key: "multi",
+        opt: "OR",
+        child: [
+          {
+            key: "name",
+            val: "multi",
+            opt: "AND",
+            child: [
+              { key: "name", val: "/joh?n(ath[oa]n)/" },
+              { key: "name", val: '"jh/on"' },
+            ],
+          },
+          {
+            key: "desc",
+            val: "multi",
+            opt: "AND",
+            child: [
+              { key: "desc", val: "/78909/" },
+              { key: "desc", val: "89/20" },
+            ],
+          },
+        ],
+      },
+      { key: "abs", val: "none/*" },
+    ],
+  });
+});
+
+test("should correctly parse if forward slashes contains quotations", () => {
+  const query = `name:/joh?n(ath[oa"']n)/ "jhon" OR desc: /78909/ 89/20 AND abs: none/*`;
+
+  expect(parse(query)).toEqual({
+    key: "multi",
+    opt: "AND",
+    child: [
+      {
+        key: "multi",
+        opt: "OR",
+        child: [
+          {
+            key: "name",
+            val: "multi",
+            opt: "AND",
+            child: [
+              { key: "name", val: `/joh?n(ath[oa"']n)/` },
+              { key: "name", val: '"jhon"' },
+            ],
+          },
+          {
+            key: "desc",
+            val: "multi",
+            opt: "AND",
+            child: [
+              { key: "desc", val: "/78909/" },
+              { key: "desc", val: "89/20" },
+            ],
+          },
+        ],
+      },
+      { key: "abs", val: "none/*" },
+    ],
+  });
+});

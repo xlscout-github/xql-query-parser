@@ -77,11 +77,11 @@ function prepareQ(q) {
 
   for (let ch = 0; ch < q.length; ch++) {
     if (q[ch] === "/") {
-      if (!start) {
+      if (!start && !sQuote) {
         if (sFSlash) eFSlash = true;
         sFSlash = true;
       }
-    } else if (q[ch] === '"' || q[ch] === "'") {
+    } else if (!sFSlash && (q[ch] === '"' || q[ch] === "'")) {
       if (sQuote) eQuote = true;
       sQuote = true;
     } else if (q[ch] !== " " && q[ch] !== "(" && q[ch] !== ")") {
