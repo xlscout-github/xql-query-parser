@@ -1,7 +1,7 @@
 const nearley = require("nearley");
 const grammar = require("./grammar");
 const prepareQ = require("./prepareQ");
-const transform = require("./transform");
+const { transform } = require("./transform");
 
 // EXAMPLE
 // ((desc:(DETECT* near5 (CONNECT* near6 SOURCE*)))) OR pn:US7420295B2

@@ -1,4 +1,4 @@
-const transform = require("../transform");
+const { transform, transform_condense } = require("../transform");
 
 test("should transform provided left-right object format to parent-child relationship format", () => {
   const lrObjData = {
@@ -58,6 +58,41 @@ test("should establish value as multi if left side and right side have same fiel
           { key: "desc", val: "SOURCE*" },
         ],
       },
+    ],
+  });
+});
+
+test("should produce a condensed ouput where values are merged and hide implicit grouping", () => {
+  const lrObjData = {
+    operator: "OR",
+    leftOperand: {
+      operator: "NEAR",
+      span: "5",
+      leftOperand: { field: "desc", value: "DETECT*" },
+      rightOperand: {
+        operator: "NEAR",
+        span: "6",
+        leftOperand: { field: "desc", value: "CONNECT*" },
+        rightOperand: { field: "desc", value: "SOURCE*" },
+        explicit: true,
+      },
+      explicit: true,
+    },
+    rightOperand: { field: "pn", value: "US7420295B2" },
+  };
+
+  expect(transform_condense(lrObjData)).toEqual({
+    field: "",
+    keyword: "",
+    operator: "OR",
+    children: [
+      {
+        field: "desc",
+        keyword: "(DETECT* NEAR5 (CONNECT* NEAR6 SOURCE*))",
+        operator: "",
+        children: [],
+      },
+      { field: "pn", keyword: "US7420295B2", operator: "", children: [] },
     ],
   });
 });

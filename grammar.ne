@@ -37,7 +37,7 @@ main -> P {% id %} |
 
 # Parentheses
 P -> "(" _ F _ ")" {% d => d[2] %} |
-     "(" _ V _ ")" {% d => d[2] %} |
+     "(" _ V _ ")" {% d => ({ ...d[2], explicit: true }) %} |
      VAL {% d => setDefaultField(d[0]) %}
 
 # Field
