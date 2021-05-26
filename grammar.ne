@@ -85,14 +85,11 @@ VAL ->
     NVAL {% id %} |
     "\"" SVAL "\"" {% d => d[0] + d[1] + d[2] %} |
     "'" SVAL "'" {% d => d[0] + d[1] + d[2] %} |
-    "[" _ NUM __ TO __ NUM _ "]" {% d => ({ type: "DATE", from: d[2], to: d[6]}) %} |
-    "/" RVAL "/" {% d => d[0] + d[1] + d[2] %}
+    "[" _ NUM __ TO __ NUM _ "]" {% d => ({ type: "DATE", from: d[2], to: d[6]}) %}
 
 NVAL -> [-+\w.?*\/\\]:+ {% d => d[0].join("") %}
 
 SVAL -> [-+\w.:?*\s\/\\]:+ {% d => d[0].join("") %}
-
-RVAL -> [-+\w.:?*\s\\\[\]()"'|{}#@&<>~]:+ {% d => d[0].join("") %}
 
 TO -> "to"i {% id %}
 

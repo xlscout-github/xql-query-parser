@@ -72,20 +72,13 @@ function prepareQ(q) {
   let index = 0;
   let sQuote = false;
   let eQuote = false;
-  let sFSlash = false;
-  let eFSlash = false;
 
   for (let ch = 0; ch < q.length; ch++) {
-    if (q[ch] === "/") {
-      if (!start && !sQuote) {
-        if (sFSlash) eFSlash = true;
-        sFSlash = true;
-      }
-    } else if (!sFSlash && (q[ch] === '"' || q[ch] === "'")) {
+    if (q[ch] === '"' || q[ch] === "'") {
       if (sQuote) eQuote = true;
       sQuote = true;
     } else if (q[ch] !== " " && q[ch] !== "(" && q[ch] !== ")") {
-      if (sQuote === eQuote && sFSlash === eFSlash) {
+      if (sQuote === eQuote) {
         if (q[ch] === ":" && construct !== "") {
           construct += q[ch];
           construct += evalSpaces(q, ch + 1);
@@ -96,8 +89,6 @@ function prepareQ(q) {
           index = 0;
           sQuote = false;
           eQuote = false;
-          sFSlash = false;
-          eFSlash = false;
         } else {
           construct += q[ch];
           if (!start) {
@@ -107,14 +98,12 @@ function prepareQ(q) {
         }
       }
     } else if (q[ch] === " ") {
-      if (sQuote === eQuote && sFSlash === eFSlash) {
+      if (sQuote === eQuote) {
         construct = "";
         start = false;
         index = 0;
         sQuote = false;
         eQuote = false;
-        sFSlash = false;
-        eFSlash = false;
       }
     }
   }
@@ -267,19 +256,9 @@ function fillDefaultOperator(q, startIndices, endIndices) {
     let onlyBracket = false;
     let sQuote = false;
     let eQuote = false;
-    let sFSlash = false;
-    let eFSlash = false;
 
     for (let ch = 0; ch < inter.length; ch++) {
-      if (inter[ch] === "/") {
-        construct += inter[ch];
-        if (start && sFSlash) eFSlash = true;
-        if (!start) {
-          sFSlash = true;
-          index = ch;
-          start = true;
-        }
-      } else if (!sFSlash && (inter[ch] === '"' || inter[ch] === "'")) {
+      if (inter[ch] === '"' || inter[ch] === "'") {
         if (sQuote) eQuote = true;
         sQuote = true;
         construct += inter[ch];
@@ -287,7 +266,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
           index = ch;
           start = true;
         }
-      } else if (!sFSlash && inter[ch] === "(") {
+      } else if (inter[ch] === "(") {
         onlyBracket = true;
         construct += inter[ch];
         if (!start) {
@@ -302,7 +281,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
           start = true;
         }
       } else if (inter[ch] === " ") {
-        if (sQuote === eQuote && sFSlash == eFSlash) {
+        if (sQuote === eQuote) {
           if (onlyBracket) {
             construct += inter[ch];
           } else {
@@ -333,8 +312,6 @@ function fillDefaultOperator(q, startIndices, endIndices) {
               index = 0;
               sQuote = false;
               eQuote = false;
-              sFSlash = false;
-              eFSlash = false;
             } else {
               construct += truct.trimEnd();
               if (explicit) ch = char - 2;
