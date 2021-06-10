@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --watchAll --verbose --coverage",
-    "start": "node index.js",
+    "start": "node sample.js",
     "gen": "nearleyc ./grammar.ne -o ./grammar.js",
     "test:gram": "nearley-test ./grammar.js -i",
     "railroad": "nearley-railroad grammar.ne -o grammar.html"

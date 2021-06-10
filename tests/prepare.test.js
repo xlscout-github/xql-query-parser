@@ -1,4 +1,4 @@
-const prepareQ = require("../prepareQ");
+const { prepareQ } = require("../prepare");
 
 test("single field: should enclose field along with value in parenthesis", () => {
   const query = "desc:DETECT* near5 (CONNECT* near6 SOURCE*)";
@@ -37,41 +37,40 @@ test("should not add default operator in case of date fields", () => {
 });
 
 test("should throw error in case of unbalanced circular brackets", () => {
-  const query = `((desc:(DETECT* near5 (CONNECT* near6 SOURCE*))) OR pn:US7420295B2`
+  const query = `((desc:(DETECT* near5 (CONNECT* near6 SOURCE*))) OR pn:US7420295B2`;
 
   expect.assertions(2);
 
   try {
     prepareQ(query);
-  } catch(error) {
+  } catch (error) {
     expect(error).toBeInstanceOf(Error);
-    expect(error).toHaveProperty("message", "Unbalanced Brackets")
+    expect(error).toHaveProperty("message", "Unbalanced Brackets");
   }
-})
+});
 
 test("should throw error in case of mismatched brackets", () => {
-  const query = `((desc:(DETECT* near5 (CONNECT* near6 SOURCE*)))) OR pd:(16990101 to 20010316]`
+  const query = `((desc:(DETECT* near5 (CONNECT* near6 SOURCE*)))) OR pd:(16990101 to 20010316]`;
 
   expect.assertions(2);
 
   try {
     prepareQ(query);
-  } catch(error) {
+  } catch (error) {
     expect(error).toBeInstanceOf(Error);
-    expect(error).toHaveProperty("message", "Unbalanced Brackets")
+    expect(error).toHaveProperty("message", "Unbalanced Brackets");
   }
-})
-
+});
 
 test("should throw error in case of unbalanced square brackets", () => {
-  const query = `((desc:(DETECT* near5 (CONNECT* near6 SOURCE*)))) OR pd:[16990101 to 20010316`
+  const query = `((desc:(DETECT* near5 (CONNECT* near6 SOURCE*)))) OR pd:[16990101 to 20010316`;
 
   expect.assertions(2);
 
   try {
     prepareQ(query);
-  } catch(error) {
+  } catch (error) {
     expect(error).toBeInstanceOf(Error);
-    expect(error).toHaveProperty("message", "Unbalanced Brackets")
+    expect(error).toHaveProperty("message", "Unbalanced Brackets");
   }
-})
+});

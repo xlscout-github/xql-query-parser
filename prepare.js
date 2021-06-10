@@ -57,7 +57,7 @@ function evalSpaces(q, i) {
   return " ".repeat(count);
 }
 
-function prepareQ(q) {
+function prepare(q) {
   if (!isMatchingBrackets(q)) {
     throw new Error("Unbalanced Brackets");
   }
@@ -178,11 +178,48 @@ function prepareQ(q) {
   }
 
   // console.log("Query", q);
+  // console.log("Found words", foundwords);
   // console.log("Start Field Index", startFieldIndices);
   // console.log("Start Val Index", startValIndices);
   // console.log("End Val Index", endValIndices);
 
-  return fillDefaultOperator(q, startValIndices, endValIndices);
+  return {
+    q,
+    foundwords,
+    startFieldIndices,
+    startValIndices,
+    endValIndices,
+  };
+}
+
+function pickKey(q, field) {
+  const {
+    q: query,
+    foundwords,
+    startFieldIndices,
+    startValIndices,
+    endValIndices,
+  } = prepare(q);
+
+  const startEnd = [];
+  for (let i = 0; i < foundwords.length; i++) {
+    if (foundwords[i].slice(0, -1) === field) {
+      startEnd.push({
+        field: field,
+        value: query.substring(startValIndices[i], endValIndices[i] + 1),
+        start: startFieldIndices[i] - (2 * i + 1),
+        end: endValIndices[i] - (2 * i + 1),
+      });
+    }
+  }
+
+  return startEnd;
+}
+
+function prepareQ(q) {
+  const { q: query, startValIndices, endValIndices } = prepare(q);
+
+  return fillDefaultOperator(query, startValIndices, endValIndices);
 }
 
 function isfirstCloseBracket(s, i) {
@@ -355,4 +392,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
   return q;
 }
 
-module.exports = prepareQ;
+module.exports = {
+  prepareQ,
+  pickKey,
+};

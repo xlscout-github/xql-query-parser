@@ -1,6 +1,6 @@
 const nearley = require("nearley");
 const grammar = require("./grammar");
-const prepareQ = require("./prepareQ");
+const { prepareQ } = require("./prepare");
 const { transform } = require("./transform");
 
 // EXAMPLE
@@ -10,6 +10,7 @@ function parse(q) {
   const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
 
   parser.feed(prepareQ(q));
+
 
   const res = parser.results;
 
