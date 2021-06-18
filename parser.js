@@ -11,7 +11,6 @@ function parse(q) {
 
   parser.feed(prepareQ(q));
 
-
   const res = parser.results;
 
   if (res.length === 0) {

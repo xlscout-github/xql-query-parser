@@ -27,8 +27,10 @@ test("should transform left-right object containing date fields", () => {
 
   expect(transform(lrObjData)).toEqual({
     key: "pd",
-    from: "16990101",
-    to: "20010316",
+    val: {
+      from: "16990101",
+      to: "20010316",
+    },
   });
 });
 

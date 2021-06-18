@@ -170,11 +170,11 @@ test("should correctly parse date query", () => {
         key: "multi",
         opt: "OR",
         child: [
-          { key: "pd", from: "16990101", to: "20010316" },
-          { key: "ab", from: "16990101", to: "20010316" },
+          { key: "pd", val: { from: "16990101", to: "20010316" } },
+          { key: "ab", val: { from: "16990101", to: "20010316" } },
         ],
       },
-      { key: "ab-s", from: "16990101", to: "20010316" },
+      { key: "ab-s", val: { from: "16990101", to: "20010316" } },
     ],
   });
 });

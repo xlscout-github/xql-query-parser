@@ -45,7 +45,7 @@ function transform(lrObj) {
   }
 
   if (lrObj.type === "DATE") {
-    return { key: lrObj.field, from: lrObj.from, to: lrObj.to };
+    return { key: lrObj.field, val: { from: lrObj.from, to: lrObj.to } };
   }
 
   return { key: lrObj.field, val: lrObj.value };
