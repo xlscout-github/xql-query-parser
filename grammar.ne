@@ -100,7 +100,8 @@ FIELD ->
 
 # Field Seperator
 SEPERATOR -> "." {% id %} |
-             "-" {% id %}
+             "-" {% id %} |
+             "_" {% id %}
 
 # Number
 NUM ->
