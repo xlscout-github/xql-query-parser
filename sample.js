@@ -8,6 +8,6 @@ const { parse } = require("./parser");
 
 // console.dir(pickedKeyParsedResult, { depth: null });
 
-const result = parse(`cpc.\\*: (G06F30\\/27 OR A41G5\\/02 OR H01M8\\/04992) OR ipc.\\*: (G06F30\\/27 OR A41G5\\/02 OR H01M8\\/04992)`);
+const result = parse(`(_v:0.5.0)`);
 
 console.dir(result, { depth: null });
