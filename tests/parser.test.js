@@ -11,16 +11,6 @@ test("should throw error is empty string is passed, no parsing in found", () => 
   }
 });
 
-test("should throw error if invalid field seperators are passed", () => {
-  expect.assertions(1);
-
-  try {
-    parse(`desc--en:DETECT*`);
-  } catch (error) {
-    expect(error).toBeInstanceOf(Error);
-  }
-});
-
 test("should parse as text field if no field is provided explicitly", () => {
   const query = `(DETECT* near5 (CONNECT* pre6 SOURCE*))`;
 
