@@ -97,7 +97,8 @@ TO -> "to"i {% id %}
 FIELD ->
     [a-zA-Z*\\]:+ {% d => d[0].join("") %} |
     [a-zA-Z*\\]:+ SEPERATOR FIELD {% d => d[0].join("") + d[1] + d[2] %} |
-    SEPERATOR FIELD {% d => d[0] + d[1] %}
+    SEPERATOR FIELD {% d => d[0] + d[1] %} |
+    FIELD SEPERATOR {% d => d[0] + d[1] %}
 
 # Field Seperator
 SEPERATOR -> "." {% id %} |
