@@ -87,9 +87,9 @@ VAL ->
     "'" SVAL "'" {% d => d[0] + d[1] + d[2] %} |
     "[" _ NUM __ TO __ NUM _ "]" {% d => ({ type: "DATE", from: d[2], to: d[6]}) %}
 
-NVAL -> [-+\w.?*\/\\]:+ {% d => d[0].join("") %}
+NVAL -> [-+\w.?*\/\\\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uffef\u4e00-\u9faf\u3400-\u4bdf\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uD7B0-\uD7FF]:+ {% d => d[0].join("") %}
 
-SVAL -> [-+\w.:?*\s\/\\]:+ {% d => d[0].join("") %}
+SVAL -> [-+\w.:?*\s\/\\\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uffef\u4e00-\u9faf\u3400-\u4bdf\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uD7B0-\uD7FF]:+ {% d => d[0].join("") %}
 
 TO -> "to"i {% id %}
 
