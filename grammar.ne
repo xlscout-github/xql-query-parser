@@ -87,9 +87,30 @@ VAL ->
     "'" SVAL "'" {% d => d[0] + d[1] + d[2] %} |
     "[" _ NUM __ TO __ NUM _ "]" {% d => ({ type: "DATE", from: d[2], to: d[6]}) %}
 
-NVAL -> [-+\w.?*\/\\\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uffef\u4e00-\u9faf\u3400-\u4bdf\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uD7B0-\uD7FF]:+ {% d => d[0].join("") %}
+# CJK Radicals Supplement \u2E80-\u2EFF
+# Kangxi Radicals \u2F00-\u2FDF
+# CJK Symbols and Punctuation \u3000-\u303F
+# CJK Strokes \u31C0-\u31EF
+# Enclosed CJK Letters and Months \u3200-\u32FF
+# CJK Compatibility \u3300-\u33FF
+# CJK Compatibility Ideographs \uF900-\uFAFF
+# CJK Compatibility Forms \uFE30-\uFE4F
+# CJK Unified Ideographs Extension A \u3400-\u4DBF
+# CJK Unified Ideographs \u4E00-\u9FFF
+# Vertical Forms \uFE10-\uFE1F
+# Hiragana \u3040-\u309F
+# Katakana \u30A0-\u30FF
+# Katakana Phonetic Extensions \u31F0-\u31FF
+# Kanbun \u3190-\u319F
+# Hangul Syllables \uAC00-\uD7AF
+# Hangul Jamo \u1100-\u11FF
+# Hangul Compatibility Jamo \u3130-\u318F
+# Hangul Jamo Extended-A \uA960-\uA97F
+# Hangul Jamo Extended-B \uD7B0-\uD7FF
+# Halfwidth and Fullwidth Forms \uFF00-\uFFEF
+NVAL -> [-+\w.?*\/\\\u2E80-\u2EFF\u2F00-\u2FDF\u3000-\u303F\u31C0-\u31EF\u3200-\u32FF\u3300-\u33FF\uF900-\uFAFF\uFE30-\uFE4F\u3400-\u4DBF\u4E00-\u9FFF\uFE10-\uFE1F\u3040-\u309F\u30A0-\u30FF\u31F0-\u31FF\u3190-\u319F\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uD7B0-\uD7FF\uFF00-\uFFEF]:+ {% d => d[0].join("") %}
 
-SVAL -> [-+\w.:?*\s\/\\\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uffef\u4e00-\u9faf\u3400-\u4bdf\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uD7B0-\uD7FF]:+ {% d => d[0].join("") %}
+SVAL -> [-+\w.:?*\s\/\\\u2E80-\u2EFF\u2F00-\u2FDF\u3000-\u303F\u31C0-\u31EF\u3200-\u32FF\u3300-\u33FF\uF900-\uFAFF\uFE30-\uFE4F\u3400-\u4DBF\u4E00-\u9FFF\uFE10-\uFE1F\u3040-\u309F\u30A0-\u30FF\u31F0-\u31FF\u3190-\u319F\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uD7B0-\uD7FF\uFF00-\uFFEF]:+ {% d => d[0].join("") %}
 
 TO -> "to"i {% id %}
 
