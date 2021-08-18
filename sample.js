@@ -1,7 +1,9 @@
 const { parse } = require("./parser");
 
 // core parse
-const result = parse(`((text:(배터리)) AND pnctry:("KR"))`);
+const result = parse(
+  `(tac:detect AND (() AND ())) OR () OR (ttl:connect* OR ppl*)`
+);
 
 console.dir(result, { depth: null });
 

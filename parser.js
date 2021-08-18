@@ -13,6 +13,8 @@ function parse(q, condense = false) {
 
   const res = parser.results;
 
+  // console.dir(res, { depth: null });
+
   if (res.length === 0) {
     throw new Error("NO parsings found"); // incomplete grouping
   } else {

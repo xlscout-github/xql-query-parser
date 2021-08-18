@@ -14,7 +14,28 @@ function findRightField(lObj) {
   return lObj.field;
 }
 
-function transform(lrObj) {
+function filterNullOperand(lrObj) {
+  if (lrObj.leftOperand === null && lrObj.rightOperand === null) {
+    return null;
+  } else if (lrObj.leftOperand === null && lrObj.rightOperand) {
+    return filterNullOperand(lrObj.rightOperand);
+  } else if (lrObj.rightOperand === null && lrObj.leftOperand) {
+    return filterNullOperand(lrObj.leftOperand);
+  } else if (lrObj.leftOperand && lrObj.rightOperand) {
+    lrObj.leftOperand = filterNullOperand(lrObj.leftOperand);
+    lrObj.rightOperand = filterNullOperand(lrObj.rightOperand);
+
+    if (lrObj.leftOperand === null) {
+      return lrObj.rightOperand;
+    } else if (lrObj.rightOperand === null) {
+      return lrObj.leftOperand;
+    }
+  }
+
+  return lrObj;
+}
+
+function _transform(lrObj) {
   if (lrObj.leftOperand && lrObj.rightOperand) {
     const res = {};
 
@@ -37,8 +58,8 @@ function transform(lrObj) {
 
     res["opt"] = lrObj.operator;
     res["child"] = [
-      transform(lrObj.leftOperand),
-      transform(lrObj.rightOperand),
+      _transform(lrObj.leftOperand),
+      _transform(lrObj.rightOperand),
     ];
 
     return res;
@@ -51,7 +72,14 @@ function transform(lrObj) {
   return { key: lrObj.field, val: lrObj.value };
 }
 
-function transform_condense(lrObj) {
+function transform(lrObj) {
+  if (lrObj === null) throw new Error("Empty grouping expression");
+  const filtered = filterNullOperand(lrObj);
+  if (filtered === null) throw new Error("Empty grouping expression");
+  return _transform(filtered);
+}
+
+function _transform_condense(lrObj) {
   if (lrObj.leftOperand && lrObj.rightOperand) {
     const res = {
       field: "",
@@ -69,21 +97,23 @@ function transform_condense(lrObj) {
     if (LL === LR && LR === RL && RL === RR) {
       res.field = LL;
       if (lrObj.explicit) {
-        res.keyword = `(${transform_condense(lrObj.leftOperand).keyword} ${
+        res.keyword = `(${_transform_condense(lrObj.leftOperand).keyword} ${
           lrObj.operator
         }${lrObj.span || ""} ${
-          transform_condense(lrObj.rightOperand).keyword
+          _transform_condense(lrObj.rightOperand).keyword
         })`;
       } else {
-        res.keyword = `${transform_condense(lrObj.leftOperand).keyword} ${
+        res.keyword = `${_transform_condense(lrObj.leftOperand).keyword} ${
           lrObj.operator
-        }${lrObj.span || ""} ${transform_condense(lrObj.rightOperand).keyword}`;
+        }${lrObj.span || ""} ${
+          _transform_condense(lrObj.rightOperand).keyword
+        }`;
       }
     } else {
       res.operator = lrObj.operator;
       res.children = [
-        transform_condense(lrObj.leftOperand),
-        transform_condense(lrObj.rightOperand),
+        _transform_condense(lrObj.leftOperand),
+        _transform_condense(lrObj.rightOperand),
       ];
     }
 
@@ -123,6 +153,13 @@ function transform_condense(lrObj) {
       children: [],
     };
   }
+}
+
+function transform_condense(lrObj) {
+  if (lrObj === null) throw new Error("Empty grouping expression");
+  const filtered = filterNullOperand(lrObj);
+  if (filtered === null) throw new Error("Empty grouping expression");
+  return _transform_condense(filtered);
 }
 
 module.exports = {

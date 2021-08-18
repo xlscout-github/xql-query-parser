@@ -1,16 +1,17 @@
-@builtin "whitespace.ne" # Whitespace: `_` is optional, `__` is mandatory.
+@builtin "whitespace.ne"
 
 @{%
 
 function setField(field, value) {
-  if (typeof value === "object" && value !== null && value.leftOperand && value.rightOperand) {
-    value.leftOperand = setField(field, value.leftOperand);
-    value.rightOperand = setField(field, value.rightOperand);
+  if (typeof value === "object" && value !== null && (value.leftOperand || value.rightOperand)) {
+    if (value.leftOperand) value.leftOperand = setField(field, value.leftOperand);
+    if (value.rightOperand) value.rightOperand = setField(field, value.rightOperand);
 
-    return value;
-  } else  {
+  } else if (value.leftOperand !== null && value.rightOperand !== null) {
     return { ...value, field };
   }
+
+  return value;
 }
 
 function setDefaultField(value, field = "text") {
@@ -38,6 +39,7 @@ main -> P {% id %} |
 # Parentheses
 P -> "(" _ F _ ")" {% d => d[2] %} |
      "(" _ V _ ")" {% d => ({ ...d[2], explicit: true }) %} |
+     "(" _ ")" {% () => null %} |
      VAL {% d => setDefaultField(d[0]) %}
 
 # Field
