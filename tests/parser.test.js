@@ -1,6 +1,6 @@
 const { parse } = require("../parser");
 
-test("should throw error is empty string is passed, no parsing in found", () => {
+test("should throw error if empty string is passed, no parsing in found", () => {
   expect.assertions(2);
 
   try {
@@ -250,4 +250,28 @@ test("should ignore empty grouping expressions", () => {
       },
     ],
   });
+});
+
+
+test("should throw error if empty brackets are passed", () => {
+  expect.assertions(2);
+
+  try {
+    parse("()");
+  } catch (error) {
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toHaveProperty("message", "Empty grouping expression");
+  }
+});
+
+
+test("should throw error if combination empty brackets are passed", () => {
+  expect.assertions(2);
+
+  try {
+    parse("(() OR ()) AND ()");
+  } catch (error) {
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toHaveProperty("message", "Empty grouping expressions");
+  }
 });

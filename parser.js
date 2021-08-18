@@ -18,6 +18,7 @@ function parse(q, condense = false) {
   if (res.length === 0) {
     throw new Error("NO parsings found"); // incomplete grouping
   } else {
+    if (res[0] === null) throw new Error("Empty grouping expression"); // `()`
     return condense ? transform_condense(res[0]) : transform(res[0]);
   }
 }

@@ -73,9 +73,8 @@ function _transform(lrObj) {
 }
 
 function transform(lrObj) {
-  if (lrObj === null) throw new Error("Empty grouping expression");
   const filtered = filterNullOperand(lrObj);
-  if (filtered === null) throw new Error("Empty grouping expression");
+  if (filtered === null) throw new Error("Empty grouping expressions");
   return _transform(filtered);
 }
 
@@ -156,9 +155,8 @@ function _transform_condense(lrObj) {
 }
 
 function transform_condense(lrObj) {
-  if (lrObj === null) throw new Error("Empty grouping expression");
   const filtered = filterNullOperand(lrObj);
-  if (filtered === null) throw new Error("Empty grouping expression");
+  if (filtered === null) throw new Error("Empty grouping expressions");
   return _transform_condense(filtered);
 }
 
