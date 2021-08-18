@@ -25,10 +25,12 @@ function filterNullOperand(lrObj) {
     lrObj.leftOperand = filterNullOperand(lrObj.leftOperand);
     lrObj.rightOperand = filterNullOperand(lrObj.rightOperand);
 
-    if (lrObj.leftOperand === null) {
+    if (lrObj.leftOperand === null && lrObj.rightOperand) {
       return lrObj.rightOperand;
-    } else if (lrObj.rightOperand === null) {
+    } else if (lrObj.rightOperand === null && lrObj.leftOperand) {
       return lrObj.leftOperand;
+    } else if (lrObj.leftOperand === null && lrObj.rightOperand === null) {
+      return null;
     }
   }
 

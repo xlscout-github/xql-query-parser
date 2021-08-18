@@ -7,7 +7,7 @@ function setField(field, value) {
     if (value.leftOperand) value.leftOperand = setField(field, value.leftOperand);
     if (value.rightOperand) value.rightOperand = setField(field, value.rightOperand);
 
-  } else if (value.leftOperand !== null && value.rightOperand !== null) {
+  } else if ( value !== null && value.leftOperand !== null && value.rightOperand !== null) {
     return { ...value, field };
   }
 

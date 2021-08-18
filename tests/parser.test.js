@@ -252,7 +252,6 @@ test("should ignore empty grouping expressions", () => {
   });
 });
 
-
 test("should throw error if empty brackets are passed", () => {
   expect.assertions(2);
 
@@ -263,7 +262,6 @@ test("should throw error if empty brackets are passed", () => {
     expect(error).toHaveProperty("message", "Empty grouping expression");
   }
 });
-
 
 test("should throw error if combination empty brackets are passed", () => {
   expect.assertions(2);
