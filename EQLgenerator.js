@@ -1,6 +1,5 @@
 function EQLgenerator(parsedStr) {
   // console.log(parsedStr);
-  // return;
   let parsedArr = JSON.parse(parsedStr);
   console.log(parsedArr);
   if ("span" in parsedArr) {
@@ -35,24 +34,22 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
 
   let operatorForNext;
   // operatorForNext = mySearchArr["opt"];
-  // console.log("mySearchArr");
-  // console.log(mySearchArr);
-  // if ("span" in mySearchArr) {
-  // span = mySearchArr["span"];
-  // }
+  if ("span" in mySearchArr) {
+    span = mySearchArr["span"];
+  }
+
   // mySearchArr = mySearchArr["child"];
-  groupQuery = { bool: { must: [], should: [], must_not: [] } };
-  console.log("NEWWWWWWWWW");
-  console.log(mySearchArr);
-  console.log(mySearchArr.length);
+  if (span == -1) {
+    groupQuery = { bool: { must: [], should: [], must_not: [] } };
+  } else {
+    groupQuery = { span_near: { clauses: [], slop: "", in_order: "" } };
+  }
   // operator = operatorForNext;
   // return;
   for (let j = 0; j < mySearchArr.length; j++) {
-    console.log("heree");
     let currentField = mySearchArr[j]["key"];
     let modifiedQuery = mySearchArr[j].val;
     // /    operator = mySearchArr[j].opt;
-    console.log(operator);
     let str = "";
     if (
       currentField === "multi" &&
@@ -114,14 +111,26 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
       qry = Tempreturnarr;
     } else {
       console.log("making single query");
-      console.log(JSON.stringify(groupQuery));
       if (typeof modifiedQuery === "string") {
-        modifiedQuery = modifiedQuery.trim();
-        str = "(" + currentField + ":(" + modifiedQuery + "))";
-        const temp = {};
-        temp.query_string = {};
-        temp.query_string = { default_operator: "AND", query: str };
-        qry = temp;
+        if (
+          operator.toLowerCase() == "pre" ||
+          operator.toLowerCase() == "near"
+        ) {
+          starIndex = modifiedQuery.indexOf("*");
+          questionMarkIndex = modifiedQuery.indexOf("?");
+          if (starIndex !== -1 || questionMarkIndex !== -1) {
+            qry = makeWildCardSpanQuery(currentField, modifiedQuery);
+          } else {
+            qry = maketermQuery(currentField, modifiedQuery);
+          }
+        } else {
+          modifiedQuery = modifiedQuery.trim();
+          str = "(" + currentField + ":(" + modifiedQuery + "))";
+          const temp = {};
+          temp.query_string = {};
+          temp.query_string = { default_operator: "AND", query: str };
+          qry = temp;
+        }
       } else {
         const temp = {};
         let tempDate;
@@ -153,19 +162,11 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
         };
         qry = temp;
       }
-      console.log("making single query again");
-
-      // console.log(JSON.stringify(groupQuery));
     }
-    console.log(JSON.stringify(groupQuery));
 
-    console.log("validations");
-    console.log(validations);
     if (validations === 0) {
       break;
     }
-    console.log("qry");
-    console.log(qry);
     switch (operator) {
       case "AND":
         groupQuery.bool.must.push(qry);
@@ -178,46 +179,21 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
       case "NOT":
         groupQuery.bool.must_not.push(qry);
         break;
+
+      case "PRE":
+      case "pre":
+        groupQuery.span_near.clauses.push(qry);
+        groupQuery.span_near.in_order = "true";
+        groupQuery.span_near.slop = span;
+        break;
+
+      case "NEAR":
+      case "near":
+        groupQuery.span_near.clauses.push(qry);
+        groupQuery.span_near.in_order = "false";
+        groupQuery.span_near.slop = span;
+        break;
     }
-    // if (j === 0) {
-    //   // switch (operator) {
-    //   //   case "AND":
-    //   // groupQuery.bool.must.push(qry);
-    //   //     break;
-
-    //   //   case "OR":
-    //   //     groupQuery.bool.should.push(qry);
-    //   //     break;
-
-    //   //   case "NOT":
-    //   //     groupQuery.bool.must_not.push(qry);
-    //   //     break;
-    //   // }
-    // } else {
-    //   console.log(" j is 1");
-    //   let tempQueryArray = {};
-    //   tempQueryArray = { bool: { must: [], should: [], must_not: [] } };
-    //   console.log("operator");
-    //   console.log(operator);
-    //   console.log(groupQuery);
-    //   switch (operator) {
-    //     case "AND":
-    //       tempQueryArray.bool.must.push(qry);
-    //       tempQueryArray.bool.must.push(groupQuery);
-    //       break;
-
-    //     case "OR":
-    //       tempQueryArray.bool.should.push(qry);
-    //       tempQueryArray.bool.should.push(groupQuery);
-    //       break;
-
-    //     case "NOT":
-    //       tempQueryArray = groupQuery;
-    //       groupQuery.bool.must_not.push(qry);
-    //       break;
-    //   }
-    //   groupQuery = tempQueryArray;
-    // }
     console.log("GROUPQUERYYYY--------------------");
     console.log(JSON.stringify(groupQuery, 0, 2));
   }

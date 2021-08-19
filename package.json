@@ -4,11 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --watchAll --verbose --coverage",
+    "test": "jest --verbose --coverage",
     "start": "node sample.js",
     "gen": "nearleyc ./grammar.ne -o ./grammar.js",
     "test:gram": "nearley-test ./grammar.js -i",
-    "railroad": "nearley-railroad grammar.ne -o grammar.html"
+    "railroad": "nearley-railroad grammar.ne -o grammar.html",
+    "postinstall": "npm run gen"
   },
   "keywords": [],
   "author": "",

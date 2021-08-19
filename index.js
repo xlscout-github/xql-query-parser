@@ -14,5 +14,5 @@ function pickKeyParsed(q, field) {
 
 module.exports = {
   parse,
-  pickKeyParsed
+  pickKeyParsed,
 };
