@@ -1,6 +1,6 @@
 const { parse } = require("../parser");
 
-test("should throw error if empty string is passed, no parsing in found", () => {
+test("should throw error if empty string is passed", () => {
   expect.assertions(2);
 
   try {
@@ -11,7 +11,7 @@ test("should throw error if empty string is passed, no parsing in found", () => 
   }
 });
 
-test("should parse as text field if no field is provided explicitly", () => {
+test('should consider default "text" field if no field is provided explicitly', () => {
   const query = `(DETECT* near5 (CONNECT* pre6 SOURCE*))`;
 
   expect(parse(query)).toEqual({
@@ -35,7 +35,7 @@ test("should parse as text field if no field is provided explicitly", () => {
   });
 });
 
-test("should correctly parse query provided, operators in lowercase", () => {
+test("should correctly parse query provided if operators in lowercase", () => {
   const query = `((desc:(DETECT* near5 (CONNECT* pre6 SOURCE*)))) and (abs: ALPHA* or pn:US7420295B2) not text: ALPHA*`;
 
   expect(parse(query)).toEqual({
@@ -252,7 +252,7 @@ test("should ignore empty grouping expressions", () => {
   });
 });
 
-test("should throw error if empty brackets are passed", () => {
+test("should throw error if singleton empty brackets are passed", () => {
   expect.assertions(2);
 
   try {
@@ -263,7 +263,7 @@ test("should throw error if empty brackets are passed", () => {
   }
 });
 
-test("should throw error if combination empty brackets are passed", () => {
+test("should throw error if combination of empty brackets are passed", () => {
   expect.assertions(2);
 
   try {
