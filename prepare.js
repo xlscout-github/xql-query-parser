@@ -4,11 +4,14 @@ function isMatchingBrackets(q) {
     "(": ")",
     "[": "]",
   };
+  let sQuote = false;
 
   for (let i = 0; i < q.length; i++) {
-    if (q[i] === "(" || q[i] === "[") {
+    if (q[i] === '"' || q[i] === "'") {
+      sQuote = !sQuote;
+    } else if (sQuote === false && (q[i] === "(" || q[i] === "[")) {
       stack.push(q[i]);
-    } else if (q[i] === ")" || q[i] === "]") {
+    } else if (sQuote === false && (q[i] === ")" || q[i] === "]")) {
       const last = stack.pop();
 
       if (q[i] !== map[last]) {
