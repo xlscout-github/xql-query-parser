@@ -150,7 +150,7 @@ test("should correctly parse string enclosed in quotations", () => {
 });
 
 test("should correctly parse date query", () => {
-  const query = `pd:[16990101 TO 20010316] OR ab:[16990101 to 20010316] OR ab-s:[16990101 to 20010316]`;
+  const query = `pd:([16990101 TO 20010316]) OR ab:(([16990101 to 20010316])) OR ab-s:[16990101 to 20010316]`;
 
   expect(parse(query)).toEqual({
     key: "multi",

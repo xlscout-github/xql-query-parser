@@ -2,7 +2,7 @@ const { parse } = require("./parser");
 
 // core parse
 const result = parse(
-  `(tac:detect AND (() AND ())) OR () OR (ttl:connect* OR ppl*)`
+  `((desc:(DETECT* near5 (CONNECT* near6 SOURCE*)))) OR pn:US7420295B2`
 );
 
 console.dir(result, { depth: null });

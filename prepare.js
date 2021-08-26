@@ -252,9 +252,14 @@ function fillDefaultOperator(q, startIndices, endIndices) {
     let isDate = true;
     let datePart = "";
     let dateParams = [];
+    let beginIndex = 0;
+
     for (let ch = 0; ch < inter.length; ch++) {
-      if (inter[ch] === "[") {
-        dateParams.push("[");
+      if (inter[ch] === "(" || inter[ch] === ")") {
+        dateParams.push(inter[ch]);
+      } else if (inter[ch] === "[") {
+        beginIndex = ch;
+        dateParams.push(inter[ch]);
       } else if (inter[ch] === "]") {
         if (isNaN(Number(datePart))) {
           isDate = false;
@@ -262,7 +267,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
         }
         if (datePart !== "") dateParams.push(datePart);
         datePart = "";
-        dateParams.push("]");
+        dateParams.push(inter[ch]);
       } else if (inter[ch] !== " ") {
         datePart += inter[ch];
       } else if (inter[ch] === " " && datePart !== "") {
@@ -278,12 +283,12 @@ function fillDefaultOperator(q, startIndices, endIndices) {
     // ignore for date
     if (
       isDate &&
-      dateParams.length === 5 &&
-      dateParams[0] === "[" &&
-      !isNaN(dateParams[1]) &&
-      dateParams[2].toLowerCase() === "to" &&
-      !isNaN(dateParams[3]) &&
-      dateParams[4] === "]"
+      dateParams.length === 2 * beginIndex + 5 &&
+      dateParams[beginIndex] === "[" &&
+      !isNaN(dateParams[beginIndex + 1]) &&
+      dateParams[beginIndex + 2].toLowerCase() === "to" &&
+      !isNaN(dateParams[beginIndex + 3]) &&
+      dateParams[beginIndex + 4] === "]"
     ) {
       continue;
     }
