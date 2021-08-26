@@ -258,8 +258,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
       if (inter[ch] === "(" || inter[ch] === ")") {
         dateParams.push(inter[ch]);
       } else if (inter[ch] === "[") {
-        beginIndex = ch;
-        dateParams.push(inter[ch]);
+        beginIndex = dateParams.push(inter[ch]) - 1;
       } else if (inter[ch] === "]") {
         if (isNaN(Number(datePart))) {
           isDate = false;
