@@ -180,11 +180,11 @@ function prepare(q) {
     startValIndices.push(startFieldIndices[i] + foundwords[i].length);
   }
 
-  // console.log("Query", q);
-  // console.log("Found words", foundwords);
-  // console.log("Start Field Index", startFieldIndices);
-  // console.log("Start Val Index", startValIndices);
-  // console.log("End Val Index", endValIndices);
+  console.log("Query", q);
+  console.log("Found words", foundwords);
+  console.log("Start Field Index", startFieldIndices);
+  console.log("Start Val Index", startValIndices);
+  console.log("End Val Index", endValIndices);
 
   return {
     q,
