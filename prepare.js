@@ -180,11 +180,11 @@ function prepare(q) {
     startValIndices.push(startFieldIndices[i] + foundwords[i].length);
   }
 
-  console.log("Query", q);
-  console.log("Found words", foundwords);
-  console.log("Start Field Index", startFieldIndices);
-  console.log("Start Val Index", startValIndices);
-  console.log("End Val Index", endValIndices);
+  // console.log("Query", q);
+  // console.log("Found words", foundwords);
+  // console.log("Start Field Index", startFieldIndices);
+  // console.log("Start Val Index", startValIndices);
+  // console.log("End Val Index", endValIndices);
 
   return {
     q,
@@ -248,6 +248,16 @@ function fillDefaultOperator(q, startIndices, endIndices) {
 
   for (let i = 0; i < startIndices.length; i++) {
     let inter = q.substring(startIndices[i], endIndices[i] + 1);
+
+    let k = inter.length - 1;
+    let noSpaces = 0;
+
+    while (inter[k] === " ") {
+      noSpaces++;
+      k--;
+    }
+
+    inter = inter.trimEnd();
 
     let isDate = true;
     let datePart = "";
@@ -387,12 +397,12 @@ function fillDefaultOperator(q, startIndices, endIndices) {
 
     startIndices = startIndices.map((val, idx) => {
       if (idx <= i) return val;
-      else return val + 4 * count;
+      else return val + 4 * count - noSpaces;
     });
 
     endIndices = endIndices.map((val, idx) => {
       if (idx < i) return val;
-      else return val + 4 * count;
+      else return val + 4 * count - noSpaces;
     });
   }
 

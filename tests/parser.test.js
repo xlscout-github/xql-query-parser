@@ -273,3 +273,25 @@ test("should throw error if combination of empty brackets are passed", () => {
     expect(error).toHaveProperty("message", "Empty grouping expressions");
   }
 });
+
+test("should parse query if multiple spaces happens to be at the end of a value", () => {
+  const query = "(ttl:(  water)    ) AND (ttl:(at er) )";
+
+  expect(parse(query)).toEqual({
+    key: "ttl",
+    val: "multi",
+    opt: "AND",
+    child: [
+      { key: "ttl", val: "water" },
+      {
+        key: "ttl",
+        val: "multi",
+        opt: "AND",
+        child: [
+          { key: "ttl", val: "at" },
+          { key: "ttl", val: "er" },
+        ],
+      },
+    ],
+  });
+});
