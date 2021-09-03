@@ -1,7 +1,8 @@
 const { parse } = require("./parser");
 
 // core parse
-const result = parse(`(pd:(   (   [   16990101   to   20010316    ] )  ))`);
+
+const result = parse("((ab:(DETECT*) OR text:MICROWAVE RADIO*) )");
 
 console.dir(result, { depth: null });
 

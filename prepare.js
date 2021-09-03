@@ -249,6 +249,16 @@ function fillDefaultOperator(q, startIndices, endIndices) {
   for (let i = 0; i < startIndices.length; i++) {
     let inter = q.substring(startIndices[i], endIndices[i] + 1);
 
+    let k = inter.length - 1;
+    let noSpaces = 0;
+
+    while (inter[k] === " ") {
+      noSpaces++;
+      k--;
+    }
+
+    inter = inter.trimEnd();
+
     let isDate = true;
     let datePart = "";
     let dateParams = [];
@@ -387,12 +397,12 @@ function fillDefaultOperator(q, startIndices, endIndices) {
 
     startIndices = startIndices.map((val, idx) => {
       if (idx <= i) return val;
-      else return val + 4 * count;
+      else return val + 4 * count - noSpaces;
     });
 
     endIndices = endIndices.map((val, idx) => {
       if (idx < i) return val;
-      else return val + 4 * count;
+      else return val + 4 * count - noSpaces;
     });
   }
 
