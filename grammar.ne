@@ -61,7 +61,12 @@ OP -> AND {% id %} |
       OR {% id %} |
       NOT {% id %} |
       NEAR NUM {% (d) => ({ type: d[0], span: d[1] }) %} |
-      PRE NUM {% (d) => ({ type: d[0], span: d[1] }) %}
+      PRE NUM {% (d) => ({ type: d[0], span: d[1] }) %} |
+      NEAR PORS {% (d) => ({ type: d[0], span: d[1].toUpperCase() }) %} |
+      PRE PORS {% (d) => ({ type: d[0], span: d[1].toUpperCase() }) %} 
+   
+     
+      
 
 AND -> "and"i {% id %}
 
@@ -72,6 +77,14 @@ NOT -> "not"i {% id %}
 NEAR -> "near"i {% id %}
 
 PRE -> "pre"i {% id %}
+
+
+
+
+
+
+
+
 
 # Value
 V -> V __ OP __ P 
@@ -143,3 +156,7 @@ SEPERATOR -> "." {% id %} |
 # Number
 NUM ->
     [0-9]:+ {% (d) => d[0].join("") %}
+
+ 
+ PORS -> "p"i {% id %} |
+         "s"i {% id %}
