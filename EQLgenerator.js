@@ -47,6 +47,7 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
     } else if (span.toLowerCase() == "s") {
       span = "15";
     }
+
     groupQuery = { span_near: { clauses: [], slop: "", in_order: "" } };
   }
   // operator = operatorForNext;
