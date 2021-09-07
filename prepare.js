@@ -4,11 +4,14 @@ function isMatchingBrackets(q) {
     "(": ")",
     "[": "]",
   };
+  let sQuote = false;
 
   for (let i = 0; i < q.length; i++) {
-    if (q[i] === "(" || q[i] === "[") {
+    if (q[i] === '"' || q[i] === "'") {
+      sQuote = !sQuote;
+    } else if (sQuote === false && (q[i] === "(" || q[i] === "[")) {
       stack.push(q[i]);
-    } else if (q[i] === ")" || q[i] === "]") {
+    } else if (sQuote === false && (q[i] === ")" || q[i] === "]")) {
       const last = stack.pop();
 
       if (q[i] !== map[last]) {
@@ -45,6 +48,23 @@ function todeduct(q, start, end) {
   }
 
   return countBefore - count;
+}
+
+function evalDeduction(q, start, end) {
+  const deduction = todeduct(q, start, end);
+
+  let i = end;
+  let foundClose = 0;
+  let overall = 0;
+
+  while (deduction !== foundClose) {
+    if (q[i] === ")") foundClose++;
+
+    overall++;
+    i--;
+  }
+
+  return overall;
 }
 
 function evalSpaces(q, i) {
@@ -153,7 +173,11 @@ function prepare(q) {
         else return val + 2;
       });
 
-      const deduction = todeduct(q, currentFieldIndex + 1, posInsertClose + 1);
+      const deduction = evalDeduction(
+        q,
+        currentFieldIndex + 1,
+        posInsertClose + 1
+      );
 
       endValIndices.push(posInsertClose + 1 - deduction);
     }
@@ -168,7 +192,7 @@ function prepare(q) {
 
     startFieldIndices[k] = startFieldIndices[k] + 1;
 
-    const deduction = todeduct(q, startFieldIndices[k], q.length - 1);
+    const deduction = evalDeduction(q, startFieldIndices[k], q.length - 1);
 
     endValIndices.push(q.length - 1 - deduction);
   }
@@ -246,12 +270,26 @@ function fillDefaultOperator(q, startIndices, endIndices) {
   for (let i = 0; i < startIndices.length; i++) {
     let inter = q.substring(startIndices[i], endIndices[i] + 1);
 
+    let k = inter.length - 1;
+    let noSpaces = 0;
+
+    while (inter[k] === " ") {
+      noSpaces++;
+      k--;
+    }
+
+    inter = inter.trimEnd();
+
     let isDate = true;
     let datePart = "";
     let dateParams = [];
+    let beginIndex = 0;
+
     for (let ch = 0; ch < inter.length; ch++) {
-      if (inter[ch] === "[") {
-        dateParams.push("[");
+      if (inter[ch] === "(" || inter[ch] === ")") {
+        dateParams.push(inter[ch]);
+      } else if (inter[ch] === "[") {
+        beginIndex = dateParams.push(inter[ch]) - 1;
       } else if (inter[ch] === "]") {
         if (isNaN(Number(datePart))) {
           isDate = false;
@@ -259,7 +297,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
         }
         if (datePart !== "") dateParams.push(datePart);
         datePart = "";
-        dateParams.push("]");
+        dateParams.push(inter[ch]);
       } else if (inter[ch] !== " ") {
         datePart += inter[ch];
       } else if (inter[ch] === " " && datePart !== "") {
@@ -275,12 +313,12 @@ function fillDefaultOperator(q, startIndices, endIndices) {
     // ignore for date
     if (
       isDate &&
-      dateParams.length === 5 &&
-      dateParams[0] === "[" &&
-      !isNaN(dateParams[1]) &&
-      dateParams[2].toLowerCase() === "to" &&
-      !isNaN(dateParams[3]) &&
-      dateParams[4] === "]"
+      dateParams.length === 2 * beginIndex + 5 &&
+      dateParams[beginIndex] === "[" &&
+      !isNaN(dateParams[beginIndex + 1]) &&
+      dateParams[beginIndex + 2].toLowerCase() === "to" &&
+      !isNaN(dateParams[beginIndex + 3]) &&
+      dateParams[beginIndex + 4] === "]"
     ) {
       continue;
     }
@@ -380,12 +418,12 @@ function fillDefaultOperator(q, startIndices, endIndices) {
 
     startIndices = startIndices.map((val, idx) => {
       if (idx <= i) return val;
-      else return val + 4 * count;
+      else return val + 4 * count - noSpaces;
     });
 
     endIndices = endIndices.map((val, idx) => {
       if (idx < i) return val;
-      else return val + 4 * count;
+      else return val + 4 * count - noSpaces;
     });
   }
 

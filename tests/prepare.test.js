@@ -15,13 +15,13 @@ test("multiple fields: should enclose field along with value in parenthesis", ()
   );
 });
 
-test("should return query as it is if no fields are present", () => {
+test("should return query as it is if no field signature is found", () => {
   const query = "DETECT* near5 (CONNECT* near6 SOURCE*)";
 
   expect(prepareQ(query)).toBe("DETECT* near5 (CONNECT* near6 SOURCE*)");
 });
 
-test("should add default operator and within value if operator is not specified", () => {
+test('should consider default operator "AND" within value if operator is not specified', () => {
   const query = "desc:DETECT* (CONNECT* SOURCE*)";
 
   expect(prepareQ(query)).toBe("(desc:DETECT* AND (CONNECT* AND SOURCE*))");
@@ -47,6 +47,22 @@ test("should throw error in case of unbalanced circular brackets", () => {
     expect(error).toBeInstanceOf(Error);
     expect(error).toHaveProperty("message", "Unbalanced Brackets");
   }
+});
+
+test("should not throw error if unbalanced circular brackets are inside quotations", () => {
+  const query = `(tac:"((detect" AND (() AND ())) OR () OR (ttl:"c))onnect*" OR ppl*)`;
+
+  expect(prepareQ(query)).toBe(
+    `((tac:"((detect" AND (() AND ())) OR ()) OR ((ttl:"c))onnect*" OR ppl*))`
+  );
+});
+
+test("should not throw error if unbalanced square brackets are inside quotations", () => {
+  const query = `(tac:"[[detect" AND (() AND ())) OR () OR (ttl:"connect]]*" OR ppl*)`;
+
+  expect(prepareQ(query)).toBe(
+    `((tac:"[[detect" AND (() AND ())) OR ()) OR ((ttl:"connect]]*" OR ppl*))`
+  );
 });
 
 test("should throw error in case of mismatched brackets", () => {
