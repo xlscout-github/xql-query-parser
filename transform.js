@@ -42,12 +42,11 @@ function _transform(lrObj) {
     const res = {};
 
     const LL = findLeftField(lrObj.leftOperand);
-    const LR = findLeftField(lrObj.rightOperand);
-
-    const RL = findRightField(lrObj.leftOperand);
+    const LR = findRightField(lrObj.leftOperand);
+    const RL = findLeftField(lrObj.rightOperand);
     const RR = findRightField(lrObj.rightOperand);
 
-    if (LL === LR && LR === RL && RL === RR) {
+    if (LL === LR && RL === RR && LR === RL) {
       res["key"] = LL;
       res["val"] = "multi";
     } else {
@@ -90,12 +89,11 @@ function _transform_condense(lrObj) {
     };
 
     const LL = findLeftField(lrObj.leftOperand);
-    const LR = findLeftField(lrObj.rightOperand);
-
-    const RL = findRightField(lrObj.leftOperand);
+    const LR = findRightField(lrObj.leftOperand);
+    const RL = findLeftField(lrObj.rightOperand);
     const RR = findRightField(lrObj.rightOperand);
 
-    if (LL === LR && LR === RL && RL === RR) {
+    if (LL === LR && RL === RR && LR === RL) {
       res.field = LL;
       if (lrObj.explicit) {
         res.keyword = `(${_transform_condense(lrObj.leftOperand).keyword} ${

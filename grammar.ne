@@ -40,11 +40,21 @@ function setDefaultField(value, field = "text") {
 main -> P {% id %} |
         main __ OP __ P 
         {% 
-        (d) => ({
-          operator: d[2].toUpperCase(),
-          leftOperand: d[0],
-          rightOperand: d[4],
-        })
+        (d) => {
+          if (d[2].type && d[2].span) {
+            return {
+              operator: d[2].type.toUpperCase(),
+              span: d[2].span,
+              leftOperand: d[0],
+              rightOperand: d[4],
+            };
+          }
+          return {
+            operator: d[2].toUpperCase(),
+            leftOperand: d[0],
+            rightOperand: d[4],
+          };
+        }
         %}
 
 # Parentheses
@@ -61,12 +71,9 @@ OP -> AND {% id %} |
       OR {% id %} |
       NOT {% id %} |
       NEAR NUM {% (d) => ({ type: d[0], span: d[1] }) %} |
-      PRE NUM {% (d) => ({ type: d[0], span: d[1] }) %} |
       NEAR PORS {% (d) => ({ type: d[0], span: d[1].toUpperCase() }) %} |
-      PRE PORS {% (d) => ({ type: d[0], span: d[1].toUpperCase() }) %} 
-   
-     
-      
+      PRE NUM {% (d) => ({ type: d[0], span: d[1] }) %} |
+      PRE PORS {% (d) => ({ type: d[0], span: d[1].toUpperCase() }) %}
 
 AND -> "and"i {% id %}
 
@@ -78,19 +85,14 @@ NEAR -> "near"i {% id %}
 
 PRE -> "pre"i {% id %}
 
-
-
-
-
-
-
-
+PORS -> "p"i {% id %} |
+        "s"i {% id %}
 
 # Value
 V -> V __ OP __ P 
       {% 
       (d) => {
-        if (typeof d[2] === "object" && d[2] !== null && d[2].type && d[2].span) {
+        if (d[2].type && d[2].span) {
           return {
             operator: d[2].type.toUpperCase(),
             span: d[2].span,
@@ -156,7 +158,3 @@ SEPERATOR -> "." {% id %} |
 # Number
 NUM ->
     [0-9]:+ {% (d) => d[0].join("") %}
-
- 
- PORS -> "p"i {% id %} |
-         "s"i {% id %}

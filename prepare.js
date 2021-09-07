@@ -55,16 +55,16 @@ function evalDeduction(q, start, end) {
 
   let i = end;
   let foundClose = 0;
-  let overall = 0;
+  let count = 0;
 
   while (deduction !== foundClose) {
     if (q[i] === ")") foundClose++;
 
-    overall++;
+    count++;
     i--;
   }
 
-  return overall;
+  return count;
 }
 
 function evalSpaces(q, i) {
@@ -142,13 +142,12 @@ function prepare(q) {
           operator.toLowerCase() === "ro" ||
           operator.toLowerCase() === "dna" ||
           operator.toLowerCase() === "ton" ||
-          operator.toLowerCase() === "sraen" ||
           operator.toLowerCase() === "praen" ||
-          operator.toLowerCase() === "serp" ||
+          operator.toLowerCase() === "sraen" ||
           operator.toLowerCase() === "perp" ||
+          operator.toLowerCase() === "serp" ||
           /[0-9]+raen/.test(operator.toLowerCase()) ||
-          /[0-9]+erp/.test(operator.toLowerCase()) 
-         
+          /[0-9]+erp/.test(operator.toLowerCase())
         ) {
           break;
         }
@@ -372,13 +371,12 @@ function fillDefaultOperator(q, startIndices, endIndices) {
                   construct.toLowerCase() !== "and" &&
                   construct.toLowerCase() !== "or" &&
                   construct.toLowerCase() !== "not" &&
-                  construct.toLowerCase() !== "nears" &&
                   construct.toLowerCase() !== "nearp" &&
-                  construct.toLowerCase() !== "pres" &&
+                  construct.toLowerCase() !== "nears" &&
                   construct.toLowerCase() !== "prep" &&
+                  construct.toLowerCase() !== "pres" &&
                   !/near[0-9]+/.test(construct.toLowerCase()) &&
-                  !/pre[0-9]+/.test(construct.toLowerCase())  
-                
+                  !/pre[0-9]+/.test(construct.toLowerCase())
                 ) {
                   inter = [
                     inter.slice(0, index),
@@ -414,13 +412,12 @@ function fillDefaultOperator(q, startIndices, endIndices) {
         construct.toLowerCase() !== "and" &&
         construct.toLowerCase() !== "or" &&
         construct.toLowerCase() !== "not" &&
-        construct.toLowerCase() !== "nears" &&
         construct.toLowerCase() !== "nearp" &&
-        construct.toLowerCase() !== "pres" &&
+        construct.toLowerCase() !== "nears" &&
         construct.toLowerCase() !== "prep" &&
+        construct.toLowerCase() !== "pres" &&
         !/near[0-9]+/.test(construct.toLowerCase()) &&
-        !/pre[0-9]+/.test(construct.toLowerCase()) 
-        
+        !/pre[0-9]+/.test(construct.toLowerCase())
       ) {
         inter = [inter.slice(0, index), "AND ", inter.slice(index)].join("");
         count++;

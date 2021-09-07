@@ -295,3 +295,45 @@ test("should parse query if multiple spaces happens to be at the end of a value"
     ],
   });
 });
+
+test("should parse if query contains various proximity operators", () => {
+  const query =
+    "((ab:(DETECT* NEARP CONNECT* PREP SHOCK) PRES text:MICROWAVE NEARS RADIO*))";
+
+  expect(parse(query)).toEqual({
+    key: "multi",
+    span: "S",
+    opt: "PRE",
+    child: [
+      {
+        key: "ab",
+        val: "multi",
+        span: "P",
+        opt: "PRE",
+        child: [
+          {
+            key: "ab",
+            val: "multi",
+            span: "P",
+            opt: "NEAR",
+            child: [
+              { key: "ab", val: "DETECT*" },
+              { key: "ab", val: "CONNECT*" },
+            ],
+          },
+          { key: "ab", val: "SHOCK" },
+        ],
+      },
+      {
+        key: "text",
+        val: "multi",
+        span: "S",
+        opt: "NEAR",
+        child: [
+          { key: "text", val: "MICROWAVE" },
+          { key: "text", val: "RADIO*" },
+        ],
+      },
+    ],
+  });
+});

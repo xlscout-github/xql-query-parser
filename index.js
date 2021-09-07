@@ -16,6 +16,7 @@ function pickKeyParsed(q, field) {
 function convertXQLtoEQL(strQry) {
   return EQLgenerator(parse(strQry));
 }
+
 module.exports = {
   parse,
   pickKeyParsed,
