@@ -2,7 +2,7 @@ const { parse } = require("./parser");
 const { EQLgenerator } = require("./EQLgenerator");
 
 let result = parse(
-`((ab:(DETECT* NEARP CONNECT* PREP SHOCK) PRES text:MICROWAVE NEARS RADIO*))`
+  `((ab:(DETECT* NEARP CONNECT* PREP SHOCK) PRES text:MICROWAVE NEARS RADIO*))`
 );
 
 //const result = parse('(DETECT* nears (CONNECT* prep SOURCE*))');
