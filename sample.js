@@ -7,7 +7,7 @@ let result = parse(
 
 console.dir(result, { depth: null });
 
-result = EQLgenerator(JSON.stringify(result));
+result = EQLgenerator(result);
 
 console.dir(result, { depth: null });
 
