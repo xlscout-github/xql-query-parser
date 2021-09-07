@@ -50,6 +50,23 @@ function todeduct(q, start, end) {
   return countBefore - count;
 }
 
+function evalDeduction(q, start, end) {
+  const deduction = todeduct(q, start, end);
+
+  let i = end;
+  let foundClose = 0;
+  let overall = 0;
+
+  while (deduction !== foundClose) {
+    if (q[i] === ")") foundClose++;
+
+    overall++;
+    i--;
+  }
+
+  return overall;
+}
+
 function evalSpaces(q, i) {
   let count = 0;
   for (let ch = i; ch <= q.length; ch++) {
@@ -161,7 +178,11 @@ function prepare(q) {
         else return val + 2;
       });
 
-      const deduction = todeduct(q, currentFieldIndex + 1, posInsertClose + 1);
+      const deduction = evalDeduction(
+        q,
+        currentFieldIndex + 1,
+        posInsertClose + 1
+      );
 
       endValIndices.push(posInsertClose + 1 - deduction);
     }
@@ -176,7 +197,7 @@ function prepare(q) {
 
     startFieldIndices[k] = startFieldIndices[k] + 1;
 
-    const deduction = todeduct(q, startFieldIndices[k], q.length - 1);
+    const deduction = evalDeduction(q, startFieldIndices[k], q.length - 1);
 
     endValIndices.push(q.length - 1 - deduction);
   }
