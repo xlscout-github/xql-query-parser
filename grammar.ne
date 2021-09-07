@@ -27,7 +27,7 @@ function setField(field, value) {
 
 function setDefaultField(value, field = "text") {
   // DATE VALUE
-  if (typeof value === "object" && value !== null && value.type === "DATE") {
+  if (typeof value === "object" && value.type === "DATE") {
     return { ...value, field };
   }
 
@@ -41,7 +41,7 @@ main -> P {% id %} |
         main __ OP __ P 
         {% 
         (d) => {
-          if (d[2].type && d[2].span) {
+          if (typeof d[2] === "object" && d[2].type && d[2].span) {
             return {
               operator: d[2].type.toUpperCase(),
               span: d[2].span,
@@ -92,7 +92,7 @@ PORS -> "p"i {% id %} |
 V -> V __ OP __ P 
       {% 
       (d) => {
-        if (d[2].type && d[2].span) {
+        if (typeof d[2] === "object" && d[2].type && d[2].span) {
           return {
             operator: d[2].type.toUpperCase(),
             span: d[2].span,
