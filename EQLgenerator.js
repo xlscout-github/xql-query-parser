@@ -1,6 +1,11 @@
 function EQLgenerator(parsedArr) {
   if ("span" in parsedArr) {
     span = parsedArr["span"];
+    if (span.toLowerCase() == "p") {
+      span = "50";
+    } else if (span.toLowerCase() == "s") {
+      span = "15";
+    }
   } else {
     span = -1;
   }
@@ -17,13 +22,20 @@ function EQLgenerator(parsedArr) {
 
   // parsedArr = [parsedArr];
   let outputArr = makeSearchQuery(parsedArr["child"], parsedArr["opt"], span);
+
+  if (outputArr["status"] == "success") {
+    if (!("bool" in outputArr["queryArray"])) {
+      let groupQuery = { bool: { must: [] } };
+      groupQuery["bool"]["must"].push(outputArr["queryArray"]);
+      outputArr["queryArray"] = groupQuery;
+    }
+  }
   return outputArr;
 }
 
 function makeSearchQuery(mySearchArr, operator, span = -1) {
   let validations = 1;
   let errorMsg = "";
-  // let operator = [];
   let regExp;
   let matchFound = [];
   let qry;
@@ -34,11 +46,16 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
   if ("span" in mySearchArr) {
     span = mySearchArr["span"];
   }
-
   // mySearchArr = mySearchArr["child"];
   if (span == -1) {
     groupQuery = { bool: { must: [], should: [], must_not: [] } };
   } else {
+    if (span.toLowerCase() == "p") {
+      span = "50";
+    } else if (span.toLowerCase() == "s") {
+      span = "15";
+    }
+
     groupQuery = { span_near: { clauses: [], slop: "", in_order: "" } };
   }
   // operator = operatorForNext;
@@ -96,6 +113,11 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
       const nearOccurence = 0;
       if ("span" in mySearchArr[j]) {
         span = mySearchArr[j]["span"];
+        if (span.toLowerCase() == "p") {
+          span = "50";
+        } else if (span.toLowerCase() == "s") {
+          span = "15";
+        }
       } else {
         span = -1;
       }
@@ -194,7 +216,7 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
     //console.log("GROUPQUERYYYY--------------------");
     //console.log(JSON.stringify(groupQuery, 0, 2));
   }
-
+  // console.log(JSON.stringify(groupQuery));
   let finalResponseArr;
   if (validations === 0) {
     finalResponseArr = {
