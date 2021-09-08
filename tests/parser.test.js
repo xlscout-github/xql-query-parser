@@ -337,3 +337,26 @@ test("should parse if query contains various paragraph and sentence proximity op
     ],
   });
 });
+
+test("should parse if single quotes occur inside double quotes or vice versa", () => {
+  const query = `((ab:("DETECT' CONNECT'" PREP SHOCK) PRES text:'MICROWAVE" RADIO"'))`;
+
+  expect(parse(query)).toEqual({
+    key: "multi",
+    span: "S",
+    opt: "PRE",
+    child: [
+      {
+        key: "ab",
+        val: "multi",
+        span: "P",
+        opt: "PRE",
+        child: [
+          { key: "ab", val: `"DETECT' AND CONNECT'"` },
+          { key: "ab", val: "SHOCK" },
+        ],
+      },
+      { key: "text", val: `'MICROWAVE" AND RADIO"'` },
+    ],
+  });
+});

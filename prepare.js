@@ -5,13 +5,24 @@ function isMatchingBrackets(q) {
     "[": "]",
   };
   let sQuote = false;
+  let dQuote = false;
 
   for (let i = 0; i < q.length; i++) {
-    if (q[i] === '"' || q[i] === "'") {
+    if (!dQuote && q[i] === "'") {
       sQuote = !sQuote;
-    } else if (sQuote === false && (q[i] === "(" || q[i] === "[")) {
+    } else if (!sQuote && q[i] === '"') {
+      dQuote = !dQuote;
+    } else if (
+      sQuote === false &&
+      dQuote === false &&
+      (q[i] === "(" || q[i] === "[")
+    ) {
       stack.push(q[i]);
-    } else if (sQuote === false && (q[i] === ")" || q[i] === "]")) {
+    } else if (
+      sQuote === false &&
+      dQuote === false &&
+      (q[i] === ")" || q[i] === "]")
+    ) {
       const last = stack.pop();
 
       if (q[i] !== map[last]) {
