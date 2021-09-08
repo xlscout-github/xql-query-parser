@@ -22,6 +22,14 @@ function EQLgenerator(parsedArr) {
 
   // parsedArr = [parsedArr];
   let outputArr = makeSearchQuery(parsedArr["child"], parsedArr["opt"], span);
+
+  if (outputArr["status"] == "success") {
+    if (!("bool" in outputArr["queryArray"])) {
+      let groupQuery = { bool: { must: [] } };
+      groupQuery["bool"]["must"].push(outputArr["queryArray"]);
+      outputArr["queryArray"] = groupQuery;
+    }
+  }
   return outputArr;
 }
 
@@ -208,7 +216,7 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
     //console.log("GROUPQUERYYYY--------------------");
     //console.log(JSON.stringify(groupQuery, 0, 2));
   }
-
+  // console.log(JSON.stringify(groupQuery));
   let finalResponseArr;
   if (validations === 0) {
     finalResponseArr = {
