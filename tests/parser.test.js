@@ -296,7 +296,7 @@ test("should parse query if multiple spaces happens to be at the end of a value"
   });
 });
 
-test("should parse if query contains various proximity operators", () => {
+test("should parse if query contains various paragraph and sentence proximity operators", () => {
   const query =
     "((ab:(DETECT* NEARP CONNECT* PREP SHOCK) PRES text:MICROWAVE NEARS RADIO*))";
 

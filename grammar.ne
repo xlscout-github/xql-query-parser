@@ -3,22 +3,15 @@
 @{%
 
 function setField(field, value) {
-  if (
-    typeof value === "object" &&
-    value !== null &&
-    (value.leftOperand || value.rightOperand)
-  ) {
+  if (value === null) return null;
+  else if (value.leftOperand || value.rightOperand) {
     if (value.leftOperand) {
       value.leftOperand = setField(field, value.leftOperand);
     }
     if (value.rightOperand) {
       value.rightOperand = setField(field, value.rightOperand);
     }
-  } else if (
-    value !== null &&
-    value.leftOperand !== null &&
-    value.rightOperand !== null
-  ) {
+  } else {
     return { ...value, field };
   }
 
