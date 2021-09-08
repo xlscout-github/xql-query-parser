@@ -1,6 +1,11 @@
 function EQLgenerator(parsedArr) {
   if ("span" in parsedArr) {
     span = parsedArr["span"];
+    if (span.toLowerCase() == "p") {
+      span = "50";
+    } else if (span.toLowerCase() == "s") {
+      span = "15";
+    }
   } else {
     span = -1;
   }
@@ -17,13 +22,20 @@ function EQLgenerator(parsedArr) {
 
   // parsedArr = [parsedArr];
   let outputArr = makeSearchQuery(parsedArr["child"], parsedArr["opt"], span);
+
+  if (outputArr["status"] == "success") {
+    if (!("bool" in outputArr["queryArray"])) {
+      let groupQuery = { bool: { must: [] } };
+      groupQuery["bool"]["must"].push(outputArr["queryArray"]);
+      outputArr["queryArray"] = groupQuery;
+    }
+  }
   return outputArr;
 }
 
 function makeSearchQuery(mySearchArr, operator, span = -1) {
   let validations = 1;
   let errorMsg = "";
-  // let operator = [];
   let regExp;
   let matchFound = [];
   let qry;
@@ -34,26 +46,28 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
   if ("span" in mySearchArr) {
     span = mySearchArr["span"];
   }
-
   // mySearchArr = mySearchArr["child"];
   if (span == -1) {
     groupQuery = { bool: { must: [], should: [], must_not: [] } };
   } else {
+    if (span.toLowerCase() == "p") {
+      span = "50";
+    } else if (span.toLowerCase() == "s") {
+      span = "15";
+    }
+
     groupQuery = { span_near: { clauses: [], slop: "", in_order: "" } };
   }
-  // operator = operatorForNext;
-  // return;
   for (let j = 0; j < mySearchArr.length; j++) {
     let currentField = mySearchArr[j]["key"];
     let modifiedQuery = mySearchArr[j].val;
-    // /    operator = mySearchArr[j].opt;
     let str = "";
     if (
       currentField === "multi" &&
       "child" in mySearchArr[j] &&
       mySearchArr[j].child.length > 0
     ) {
-      //console.log("***multi key");
+      // console.log("***multi key");
       const Tempreturnarr = makeSearchQuery(
         mySearchArr[j].child,
         mySearchArr[j].opt
@@ -83,7 +97,7 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
         mySearchArr[j].child.length === 0) ||
       (currentField === "multi" && !("child" in mySearchArr[j]))
     ) {
-      //console.log("***invalid case");
+      // console.log("***invalid case");
       // nothing to do, let it go as it is
     } else if (
       currentField !== "" &&
@@ -92,22 +106,33 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
       "child" in mySearchArr[j] &&
       mySearchArr[j].child.length > 0
     ) {
-      //console.log("***multi value");
+      // console.log("***multi value");
       const nearOccurence = 0;
-      if ("span" in mySearchArr[j]) {
-        span = mySearchArr[j]["span"];
+      temphavenearoccured = 0;
+      if (span != -1) {
+        temphavenearoccured = 1;
       } else {
-        span = -1;
+        temphavenearoccured = 0;
+      }
+      if ("span" in mySearchArr[j]) {
+        tempspan = mySearchArr[j]["span"];
+        if (tempspan.toLowerCase() == "p") {
+          tempspan = "50";
+        } else if (tempspan.toLowerCase() == "s") {
+          tempspan = "15";
+        }
+      } else {
+        tempspan = -1;
       }
       Tempreturnarr = makeFinalQuery(
         mySearchArr[j].child,
-        0,
+        temphavenearoccured,
         mySearchArr[j].opt,
-        span
+        tempspan
       );
       qry = Tempreturnarr;
     } else {
-      //console.log("making single query");
+      // console.log("making single query");
       if (typeof modifiedQuery === "string") {
         if (
           operator.toLowerCase() == "pre" ||
@@ -194,7 +219,6 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
     //console.log("GROUPQUERYYYY--------------------");
     //console.log(JSON.stringify(groupQuery, 0, 2));
   }
-
   let finalResponseArr;
   if (validations === 0) {
     finalResponseArr = {
