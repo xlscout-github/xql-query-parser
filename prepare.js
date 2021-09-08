@@ -102,14 +102,15 @@ function prepare(q) {
   let start = false;
   let index = 0;
   let sQuote = false;
-  let eQuote = false;
+  let dQuote = false;
 
   for (let ch = 0; ch < q.length; ch++) {
-    if (q[ch] === '"' || q[ch] === "'") {
-      if (sQuote) eQuote = true;
-      sQuote = true;
+    if (!dQuote && q[ch] === "'") {
+      sQuote = !sQuote;
+    } else if (!sQuote && q[ch] === '"') {
+      dQuote = !dQuote;
     } else if (q[ch] !== " " && q[ch] !== "(" && q[ch] !== ")") {
-      if (sQuote === eQuote) {
+      if (sQuote === false && dQuote === false) {
         if (q[ch] === ":" && construct !== "") {
           construct += q[ch];
           construct += evalSpaces(q, ch + 1);
@@ -119,7 +120,7 @@ function prepare(q) {
           start = false;
           index = 0;
           sQuote = false;
-          eQuote = false;
+          dQuote = false;
         } else {
           construct += q[ch];
           if (!start) {
@@ -129,12 +130,12 @@ function prepare(q) {
         }
       }
     } else if (q[ch] === " ") {
-      if (sQuote === eQuote) {
+      if (sQuote === false && dQuote === false) {
         construct = "";
         start = false;
         index = 0;
         sQuote = false;
-        eQuote = false;
+        dQuote = false;
       }
     }
   }
@@ -345,12 +346,18 @@ function fillDefaultOperator(q, startIndices, endIndices) {
     let construct = "";
     let onlyBracket = false;
     let sQuote = false;
-    let eQuote = false;
+    let dQuote = false;
 
     for (let ch = 0; ch < inter.length; ch++) {
-      if (inter[ch] === '"' || inter[ch] === "'") {
-        if (sQuote) eQuote = true;
-        sQuote = true;
+      if (!dQuote && inter[ch] === "'") {
+        sQuote = !sQuote;
+        construct += inter[ch];
+        if (!start) {
+          index = ch;
+          start = true;
+        }
+      } else if (!sQuote && inter[ch] === '"') {
+        dQuote = !dQuote;
         construct += inter[ch];
         if (!start) {
           index = ch;
@@ -371,7 +378,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
           start = true;
         }
       } else if (inter[ch] === " ") {
-        if (sQuote === eQuote) {
+        if (sQuote === false && dQuote === false) {
           if (onlyBracket) {
             construct += inter[ch];
           } else {
@@ -405,7 +412,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
               start = false;
               index = 0;
               sQuote = false;
-              eQuote = false;
+              dQuote = false;
             } else {
               construct += truct.trimEnd();
               if (explicit) ch = char - 2;

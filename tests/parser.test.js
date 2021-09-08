@@ -352,11 +352,11 @@ test("should parse if single quotes occur inside double quotes or vice versa", (
         span: "P",
         opt: "PRE",
         child: [
-          { key: "ab", val: `"DETECT' AND CONNECT'"` },
+          { key: "ab", val: `"DETECT' CONNECT'"` },
           { key: "ab", val: "SHOCK" },
         ],
       },
-      { key: "text", val: `'MICROWAVE" AND RADIO"'` },
+      { key: "text", val: `'MICROWAVE" RADIO"'` },
     ],
   });
 });
