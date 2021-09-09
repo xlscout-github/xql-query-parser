@@ -24,11 +24,9 @@ function EQLgenerator(parsedArr) {
   let outputArr = makeSearchQuery(parsedArr["child"], parsedArr["opt"], span);
 
   if (outputArr["status"] == "success") {
-    if (!("bool" in outputArr["queryArray"])) {
-      let groupQuery = { bool: { must: [] } };
-      groupQuery["bool"]["must"].push(outputArr["queryArray"]);
-      outputArr["queryArray"] = groupQuery;
-    }
+    let groupQuery = { bool: { must: [], should: [], must_not: [] } };
+    groupQuery["bool"]["must"].push(outputArr["queryArray"]);
+    outputArr["queryArray"] = groupQuery;
   }
   return outputArr;
 }
