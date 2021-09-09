@@ -145,7 +145,7 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
           }
         } else {
           modifiedQuery = modifiedQuery.trim();
-          str = "(" + currentField + ":(" + modifiedQuery.toLowerCase() + "))";
+          str = "(" + currentField + ":(" + modifiedQuery + "))";
           const temp = {};
           temp.query_string = {};
           temp.query_string = { default_operator: "AND", query: str };
@@ -268,7 +268,12 @@ function makeWildCardQuery(field, value) {
 function maketermQuery(field, value) {
   const x = {};
   x.span_term = {};
-  x.span_term[field] = value.toLowerCase();
+  if (value.indexOf('"') != -1) {
+    //no conversion of '"' encountered
+  } else {
+    value = value.toLowerCase();
+  }
+  x.span_term[field] = value;
   return x;
 }
 
@@ -495,7 +500,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
       } else {
         //console.log("heree  " + searchValue);
         //console.log("heree  " + operator);
-        str = "(" + searchfield + ":(" + searchValue.toLowerCase() + "))";
+        str = "(" + searchfield + ":(" + searchValue + "))";
         tempqry = { query_string: { default_operator: "AND", query: str } };
         if (operator == "AND") {
           tempquery = { bool: { must: [] } };
@@ -664,7 +669,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
         //console.log("HEREE MULTI CHILD");
         //console.log(searchValue);
         //console.log(searchfield);
-        str = "(" + searchfield + ":(" + searchValue.toLowerCase() + "))";
+        str = "(" + searchfield + ":(" + searchValue + "))";
         tempqry = { query_string: { default_operator: "AND", query: str } };
 
         //console.log("nextchildmulti");
@@ -750,11 +755,11 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           //console.log(JSON.stringify(tempquery, 0, 2));
         } else {
           //both are non multi and operator is not proximity
-          str = "(" + searchfield + ":(" + searchValue.toLowerCase() + "))";
+          str = "(" + searchfield + ":(" + searchValue + "))";
           tempqry = { query_string: { default_operator: "AND", query: str } };
           let tempqry2;
           if (operator == "OR") {
-            str = "(" + nextObj.key + ":(" + nextObj.val.toLowerCase() + "))";
+            str = "(" + nextObj.key + ":(" + nextObj.val + "))";
             tempqry2 = {
               query_string: { default_operator: "AND", query: str },
             };
@@ -763,7 +768,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
             tempquery2.bool.should.push(tempqry2);
             tempquery = tempquery2;
           } else if (operator == "NOT") {
-            str = "(" + nextObj.key + ":(" + nextObj.val.toLowerCase() + "))";
+            str = "(" + nextObj.key + ":(" + nextObj.val + "))";
             tempqry2 = {
               query_string: { default_operator: "AND", query: str },
             };
@@ -772,7 +777,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
             tempquery2.bool.must_not.push(tempqry2);
             tempquery = tempquery2;
           } else if (operator == "AND") {
-            str = "(" + nextObj.key + ":(" + nextObj.val.toLowerCase() + "))";
+            str = "(" + nextObj.key + ":(" + nextObj.val + "))";
             tempqry2 = {
               query_string: { default_operator: "AND", query: str },
             };
