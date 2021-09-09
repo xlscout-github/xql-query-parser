@@ -24,11 +24,9 @@ function EQLgenerator(parsedArr) {
   let outputArr = makeSearchQuery(parsedArr["child"], parsedArr["opt"], span);
 
   if (outputArr["status"] == "success") {
-    if (!("bool" in outputArr["queryArray"])) {
-      let groupQuery = { bool: { must: [] } };
-      groupQuery["bool"]["must"].push(outputArr["queryArray"]);
-      outputArr["queryArray"] = groupQuery;
-    }
+    let groupQuery = { bool: { must: [], should: [], must_not: [] } };
+    groupQuery["bool"]["must"].push(outputArr["queryArray"]);
+    outputArr["queryArray"] = groupQuery;
   }
   return outputArr;
 }
@@ -147,7 +145,7 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
           }
         } else {
           modifiedQuery = modifiedQuery.trim();
-          str = "(" + currentField + ":(" + modifiedQuery + "))";
+          str = "(" + currentField + ":(" + modifiedQuery.toLowerCase() + "))";
           const temp = {};
           temp.query_string = {};
           temp.query_string = { default_operator: "AND", query: str };
@@ -242,7 +240,7 @@ function makeWildCardSpanQuery(field, value) {
   wildcardquery.span_multi.match = {};
   wildcardquery.span_multi.match.wildcard = {};
   wildcardquery.span_multi.match.wildcard[field] = {
-    value: value,
+    value: value.toLowerCase(),
     rewrite: "top_terms_4092",
   };
   return wildcardquery;
@@ -270,7 +268,7 @@ function makeWildCardQuery(field, value) {
 function maketermQuery(field, value) {
   const x = {};
   x.span_term = {};
-  x.span_term[field] = value;
+  x.span_term[field] = value.toLowerCase();
   return x;
 }
 
@@ -497,7 +495,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
       } else {
         //console.log("heree  " + searchValue);
         //console.log("heree  " + operator);
-        str = "(" + searchfield + ":(" + searchValue + "))";
+        str = "(" + searchfield + ":(" + searchValue.toLowerCase() + "))";
         tempqry = { query_string: { default_operator: "AND", query: str } };
         if (operator == "AND") {
           tempquery = { bool: { must: [] } };
@@ -666,7 +664,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
         //console.log("HEREE MULTI CHILD");
         //console.log(searchValue);
         //console.log(searchfield);
-        str = "(" + searchfield + ":(" + searchValue + "))";
+        str = "(" + searchfield + ":(" + searchValue.toLowerCase() + "))";
         tempqry = { query_string: { default_operator: "AND", query: str } };
 
         //console.log("nextchildmulti");
@@ -752,11 +750,11 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           //console.log(JSON.stringify(tempquery, 0, 2));
         } else {
           //both are non multi and operator is not proximity
-          str = "(" + searchfield + ":(" + searchValue + "))";
+          str = "(" + searchfield + ":(" + searchValue.toLowerCase() + "))";
           tempqry = { query_string: { default_operator: "AND", query: str } };
           let tempqry2;
           if (operator == "OR") {
-            str = "(" + nextObj.key + ":(" + nextObj.val + "))";
+            str = "(" + nextObj.key + ":(" + nextObj.val.toLowerCase() + "))";
             tempqry2 = {
               query_string: { default_operator: "AND", query: str },
             };
@@ -765,7 +763,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
             tempquery2.bool.should.push(tempqry2);
             tempquery = tempquery2;
           } else if (operator == "NOT") {
-            str = "(" + nextObj.key + ":(" + nextObj.val + "))";
+            str = "(" + nextObj.key + ":(" + nextObj.val.toLowerCase() + "))";
             tempqry2 = {
               query_string: { default_operator: "AND", query: str },
             };
@@ -774,7 +772,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
             tempquery2.bool.must_not.push(tempqry2);
             tempquery = tempquery2;
           } else if (operator == "AND") {
-            str = "(" + nextObj.key + ":(" + nextObj.val + "))";
+            str = "(" + nextObj.key + ":(" + nextObj.val.toLowerCase() + "))";
             tempqry2 = {
               query_string: { default_operator: "AND", query: str },
             };
