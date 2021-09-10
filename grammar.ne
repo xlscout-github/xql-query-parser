@@ -52,7 +52,16 @@ main -> P {% id %} |
 
 # Parentheses
 P -> "(" _ F _ ")" {% (d) => d[2] %} |
-     "(" _ V _ ")" {% (d) => ({ ...d[2], explicit: true }) %} |
+     "(" _ V _ ")" 
+     {% 
+     ([, , val]) => {
+       if (val != null) {
+         return { ...val, explicit: true };
+       } else {
+         return null;
+       }
+      } 
+     %} |
      "(" _ ")" {% (d) => null %} |
      VAL {% (d) => setDefaultField(d[0]) %}
 

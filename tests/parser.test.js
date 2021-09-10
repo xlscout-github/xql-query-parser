@@ -360,3 +360,24 @@ test("should parse if single quotes occur inside double quotes or vice versa", (
     ],
   });
 });
+
+test("should parse if date fields contains asterisk in their value", () => {
+  const query =
+    "pdyear:(([2020 TO *])) AND pd:([* TO 2021]) OR pdyear: [* to *]";
+
+  expect(parse(query)).toEqual({
+    key: "multi",
+    opt: "OR",
+    child: [
+      {
+        key: "multi",
+        opt: "AND",
+        child: [
+          { key: "pdyear", val: { from: "2020", to: "*" } },
+          { key: "pd", val: { from: "*", to: "2021" } },
+        ],
+      },
+      { key: "pdyear", val: { from: "*", to: "*" } },
+    ],
+  });
+});
