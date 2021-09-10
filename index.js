@@ -11,7 +11,7 @@ function pickKeyParsed(q, field) {
 
 function getUniqueFields(q) {
   const { foundwords } = getFields(q);
-  return Array.from(new Set(foundwords));
+  return Array.from(new Set(foundwords.map((word) => word.slice(0, -1))));
 }
 
 function convertXQLtoEQL(strQry) {
