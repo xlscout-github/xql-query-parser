@@ -88,15 +88,9 @@ function evalSpaces(q, i) {
   return " ".repeat(count);
 }
 
-function prepare(q) {
-  if (!isMatchingBrackets(q)) {
-    throw new Error("Unbalanced Brackets");
-  }
-
+function getFields(q) {
   const foundwords = [];
   let startFieldIndices = [];
-  let startValIndices = [];
-  let endValIndices = [];
 
   let construct = "";
   let start = false;
@@ -139,6 +133,25 @@ function prepare(q) {
       }
     }
   }
+
+  return {
+    foundwords,
+    startFieldIndices,
+  };
+}
+
+function prepare(q) {
+  if (!isMatchingBrackets(q)) {
+    throw new Error("Unbalanced Brackets");
+  }
+
+  const fields = getFields(q);
+
+  const { foundwords } = fields;
+  let { startFieldIndices } = fields;
+
+  let startValIndices = [];
+  let endValIndices = [];
 
   if (startFieldIndices.length) {
     let k;
@@ -463,4 +476,5 @@ function fillDefaultOperator(q, startIndices, endIndices) {
 module.exports = {
   prepareQ,
   pickKey,
+  getFields,
 };

@@ -1,5 +1,5 @@
 const { parse } = require("./parser");
-const { pickKey } = require("./prepare");
+const { pickKey, getFields } = require("./prepare");
 const { EQLgenerator } = require("./EQLgenerator");
 
 function pickKeyParsed(q, field) {
@@ -9,6 +9,11 @@ function pickKeyParsed(q, field) {
   }));
 }
 
+function getUniqueFields(q) {
+  const { foundwords } = getFields(q);
+  return Array.from(new Set(foundwords));
+}
+
 function convertXQLtoEQL(strQry) {
   return EQLgenerator(parse(strQry));
 }
@@ -16,5 +21,6 @@ function convertXQLtoEQL(strQry) {
 module.exports = {
   parse,
   pickKeyParsed,
+  getUniqueFields,
   convertXQLtoEQL,
 };

@@ -5,7 +5,6 @@ let result = parse(
   `((ab:("DETECT' CONNECT'" PREP SHOCK) PRES text:'MICROWAVE" RADIO"'))`
 );
 
-//const result = parse('(DETECT* nears (CONNECT* prep SOURCE*))');
 console.dir(result, { depth: null });
 
 // result = EQLgenerator(result);
