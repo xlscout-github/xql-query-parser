@@ -320,7 +320,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
       } else if (inter[ch] === "[") {
         beginIndex = dateParams.push(inter[ch]) - 1;
       } else if (inter[ch] === "]") {
-        if (isNaN(Number(datePart))) {
+        if (isNaN(Number(datePart)) && datePart !== "*") {
           isDate = false;
           break;
         }
@@ -330,7 +330,11 @@ function fillDefaultOperator(q, startIndices, endIndices) {
       } else if (inter[ch] !== " ") {
         datePart += inter[ch];
       } else if (inter[ch] === " " && datePart !== "") {
-        if (isNaN(Number(datePart)) && datePart.toLowerCase() !== "to") {
+        if (
+          isNaN(Number(datePart)) &&
+          datePart !== "*" &&
+          datePart.toLowerCase() !== "to"
+        ) {
           isDate = false;
           break;
         }
@@ -344,9 +348,11 @@ function fillDefaultOperator(q, startIndices, endIndices) {
       isDate &&
       dateParams.length === 2 * beginIndex + 5 &&
       dateParams[beginIndex] === "[" &&
-      !isNaN(dateParams[beginIndex + 1]) &&
+      (dateParams[beginIndex + 1] === "*" ||
+        !isNaN(dateParams[beginIndex + 1])) &&
       dateParams[beginIndex + 2].toLowerCase() === "to" &&
-      !isNaN(dateParams[beginIndex + 3]) &&
+      (dateParams[beginIndex + 3] === "*" ||
+        !isNaN(dateParams[beginIndex + 3])) &&
       dateParams[beginIndex + 4] === "]"
     ) {
       continue;

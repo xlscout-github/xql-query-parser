@@ -1,9 +1,7 @@
 const { parse } = require("./parser");
 // const { EQLgenerator } = require("./EQLgenerator");
 
-let result = parse(
-  `((ab:("DETECT' CONNECT'" PREP SHOCK) PRES text:'MICROWAVE" RADIO"'))`
-);
+let result = parse(`pdyear:(([2020 TO *])) AND ipc.grp:(G06F30)`);
 
 console.dir(result, { depth: null });
 

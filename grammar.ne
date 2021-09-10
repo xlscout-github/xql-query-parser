@@ -107,7 +107,10 @@ VAL ->
     NVAL {% id %} |
     "\"" DSVAL "\"" {% (d) => d[0] + d[1] + d[2] %} |
     "'" SSVAL "'" {% (d) => d[0] + d[1] + d[2] %} |
-    "[" _ NUM __ TO __ NUM _ "]" {% (d) => ({ type: "DATE", from: d[2], to: d[6] }) %}
+    "[" _ NUMORSTAR __ TO __ NUMORSTAR _ "]" {% (d) => ({ type: "DATE", from: d[2], to: d[6] }) %}
+
+NUMORSTAR -> NUM {% id %} |
+             "*" {% id %}
 
 # CJK Radicals Supplement \u2E80-\u2EFF
 # Kangxi Radicals \u2F00-\u2FDF
