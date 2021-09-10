@@ -90,7 +90,7 @@ function evalSpaces(q, i) {
 
 function getFields(q) {
   const foundwords = [];
-  let startFieldIndices = [];
+  const startFieldIndices = [];
 
   let construct = "";
   let start = false;
