@@ -217,14 +217,14 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
 
       switch (operator) {
         case "AND":
-          tempQueryArray.bool.must.push(groupQuery);
           tempQueryArray.bool.must.push(qry);
+          tempQueryArray.bool.must.push(groupQuery);
           groupQuery = tempQueryArray;
           break;
 
         case "OR":
-          tempQueryArray.bool.should.push(groupQuery);
           tempQueryArray.bool.should.push(qry);
+          tempQueryArray.bool.should.push(groupQuery);
           groupQuery = tempQueryArray;
           break;
 
@@ -350,6 +350,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
     currentObj.position = "first";
     nonmultiOperand.push(currentObj);
   }
+
   if (
     nextObj.key !== "" &&
     nextObj.key !== "multi" &&
@@ -357,12 +358,13 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
     "child" in nextObj &&
     nextObj.child.length > 0
   ) {
-    nextObj.position = "first";
+    nextObj.position = "second";
     multiOperand.push(nextObj);
   } else {
-    nextObj.position = "first";
+    nextObj.position = "second";
     nonmultiOperand.push(nextObj);
   }
+
   console.log(multiOperand.length);
   console.log(nonmultiOperand.length);
   console.log(havenearoccured);
@@ -430,20 +432,22 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
         tempquery = { bool: { must: [] } };
         if (operator == "AND") {
           //#querytotest- ((text:((smart NEAR2 (wearable OR wearables OR watch OR watches)) AND (heart NEAR2 rate))) NOT (tac:(smart NEAR2 (wearable OR wearables))) OR (tac:(smart NEAR4 (watch OR watches))))
-          tempquery2 = { bool: { must: [] } };
-          tempquery2.bool.must.push(tempqueryArr2);
+          tempquery.bool.must.push(tempqueryArr1);
+          tempquery.bool.must.push(tempqueryArr2);
         } else if (operator === "OR") {
-          tempquery2 = { bool: { should: [] } };
-          tempquery2.bool.should.push(tempqueryArr2);
+          //#querytotest- (text: ((silicone* OR (("r2sio") AND x) OR (poly pre1 siloxane) OR siloxane* OR polysilioxane*))) AND ((pa: ((dow OR wacker OR momenteo))))
+          tempquery = { bool: { should: [] } };
+          tempquery.bool.should.push(tempqueryArr1);
+          tempquery.bool.should.push(tempqueryArr2);
         } else if (operator == "NOT") {
-          tempquery2 = { bool: { must_not: [] } };
-          tempquery2.bool.must_not.push(tempqueryArr2);
+          tempquery = { bool: { must_not: [] } };
+          tempquery.bool.must_not.push(tempqueryArr1);
+          tempquery.bool.must_not.push(tempqueryArr2);
         } else {
+          console.log("operator");
+          console.log(operator);
+          console.log("SOMEE UNCOVERED CASE");
         }
-        tempquery.bool.must.push(tempqueryArr1);
-        tempquery.bool.must.push(tempquery2);
-        console.log(JSON.stringify(tempquery2));
-        console.log(JSON.stringify(tempquery));
       }
     } else if (nonmultiOperand.length > 0) {
       secondOperand = nonmultiOperand[0];
@@ -514,23 +518,35 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
         str = "(" + searchfield + ":(" + searchValue + "))";
         tempqry = { query_string: { default_operator: "AND", query: str } };
         tempquery = { bool: { must: [] } };
-        console.log("leftonee");
 
+        console.log("leftonee" + operator);
+        console.log(JSON.stringify(tempqry));
         console.log("hert8");
         if (operator == "AND") {
-          tempquery2 = { bool: { must: [] } };
-          tempquery2.bool.must.push(tempqueryArr1);
+          tempquery = { bool: { must: [] } };
+          tempquery.bool.must.push(tempqueryArr1);
+          tempquery.bool.must.push(tempqry);
         } else if (operator === "OR") {
-          tempquery2 = { bool: { should: [] } };
-          tempquery2.bool.should.push(tempqueryArr1);
+          // #querytotest- (text: ((silicone* OR (("r2sio") AND x) OR (poly pre1 siloxane) OR siloxane* OR polysilioxane*))) AND ((pa: ((dow OR wacker OR momenteo))))
+          tempquery = { bool: { should: [] } };
+          tempquery.bool.should.push(tempqueryArr1);
+          tempquery.bool.should.push(tempqry);
         } else if (operator == "NOT") {
-          tempquery2 = { bool: { must_not: [] } };
-          tempquery2.bool.must_not.push(tempqueryArr1);
+          tempquery = { bool: { must_not: [], must: [] } };
+          if (searchPosition == "first") {
+            console.log("first not");
+            tempquery.bool.must.push(tempqry);
+            tempquery.bool.must_not.push(tempqueryArr1);
+          } else {
+            console.log("second not");
+            tempquery.bool.must.push(tempqueryArr1);
+            tempquery.bool.must_not.push(tempqry);
+          }
         } else {
           // wrong case
+          console.log("unhandled casaee");
         }
-        tempquery.bool.must.push(tempqry);
-        tempquery.bool.must.push(tempquery2);
+        console.log(JSON.stringify(tempquery));
       }
     } else {
       tempquery = tempqueryArr1;
@@ -750,13 +766,14 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           //console.log("-----------------finalq uery here is ");
           //console.log(JSON.stringify(tempquery, 0, 2));
         } else {
-          console.log("leftonee20");
+          console.log("leftonee20 " + operator);
           //both are non multi and operator is not proximity
           str = "(" + searchfield + ":(" + searchValue + "))";
           tempqry = { query_string: { default_operator: "AND", query: str } };
           let tempqry2;
           console.log("het");
           if (operator == "OR") {
+            // #querytotest- ((tac:(autonomous NEAR2 (vehicle* OR car OR cars OR automobile*))) NOT tac:(manual NEAR2 (transmission OR gear*)))
             str = "(" + nextObj.key + ":(" + nextObj.val + "))";
             tempqry2 = {
               query_string: { default_operator: "AND", query: str },
@@ -775,6 +792,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
             tempquery2.bool.must_not.push(tempqry2);
             tempquery = tempquery2;
           } else if (operator == "AND") {
+            // #querytotest- (text: ((silicone* OR (("r2sio") AND x) OR (poly pre1 siloxane) OR siloxane* OR polysilioxane*))) AND ((pa: ((dow OR wacker OR momenteo))))
             str = "(" + nextObj.key + ":(" + nextObj.val + "))";
             tempqry2 = {
               query_string: { default_operator: "AND", query: str },
@@ -783,8 +801,8 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
             tempquery2.bool.must.push(tempqry);
             tempquery2.bool.must.push(tempqry2);
             tempquery = tempquery2;
-          } else {
-            //console.log("irrelevant case");
+            console.log(JSON.stringify(tempquery));
+            console.log("irrelevant case");
             //console.log("nextopt ios " + operator);
           }
         }
