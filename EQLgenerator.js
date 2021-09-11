@@ -195,11 +195,21 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
         case "pre":
           groupQuery.span_near.clauses.push(qry);
           groupQuery.span_near.in_order = "true";
+          if (span.toLowerCase() == "p") {
+            span = "50";
+          } else if (span.toLowerCase() == "s") {
+            span = "15";
+          }
           groupQuery.span_near.slop = span;
           break;
 
         case "NEAR":
         case "near":
+          if (span.toLowerCase() == "p") {
+            span = "50";
+          } else if (span.toLowerCase() == "s") {
+            span = "15";
+          }
           groupQuery.span_near.clauses.push(qry);
           groupQuery.span_near.in_order = "false";
           groupQuery.span_near.slop = span;
@@ -238,6 +248,11 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
         case "pre":
           groupQuery.span_near.clauses.push(qry);
           groupQuery.span_near.in_order = "true";
+          if (span.toLowerCase() == "p") {
+            span = "50";
+          } else if (span.toLowerCase() == "s") {
+            span = "15";
+          }
           groupQuery.span_near.slop = span;
           break;
 
@@ -245,6 +260,11 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
         case "near":
           groupQuery.span_near.clauses.push(qry);
           groupQuery.span_near.in_order = "false";
+          if (span.toLowerCase() == "p") {
+            span = "50";
+          } else if (span.toLowerCase() == "s") {
+            span = "15";
+          }
           groupQuery.span_near.slop = span;
           break;
       }
@@ -415,6 +435,11 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           } else {
             tempquery.span_near.in_order = "true";
           }
+          if (span.toLowerCase() == "p") {
+            span = "50";
+          } else if (span.toLowerCase() == "s") {
+            span = "15";
+          }
           // }
           tempquery.span_near.slop = span;
         } else if (operator == "OR") {
@@ -507,6 +532,11 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
             } else {
               tempquery.span_near.in_order = "false";
             }
+          }
+          if (span.toLowerCase() == "p") {
+            span = "50";
+          } else if (span.toLowerCase() == "s") {
+            span = "15";
           }
           tempquery.span_near.slop = span;
           console.log("finally completeled");
@@ -607,6 +637,11 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           } else {
             tempquery.span_near.in_order = "false";
           }
+          if (span.toLowerCase() == "p") {
+            span = "50";
+          } else if (span.toLowerCase() == "s") {
+            span = "15";
+          }
           tempquery.span_near.slop = span;
         } else {
           console.log("coming in wrong case");
@@ -668,6 +703,11 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
             } else {
               tempquery.span_near.in_order = "false";
             }
+          }
+          if (span.toLowerCase() == "p") {
+            span = "50";
+          } else if (span.toLowerCase() == "s") {
+            span = "15";
           }
           tempquery.span_near.slop = span;
           //console.log("finalq uery here is ");
@@ -761,6 +801,11 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
             tempquery.span_near.in_order = "true";
           } else {
             tempquery.span_near.in_order = "false";
+          }
+          if (span.toLowerCase() == "p") {
+            span = "50";
+          } else if (span.toLowerCase() == "s") {
+            span = "15";
           }
           tempquery.span_near.slop = span;
           //console.log("-----------------finalq uery here is ");
