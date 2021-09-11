@@ -148,7 +148,7 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
           str = "(" + currentField + ":(" + modifiedQuery + "))";
           const temp = {};
           temp.query_string = {};
-          temp.query_string = { default_operator: "AND", query: str };
+          temp.query_string = { default_operator: "AND", query: str, analyze_wildcard: true };
           qry = temp;
         }
       } else {
@@ -546,7 +546,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
         }
       } else {
         str = "(" + searchfield + ":(" + searchValue + "))";
-        tempqry = { query_string: { default_operator: "AND", query: str } };
+        tempqry = { query_string: { default_operator: "AND", query: str, analyze_wildcard: true } };
         tempquery = { bool: { must: [] } };
 
         console.log("leftonee" + operator);
@@ -727,7 +727,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
       ) {
         console.log("left565");
         str = "(" + searchfield + ":(" + searchValue + "))";
-        tempqry = { query_string: { default_operator: "AND", query: str } };
+        tempqry = { query_string: { default_operator: "AND", query: str, analyze_wildcard: true } };
         tempqry2 = makeFinalQuery(
           nextObj.child,
           havenearoccured,
@@ -814,14 +814,14 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           console.log("leftonee20 " + operator);
           //both are non multi and operator is not proximity
           str = "(" + searchfield + ":(" + searchValue + "))";
-          tempqry = { query_string: { default_operator: "AND", query: str } };
+          tempqry = { query_string: { default_operator: "AND", query: str, analyze_wildcard: true } };
           let tempqry2;
           console.log("het");
           if (operator == "OR") {
             // #querytotest- ((tac:(autonomous NEAR2 (vehicle* OR car OR cars OR automobile*))) NOT tac:(manual NEAR2 (transmission OR gear*)))
             str = "(" + nextObj.key + ":(" + nextObj.val + "))";
             tempqry2 = {
-              query_string: { default_operator: "AND", query: str },
+              query_string: { default_operator: "AND", query: str, analyze_wildcard: true },
             };
             tempquery2 = { bool: { should: [] } };
             tempquery2.bool.should.push(tempqry);
@@ -830,7 +830,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           } else if (operator == "NOT") {
             str = "(" + nextObj.key + ":(" + nextObj.val + "))";
             tempqry2 = {
-              query_string: { default_operator: "AND", query: str },
+              query_string: { default_operator: "AND", query: str, analyze_wildcard: true },
             };
             tempquery2 = { bool: { should: [] } };
             tempquery2.bool.must_not.push(tempqry);
@@ -840,7 +840,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
             // #querytotest- (text: ((silicone* OR (("r2sio") AND x) OR (poly pre1 siloxane) OR siloxane* OR polysilioxane*))) AND ((pa: ((dow OR wacker OR momenteo))))
             str = "(" + nextObj.key + ":(" + nextObj.val + "))";
             tempqry2 = {
-              query_string: { default_operator: "AND", query: str },
+              query_string: { default_operator: "AND", query: str, analyze_wildcard: true },
             };
             tempquery2 = { bool: { must: [] } };
             tempquery2.bool.must.push(tempqry);
