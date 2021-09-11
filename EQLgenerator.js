@@ -104,7 +104,7 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
       "child" in mySearchArr[j] &&
       mySearchArr[j].child.length > 0
     ) {
-      // console.log("***multi value");
+      console.log("***multi value");
       const nearOccurence = 0;
       temphavenearoccured = 0;
       if (span != -1) {
@@ -154,32 +154,15 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
       } else {
         const temp = {};
         let tempDate;
-        if (modifiedQuery.from === "*") {
-          modifiedQuery.from = new Date(1699, 0, 1, 0, 0, 0, 0);
-          tempDate = modifiedQuery.from;
-          modifiedQuery.from =
-            tempDate.getFullYear() +
-            "" +
-            ("0" + (tempDate.getMonth() + 1)).slice(-2) +
-            "" +
-            ("0" + tempDate.getDate()).slice(-2);
-        }
-        if (modifiedQuery.to === "*") {
-          modifiedQuery.to = new Date();
-          tempDate = modifiedQuery.to;
-          modifiedQuery.to =
-            tempDate.getFullYear() +
-            "" +
-            ("0" + (tempDate.getMonth() + 1)).slice(-2) +
-            "" +
-            ("0" + tempDate.getDate()).slice(-2);
-        }
         temp.range = {};
+        temp.range[currentField] = {};
+        if (modifiedQuery.from != "*") {
+          temp.range[currentField].gte = modifiedQuery.from;
+        }
+        if (modifiedQuery.to != "*") {
+          temp.range[currentField].lte = modifiedQuery.to;
+        }
 
-        temp.range[currentField] = {
-          gte: modifiedQuery.from,
-          lte: modifiedQuery.to,
-        };
         qry = temp;
       }
     }
@@ -187,35 +170,85 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
     if (validations === 0) {
       break;
     }
-    switch (operator) {
-      case "AND":
-        groupQuery.bool.must.push(qry);
-        break;
+    if (j === 0) {
+      console.log("heree  " + operator);
+      switch (operator) {
+        case "AND":
+        case "OR":
+        case "NOT":
+          groupQuery.bool.must.push(qry);
+          console.log(JSON.stringify(groupQuery));
+          break;
 
-      case "OR":
-        groupQuery.bool.should.push(qry);
-        break;
+        // case "OR":
+        //   groupQuery.bool.should.push(qry);
+        //   console.log(JSON.stringify(groupQuery));
+        //   break;
 
-      case "NOT":
-        groupQuery.bool.must_not.push(qry);
-        break;
+        // case "NOT":
+        //   groupQuery.bool.must_not.push(qry);
+        //   console.log(JSON.stringify(groupQuery));
 
-      case "PRE":
-      case "pre":
-        groupQuery.span_near.clauses.push(qry);
-        groupQuery.span_near.in_order = "true";
-        groupQuery.span_near.slop = span;
-        break;
+        //   break;
 
-      case "NEAR":
-      case "near":
-        groupQuery.span_near.clauses.push(qry);
-        groupQuery.span_near.in_order = "false";
-        groupQuery.span_near.slop = span;
-        break;
+        case "PRE":
+        case "pre":
+          groupQuery.span_near.clauses.push(qry);
+          groupQuery.span_near.in_order = "true";
+          groupQuery.span_near.slop = span;
+          break;
+
+        case "NEAR":
+        case "near":
+          groupQuery.span_near.clauses.push(qry);
+          groupQuery.span_near.in_order = "false";
+          groupQuery.span_near.slop = span;
+          break;
+      }
+    } else {
+      console.log("here2e");
+      let tempQueryArray = {};
+      tempQueryArray = { bool: { must: [], should: [], must_not: [] } };
+      console.log(operator);
+      console.log(JSON.stringify(qry));
+      console.log("---------------");
+      console.log(JSON.stringify(groupQuery));
+      console.log("------------------------------------");
+
+      switch (operator) {
+        case "AND":
+          tempQueryArray.bool.must.push(groupQuery);
+          tempQueryArray.bool.must.push(qry);
+          groupQuery = tempQueryArray;
+          break;
+
+        case "OR":
+          tempQueryArray.bool.should.push(groupQuery);
+          tempQueryArray.bool.should.push(qry);
+          groupQuery = tempQueryArray;
+          break;
+
+        case "NOT":
+          tempQueryArray = groupQuery;
+          groupQuery.bool.must_not.push(qry);
+          groupQuery = tempQueryArray;
+          break;
+
+        case "PRE":
+        case "pre":
+          groupQuery.span_near.clauses.push(qry);
+          groupQuery.span_near.in_order = "true";
+          groupQuery.span_near.slop = span;
+          break;
+
+        case "NEAR":
+        case "near":
+          groupQuery.span_near.clauses.push(qry);
+          groupQuery.span_near.in_order = "false";
+          groupQuery.span_near.slop = span;
+          break;
+      }
     }
-    //console.log("GROUPQUERYYYY--------------------");
-    //console.log(JSON.stringify(groupQuery, 0, 2));
   }
   let finalResponseArr;
   if (validations === 0) {
@@ -245,26 +278,7 @@ function makeWildCardSpanQuery(field, value) {
   };
   return wildcardquery;
 }
-function makeWildCardQuery(field, value) {
-  const wildCardQuery = { IsChanged: 0, changedValue: value };
-  const starIndex = value.indexOf("*");
-  const questionMarkIndex = value.indexOf("?");
-  if (starIndex === -1 && questionMarkIndex === -1) {
-    // error
-  } else {
-    const x = {};
-    x.span_multi = {};
-    x.span_multi.match = {};
-    x.span_multi.match.wildcard = {};
-    x.span_multi.match.wildcard[field] = {
-      value: value,
-      rewrite: "top_terms_4092",
-    };
-    wildCardQuery.changedValue = x;
-    wildCardQuery.IsChanged = 1;
-  }
-  return wildCardQuery;
-}
+
 function maketermQuery(field, value) {
   const x = {};
   x.span_term = {};
@@ -330,8 +344,10 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
     "child" in currentObj &&
     currentObj.child.length > 0
   ) {
+    currentObj.position = "first";
     multiOperand.push(currentObj);
   } else {
+    currentObj.position = "first";
     nonmultiOperand.push(currentObj);
   }
   if (
@@ -341,39 +357,34 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
     "child" in nextObj &&
     nextObj.child.length > 0
   ) {
+    nextObj.position = "first";
     multiOperand.push(nextObj);
   } else {
+    nextObj.position = "first";
     nonmultiOperand.push(nextObj);
   }
-  //console.log(havenearoccured);
+  console.log(multiOperand.length);
+  console.log(nonmultiOperand.length);
+  console.log(havenearoccured);
   if (multiOperand.length > 0) {
+    console.log("here5");
     firstOperand = multiOperand[0];
-    // if (havenearoccured === 0) {
-    //   havenearoccured = checkNearoccurence(firstOperand.child);
-    // }
-    //console.log("here multi1");
-    //console.log(operator);
     tempqueryArr1 = makeFinalQuery(
       firstOperand.child,
       havenearoccured,
       firstOperand.opt,
       firstOperand.span
     );
-    //console.log("TEMPQUERYYY1 ouput is ");
-    //console.log(tempqueryArr1);
+
+    console.log(multiOperand.length);
+    console.log(nonmultiOperand.length);
     if (multiOperand.length == 2) {
       secondOperand = multiOperand[1];
-      //console.log("heree next");
       if (havenearoccured === 0) {
-        //console.log(span);
         if (span != -1) {
           havenearoccured = 1;
         }
-        // else {
-        //   havenearoccured = checkNearoccurence(secondOperand.child);
-        // }
       }
-      //console.log(havenearoccured);
       tempqueryArr2 = makeFinalQuery(
         secondOperand.child,
         havenearoccured,
@@ -382,10 +393,11 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
       );
       //console.log("tempqueryArr2");
       //console.log(tempqueryArr2);
-      //console.log("nearoccured");
-      //console.log(havenearoccured);
+      console.log("nearoccured");
+      console.log(havenearoccured);
       if (havenearoccured === 1) {
         if (span != -1) {
+          // #querytotest- ((ttl:((smart pre1 (watch OR watches)) NEAR5 (wearable* OR device*))) AND pd: [20000101 TO 20210910])
           tempquery = {};
           tempquery.span_near = {};
           tempquery.span_near.clauses = [];
@@ -404,49 +416,50 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           // }
           tempquery.span_near.slop = span;
         } else if (operator == "OR") {
+          console.log("coming left2");
           tempquery = {};
           tempquery.span_or = {};
           tempquery.span_or.clauses = [];
           tempquery.span_or.clauses.push(tempqueryArr1);
           tempquery.span_or.clauses.push(tempqueryArr2);
         } else {
-          //console.log("unhandledd case");
+          console.log("unhandledd case");
         }
       } else {
+        console.log("coming hereee" + operator);
+        tempquery = { bool: { must: [] } };
         if (operator == "AND") {
-          tempquery = { bool: { must: [] } };
-          tempquery.bool.must.push(tempqueryArr1);
-          tempquery.bool.must.push(tempqueryArr2);
+          //#querytotest- ((text:((smart NEAR2 (wearable OR wearables OR watch OR watches)) AND (heart NEAR2 rate))) NOT (tac:(smart NEAR2 (wearable OR wearables))) OR (tac:(smart NEAR4 (watch OR watches))))
+          tempquery2 = { bool: { must: [] } };
+          tempquery2.bool.must.push(tempqueryArr2);
         } else if (operator === "OR") {
-          tempquery = { bool: { should: [] } };
-          tempquery.bool.should.push(tempqueryArr1);
-          tempquery.bool.should.push(tempqueryArr2);
+          tempquery2 = { bool: { should: [] } };
+          tempquery2.bool.should.push(tempqueryArr2);
         } else if (operator == "NOT") {
-          tempquery = { bool: { must_not: [] } };
-          tempquery.bool.must_not.push(tempqueryArr1);
-          tempquery.bool.must_not.push(tempqueryArr2);
+          tempquery2 = { bool: { must_not: [] } };
+          tempquery2.bool.must_not.push(tempqueryArr2);
         } else {
-          //console.log("operator");
-          //console.log(operator);
-          //console.log("SOMEE UNCOVERED CASE");
         }
+        tempquery.bool.must.push(tempqueryArr1);
+        tempquery.bool.must.push(tempquery2);
+        console.log(JSON.stringify(tempquery2));
+        console.log(JSON.stringify(tempquery));
       }
     } else if (nonmultiOperand.length > 0) {
       secondOperand = nonmultiOperand[0];
-      //console.log("second operator not multi");
-      //console.log(secondOperand);
       searchValue = secondOperand.val;
       searchfield = secondOperand.key;
-      //console.log("span");
-      //console.log(span);
-      //console.log("havenearoccured");
-      //console.log(havenearoccured);
+      searchPosition = secondOperand.position;
+      console.log("havenearoccured5 " + havenearoccured);
+      console.log(operator);
+      console.log(span);
       if (havenearoccured === 1) {
-        //console.log(span);
-        //console.log(operator);
+        console.log(operator);
         if (operator == "OR") {
+          // #querytotest- (text:((smart NEAR2 (wearable OR wearables OR watch OR watches)) AND (heart NEAR2 rate)))
           starIndex = searchValue.indexOf("*");
           questionMarkIndex = searchValue.indexOf("?");
+
           // making current query part
           if (starIndex !== -1 || questionMarkIndex !== -1) {
             tempqry = makeWildCardSpanQuery(searchfield, searchValue);
@@ -455,11 +468,15 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           }
           tempquery.span_or = {};
           tempquery.span_or.clauses = [];
-          tempquery.span_or.clauses.push(tempqueryArr1);
-          tempquery.span_or.clauses.push(tempqry);
+          if (searchPosition == "first") {
+            tempquery.span_or.clauses.push(tempqry);
+            tempquery.span_or.clauses.push(tempqueryArr1);
+          } else {
+            tempquery.span_or.clauses.push(tempqueryArr1);
+            tempquery.span_or.clauses.push(tempqry);
+          }
         } else if (span != -1) {
-          //console.log("span  coming here");
-          //console.log(span);
+          //#querytotest- ttl:abc NEAR5 (lithium OR battery) near10 (battery OR cell)
           starIndex = searchValue.indexOf("*");
           questionMarkIndex = searchValue.indexOf("?");
           // making current query part
@@ -470,15 +487,14 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           }
           tempquery.span_near = {};
           tempquery.span_near.clauses = [];
-          tempquery.span_near.clauses.push(tempqueryArr1);
-          tempquery.span_near.clauses.push(tempqry);
-          // if (operator.match(/(pre)[\d]+/i) !== null) {
-          //   tempquery.span_near.in_order = "true";
-          //   span = operator.replace(/(pre)/i, "");
-          // } else {
-          //   span = operator.replace(/(near)/i, "");
-          //console.log("span");
-          //console.log(span);
+          if (searchPosition == "first") {
+            tempquery.span_near.clauses.push(tempqry);
+            tempquery.span_near.clauses.push(tempqueryArr1);
+          } else {
+            tempquery.span_near.clauses.push(tempqueryArr1);
+            tempquery.span_near.clauses.push(tempqry);
+          }
+
           if (operator.toLowerCase() == "pre") {
             tempquery.span_near.in_order = "true";
           } else {
@@ -488,35 +504,33 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
               tempquery.span_near.in_order = "false";
             }
           }
-          // }
-          //console.log("span2");
-          //console.log(span);
           tempquery.span_near.slop = span;
-          //console.log("finalq uery here is ");
-          //console.log(JSON.stringify(tempquery, 0, 2));
+          console.log("finally completeled");
+          console.log(JSON.stringify(tempquery));
         } else {
           //console.log("irrelevant case yhaa");
         }
       } else {
-        //console.log("heree  " + searchValue);
-        //console.log("heree  " + operator);
         str = "(" + searchfield + ":(" + searchValue + "))";
         tempqry = { query_string: { default_operator: "AND", query: str } };
+        tempquery = { bool: { must: [] } };
+        console.log("leftonee");
+
+        console.log("hert8");
         if (operator == "AND") {
-          tempquery = { bool: { must: [] } };
-          tempquery.bool.must.push(tempqueryArr1);
-          tempquery.bool.must.push(tempqry);
+          tempquery2 = { bool: { must: [] } };
+          tempquery2.bool.must.push(tempqueryArr1);
         } else if (operator === "OR") {
-          tempquery = { bool: { should: [] } };
-          tempquery.bool.should.push(tempqueryArr1);
-          tempquery.bool.should.push(tempqry);
+          tempquery2 = { bool: { should: [] } };
+          tempquery2.bool.should.push(tempqueryArr1);
         } else if (operator == "NOT") {
-          tempquery = { bool: { must_not: [] } };
-          tempquery.bool.must_not.push(tempqueryArr1);
-          tempquery.bool.must_not.push(tempqry);
+          tempquery2 = { bool: { must_not: [] } };
+          tempquery2.bool.must_not.push(tempqueryArr1);
         } else {
           // wrong case
         }
+        tempquery.bool.must.push(tempqry);
+        tempquery.bool.must.push(tempquery2);
       }
     } else {
       tempquery = tempqueryArr1;
@@ -527,8 +541,9 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
     // let currentOperator = currentObj.opt;
     let tempqueryArr2 = {};
     let tempqry = {};
-    //console.log("in elseeee initial child not multi");
-    //console.log(havenearoccured);
+    console.log("in elseeee initial child not multi");
+    console.log(JSON.stringify(currentObj));
+    console.log(havenearoccured);
     if (havenearoccured == 1) {
       if (
         nextObj.key !== "" &&
@@ -538,10 +553,12 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
         nextObj.child.length > 0
       ) {
         // nextOpt = nextObj.opt;
-        //console.log("here multi multi");
+        console.log("here multi multi");
+        console.log("leftonee2");
         tempqueryArr2 = makeFinalQuery(nextObj.child, havenearoccured);
 
         if (operator == "OR") {
+          console.log("leftonee3");
           starIndex = searchValue.indexOf("*");
           questionMarkIndex = searchValue.indexOf("?");
           // making current query part
@@ -555,6 +572,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           tempquery.span_or.clauses.push(tempqry);
           tempquery.span_or.clauses.push(tempqueryArr2);
         } else if (span != -1) {
+          console.log("leftonee4");
           starIndex = searchValue.indexOf("*");
           questionMarkIndex = searchValue.indexOf("?");
           // making current query part
@@ -567,32 +585,21 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           tempquery.span_near.clauses = [];
           tempquery.span_near.clauses.push(tempqry);
           tempquery.span_near.clauses.push(tempqueryArr2);
-          // let span;
-          // if (operator.match(/(pre)[\d]+/i) !== null) {
-          //   tempquery.span_near.in_order = "true";
-          //   span = operator.replace(/(pre)/i, "");
-          // } else {
-          //   span = operator.replace(/(near)/i, "");
 
           if (span === "0") {
             tempquery.span_near.in_order = "true"; // case of inverted commas converted to near0
           } else {
             tempquery.span_near.in_order = "false";
           }
-          // }
           tempquery.span_near.slop = span;
         } else {
-          //console.log("coming in wrong case");
+          console.log("coming in wrong case");
         }
-        //console.log(JSON.stringify(tempquery));
       } else {
-        // const nextOpt = nextObj.opt;
-        //console.log("regExp");
-        //console.log(regExp);
-        //console.log(regExp2);
-        //console.log(operator);
-        //console.log(span);
+        console.log("here4");
+        console.log(operator);
         if (operator == "OR") {
+          // #querytotest- ttl:abc NEAR5 (lithium OR battery) near10 (battery OR cell)
           starIndex = searchValue.indexOf("*");
           questionMarkIndex = searchValue.indexOf("?");
           // making current query part
@@ -614,6 +621,8 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           }
           tempquery.span_or.clauses.push(tempqry);
         } else if (span != -1) {
+          // #querytotest- ttl:abc NEAR5 (lithium OR battery) near10 (battery near5 cell)
+          // #querytotest- ttl:abc OR (lithium near6 battery) near10 (battery near5 cell)
           starIndex = searchValue.indexOf("*");
           questionMarkIndex = searchValue.indexOf("?");
           // making current query part
@@ -648,17 +657,11 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           //console.log("finalq uery here is ");
           //console.log(JSON.stringify(tempquery, 0, 2));
         } else {
-          //console.log("irrelevant case77");
+          console.log("irrelevant case7");
         }
       }
     } else {
-      //console.log("heree  " + searchValue);
-
-      //console.log("nextobjjjjjj");
-      //console.log(JSON.stringify(nextObj));
-      //console.log(JSON.stringify(tempquery));
-      //console.log("span now is " + span);
-      // nextOpt = nextObj.opt;
+      console.log("leftone25");
       if (
         nextObj.key !== "" &&
         nextObj.key !== "multi" &&
@@ -666,16 +669,9 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
         "child" in nextObj &&
         nextObj.child.length > 0
       ) {
-        //console.log("HEREE MULTI CHILD");
-        //console.log(searchValue);
-        //console.log(searchfield);
+        console.log("left565");
         str = "(" + searchfield + ":(" + searchValue + "))";
         tempqry = { query_string: { default_operator: "AND", query: str } };
-
-        //console.log("nextchildmulti");
-        //console.log("tempquery till now");
-        //console.log(JSON.stringify(tempqry));
-
         tempqry2 = makeFinalQuery(
           nextObj.child,
           havenearoccured,
@@ -685,7 +681,7 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
         // nextOpt = nextObj.opt;
         //console.log("tempqry after makefinalQUery");
         //console.log(JSON.stringify(tempqry2));
-        //console.log("next opt is " + operator);
+        console.log("next opt is " + operator);
         if (operator == "AND") {
           tempquery2 = { bool: { must: [] } };
           tempquery2.bool.must.push(tempqry2);
@@ -708,10 +704,10 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
         //console.log(JSON.stringify(tempquery, 0, 2));
       } else {
         // nextobj val is not multi
-        //console.log("nextobj not mjulti");
+        console.log("leftonee24");
         if (span != -1) {
+          console.log("leftonee27");
           // both are non multi and operator is proximity
-          //console.log("hereeee ion reg match");
           starIndex = searchValue.indexOf("*");
           questionMarkIndex = searchValue.indexOf("?");
           // making current query part
@@ -754,10 +750,12 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
           //console.log("-----------------finalq uery here is ");
           //console.log(JSON.stringify(tempquery, 0, 2));
         } else {
+          console.log("leftonee20");
           //both are non multi and operator is not proximity
           str = "(" + searchfield + ":(" + searchValue + "))";
           tempqry = { query_string: { default_operator: "AND", query: str } };
           let tempqry2;
+          console.log("het");
           if (operator == "OR") {
             str = "(" + nextObj.key + ":(" + nextObj.val + "))";
             tempqry2 = {
