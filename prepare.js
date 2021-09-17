@@ -429,7 +429,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
                 /near[0-9]+/.test(construct.toLowerCase()) ||
                 /pre[0-9]+/.test(construct.toLowerCase())
               ) {
-                throw new Error("Consective Operators Not Allowed");
+                throw new Error("Consective Operators Are Not Allowed");
               }
 
               toggle = !toggle;
@@ -479,7 +479,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
         /near[0-9]+/.test(construct.toLowerCase()) ||
         /pre[0-9]+/.test(construct.toLowerCase())
       ) {
-        throw new Error("Consective Operators Not Allowed");
+        throw new Error("Consective Operators Are Not Allowed");
       }
     }
 
