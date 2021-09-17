@@ -275,19 +275,18 @@ function prepareQ(q) {
   return fillDefaultOperator(query, startValIndices, endValIndices);
 }
 
-function isfirstCloseBracket(s, i) {
-  let truct = "";
+function collectRemainingParts(s, i) {
+  let remain = "";
   let char;
-  let explicit = false;
   for (char = i; char < s.length; char++) {
     if (s[char] === " " || s[char] === ")") {
-      truct += s[char];
+      remain += s[char];
     } else {
-      explicit = true;
       break;
     }
   }
-  return { truct, char, explicit };
+
+  return { remain, char };
 }
 
 function fillDefaultOperator(q, startIndices, endIndices) {
@@ -397,46 +396,55 @@ function fillDefaultOperator(q, startIndices, endIndices) {
           start = true;
         }
       } else if (inter[ch] === " ") {
-        if (sQuote === false && dQuote === false) {
-          if (onlyBracket) {
-            construct += inter[ch];
-          } else {
-            const { truct, char, explicit } = isfirstCloseBracket(inter, ch);
-            if (truct === " " && char === ch + 1) {
-              if (toggle) {
-                if (
-                  construct.toLowerCase() !== "and" &&
-                  construct.toLowerCase() !== "or" &&
-                  construct.toLowerCase() !== "not" &&
-                  construct.toLowerCase() !== "nearp" &&
-                  construct.toLowerCase() !== "nears" &&
-                  construct.toLowerCase() !== "prep" &&
-                  construct.toLowerCase() !== "pres" &&
-                  !/near[0-9]+/.test(construct.toLowerCase()) &&
-                  !/pre[0-9]+/.test(construct.toLowerCase())
-                ) {
-                  inter = [
-                    inter.slice(0, index),
-                    "AND ",
-                    inter.slice(index),
-                  ].join("");
-                  count++;
-                  ch = ch + 4;
-                  toggle = true;
-                } else toggle = !toggle;
-              } else {
-                toggle = !toggle;
+        if (!sQuote && !dQuote && !onlyBracket) {
+          const { remain, char } = collectRemainingParts(inter, ch);
+          if (remain === " " && char === ch + 1) {
+            if (
+              toggle &&
+              construct.toLowerCase() !== "and" &&
+              construct.toLowerCase() !== "or" &&
+              construct.toLowerCase() !== "not" &&
+              construct.toLowerCase() !== "nearp" &&
+              construct.toLowerCase() !== "nears" &&
+              construct.toLowerCase() !== "prep" &&
+              construct.toLowerCase() !== "pres" &&
+              !/near[0-9]+/.test(construct.toLowerCase()) &&
+              !/pre[0-9]+/.test(construct.toLowerCase())
+            ) {
+              inter = [inter.slice(0, index), "AND ", inter.slice(index)].join(
+                ""
+              );
+              count++;
+              ch = ch + 4;
+              toggle = true;
+            } else if (!toggle) {
+              if (
+                construct.toLowerCase() === "and" ||
+                construct.toLowerCase() === "or" ||
+                construct.toLowerCase() === "not" ||
+                construct.toLowerCase() === "nearp" ||
+                construct.toLowerCase() === "nears" ||
+                construct.toLowerCase() === "prep" ||
+                construct.toLowerCase() === "pres" ||
+                /near[0-9]+/.test(construct.toLowerCase()) ||
+                /pre[0-9]+/.test(construct.toLowerCase())
+              ) {
+                throw new Error("Consective Operators Not Allowed");
               }
-              construct = "";
-              start = false;
-              index = 0;
-              sQuote = false;
-              dQuote = false;
+
+              toggle = !toggle;
             } else {
-              construct += truct.trimEnd();
-              if (explicit) ch = char - 2;
-              else break;
+              toggle = !toggle;
             }
+
+            construct = "";
+            start = false;
+            index = 0;
+            sQuote = false;
+            dQuote = false;
+          } else {
+            construct += remain.trimEnd();
+            ch = char - 2;
           }
         } else {
           construct += inter[ch];
@@ -458,6 +466,20 @@ function fillDefaultOperator(q, startIndices, endIndices) {
       ) {
         inter = [inter.slice(0, index), "AND ", inter.slice(index)].join("");
         count++;
+      }
+    } else {
+      if (
+        construct.toLowerCase() === "and" ||
+        construct.toLowerCase() === "or" ||
+        construct.toLowerCase() === "not" ||
+        construct.toLowerCase() === "nearp" ||
+        construct.toLowerCase() === "nears" ||
+        construct.toLowerCase() === "prep" ||
+        construct.toLowerCase() === "pres" ||
+        /near[0-9]+/.test(construct.toLowerCase()) ||
+        /pre[0-9]+/.test(construct.toLowerCase())
+      ) {
+        throw new Error("Consective Operators Not Allowed");
       }
     }
 

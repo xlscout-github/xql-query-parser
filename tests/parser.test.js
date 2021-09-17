@@ -263,6 +263,17 @@ test("should throw error if singleton empty brackets are passed", () => {
   }
 });
 
+test("should throw error if brackets within brackets are passed", () => {
+  expect.assertions(2);
+
+  try {
+    parse("(())");
+  } catch (error) {
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toHaveProperty("message", "Empty grouping expression");
+  }
+});
+
 test("should throw error if combination of empty brackets are passed", () => {
   expect.assertions(2);
 
@@ -339,7 +350,7 @@ test("should parse if query contains various paragraph and sentence proximity op
 });
 
 test("should parse if single quotes occur inside double quotes or vice versa", () => {
-  const query = `((ab:("DETECT' CONNECT'" PREP SHOCK) PRES text:'MICROWAVE" RADIO"'))`;
+  const query = `ab:("DETECT' CONNECT'" PREP SHOCK) PRES text:'MICROWAVE" RADIO"'`;
 
   expect(parse(query)).toEqual({
     key: "multi",

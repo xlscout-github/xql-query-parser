@@ -1,9 +1,11 @@
 const { prepareQ } = require("../prepare");
 
 test("single field: should enclose field along with value in parenthesis", () => {
-  const query = "desc:DETECT* near5 (CONNECT* near6 SOURCE*)";
+  const query = "desc:(DETECT* ) near5 (CONNECT* near6 SOURCE*)";
 
-  expect(prepareQ(query)).toBe("(desc:DETECT* near5 (CONNECT* near6 SOURCE*))");
+  expect(prepareQ(query)).toBe(
+    "(desc:(DETECT* ) near5 (CONNECT* near6 SOURCE*))"
+  );
 });
 
 test("multiple fields: should enclose field along with value in parenthesis", () => {
@@ -88,5 +90,27 @@ test("should throw error in case of unbalanced square brackets", () => {
   } catch (error) {
     expect(error).toBeInstanceOf(Error);
     expect(error).toHaveProperty("message", "Unbalanced Brackets");
+  }
+});
+
+test("should throw error if consective operators are passed", () => {
+  expect.assertions(2);
+
+  try {
+    prepareQ("(car  ) bus OR near2 autonomous");
+  } catch (error) {
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toHaveProperty("message", "Consective Operators Not Allowed");
+  }
+});
+
+test("should throw error if consective operators are present at the end", () => {
+  expect.assertions(2);
+
+  try {
+    prepareQ("(car  ) bus OR near2");
+  } catch (error) {
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toHaveProperty("message", "Consective Operators Not Allowed");
   }
 });
