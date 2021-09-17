@@ -100,7 +100,10 @@ test("should throw error if consective operators are passed", () => {
     prepareQ("(car  ) bus OR near2 autonomous");
   } catch (error) {
     expect(error).toBeInstanceOf(Error);
-    expect(error).toHaveProperty("message", "Consective Operators Not Allowed");
+    expect(error).toHaveProperty(
+      "message",
+      "Consective operators Are not allowed"
+    );
   }
 });
 
@@ -111,6 +114,9 @@ test("should throw error if consective operators are present at the end", () => 
     prepareQ("(car  ) bus OR near2");
   } catch (error) {
     expect(error).toBeInstanceOf(Error);
-    expect(error).toHaveProperty("message", "Consective Operators Not Allowed");
+    expect(error).toHaveProperty(
+      "message",
+      "Consective operators Are not allowed"
+    );
   }
 });
