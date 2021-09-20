@@ -1,7 +1,7 @@
 const { parse } = require("./parser");
 // const { EQLgenerator } = require("./EQLgenerator");
 
-let result = parse(`(car  ) bus OR near2 autonomous`);
+let result = parse(`(car  ) bus (near2 )`);
 // (ab:(("自動運転車") OR (Selfdriving car)) NEAR10 (("バッテリー") OR (battery)))
 // (rrt OR ratatata) pre2 (shots OR fire OR kill)
 // (((asd io) NEAR2 (cde io)))

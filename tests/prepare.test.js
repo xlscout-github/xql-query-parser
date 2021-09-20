@@ -102,7 +102,7 @@ test("should throw error if consective operators are passed", () => {
     expect(error).toBeInstanceOf(Error);
     expect(error).toHaveProperty(
       "message",
-      "Consective operators are not allowed"
+      "consective operators are not allowed"
     );
   }
 });
@@ -116,7 +116,21 @@ test("should throw error if consective operators are present at the end", () => 
     expect(error).toBeInstanceOf(Error);
     expect(error).toHaveProperty(
       "message",
-      "Consective operators are not allowed"
+      "consective operators are not allowed"
+    );
+  }
+});
+
+test("should throw error if trailing operators are present", () => {
+  expect.assertions(2);
+
+  try {
+    prepareQ("(car  ) bus (near2 )");
+  } catch (error) {
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toHaveProperty(
+      "message",
+      "trailing operators are not allowed"
     );
   }
 });

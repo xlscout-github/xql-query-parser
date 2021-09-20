@@ -281,12 +281,22 @@ function collectRemainingParts(s, i) {
   for (char = i; char < s.length; char++) {
     if (s[char] === " " || s[char] === ")") {
       remain += s[char];
-    } else {
-      break;
-    }
+    } else break;
   }
 
   return { remain, char };
+}
+
+function removeBrackets(s) {
+  while (s.startsWith("(")) {
+    s = s.slice(1).trim();
+  }
+
+  while (s.endsWith(")")) {
+    s = s.slice(0, -1).trim();
+  }
+
+  return s;
 }
 
 function fillDefaultOperator(q, startIndices, endIndices) {
@@ -399,6 +409,8 @@ function fillDefaultOperator(q, startIndices, endIndices) {
         if (!sQuote && !dQuote && !onlyBracket) {
           const { remain, char } = collectRemainingParts(inter, ch);
           if (remain === " " && char === ch + 1) {
+            construct = removeBrackets(construct);
+
             if (
               toggle &&
               construct.toLowerCase() !== "and" &&
@@ -429,7 +441,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
                 /near[0-9]+/.test(construct.toLowerCase()) ||
                 /pre[0-9]+/.test(construct.toLowerCase())
               ) {
-                throw new Error("Consective operators are not allowed");
+                throw new Error("consective operators are not allowed");
               }
 
               toggle = !toggle;
@@ -444,13 +456,20 @@ function fillDefaultOperator(q, startIndices, endIndices) {
             dQuote = false;
           } else {
             construct += remain.trimEnd();
-            ch = char - 2;
+
+            if (inter.length === char) {
+              break;
+            } else {
+              ch = char - 2;
+            }
           }
         } else {
           construct += inter[ch];
         }
       }
     }
+
+    construct = removeBrackets(construct);
 
     if (toggle) {
       if (
@@ -466,6 +485,8 @@ function fillDefaultOperator(q, startIndices, endIndices) {
       ) {
         inter = [inter.slice(0, index), "AND ", inter.slice(index)].join("");
         count++;
+      } else {
+        throw new Error("trailing operators are not allowed");
       }
     } else {
       if (
@@ -479,7 +500,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
         /near[0-9]+/.test(construct.toLowerCase()) ||
         /pre[0-9]+/.test(construct.toLowerCase())
       ) {
-        throw new Error("Consective operators are not allowed");
+        throw new Error("consective operators are not allowed");
       }
     }
 
