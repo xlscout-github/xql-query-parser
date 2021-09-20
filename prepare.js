@@ -391,7 +391,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
           index = ch;
           start = true;
         }
-      } else if (inter[ch] === "(") {
+      } else if (!sQuote && !dQuote && inter[ch] === "(") {
         onlyBracket = true;
         construct += inter[ch];
         if (!start) {
