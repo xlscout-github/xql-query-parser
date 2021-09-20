@@ -93,7 +93,7 @@ test("should throw error in case of unbalanced square brackets", () => {
   }
 });
 
-test("should throw error if consective operators are passed", () => {
+test("should throw error if consecutive operators are present", () => {
   expect.assertions(2);
 
   try {
@@ -102,12 +102,12 @@ test("should throw error if consective operators are passed", () => {
     expect(error).toBeInstanceOf(Error);
     expect(error).toHaveProperty(
       "message",
-      "consective operators are not allowed"
+      "consecutive operators are not allowed"
     );
   }
 });
 
-test("should throw error if consective operators are present at the end", () => {
+test("should throw error if consecutive operators are present at the end", () => {
   expect.assertions(2);
 
   try {
@@ -116,7 +116,7 @@ test("should throw error if consective operators are present at the end", () => 
     expect(error).toBeInstanceOf(Error);
     expect(error).toHaveProperty(
       "message",
-      "consective operators are not allowed"
+      "consecutive operators are not allowed"
     );
   }
 });
