@@ -140,6 +140,28 @@ function getFields(q) {
   };
 }
 
+function isNear(s) {
+  const parts = s.toLowerCase().split("near");
+
+  return parts.length === 2 &&
+    parts[0] === "" &&
+    parts[1] !== "" &&
+    (Number(parts[1]) > -1 ? true : false)
+    ? true
+    : false;
+}
+
+function isPre(s) {
+  const parts = s.toLowerCase().split("pre");
+
+  return parts.length === 2 &&
+    parts[0] === "" &&
+    parts[1] !== "" &&
+    (Number(parts[1]) > -1 ? true : false)
+    ? true
+    : false;
+}
+
 function prepare(q) {
   if (!isMatchingBrackets(q)) {
     throw new Error("Unbalanced Brackets");
@@ -171,8 +193,8 @@ function prepare(q) {
           operator.toLowerCase() === "sraen" ||
           operator.toLowerCase() === "perp" ||
           operator.toLowerCase() === "serp" ||
-          /[0-9]+raen/.test(operator.toLowerCase()) ||
-          /[0-9]+erp/.test(operator.toLowerCase())
+          isNear(operator) ||
+          isPre(operator)
         ) {
           break;
         }
@@ -420,8 +442,8 @@ function fillDefaultOperator(q, startIndices, endIndices) {
               construct.toLowerCase() !== "nears" &&
               construct.toLowerCase() !== "prep" &&
               construct.toLowerCase() !== "pres" &&
-              !/near[0-9]+/.test(construct.toLowerCase()) &&
-              !/pre[0-9]+/.test(construct.toLowerCase())
+              !isNear(construct) &&
+              !isPre(construct)
             ) {
               inter = [inter.slice(0, index), "AND ", inter.slice(index)].join(
                 ""
@@ -438,8 +460,8 @@ function fillDefaultOperator(q, startIndices, endIndices) {
                 construct.toLowerCase() === "nears" ||
                 construct.toLowerCase() === "prep" ||
                 construct.toLowerCase() === "pres" ||
-                /near[0-9]+/.test(construct.toLowerCase()) ||
-                /pre[0-9]+/.test(construct.toLowerCase())
+                isNear(construct) ||
+                isPre(construct)
               ) {
                 throw new Error("consecutive operators are not allowed");
               }
@@ -480,8 +502,8 @@ function fillDefaultOperator(q, startIndices, endIndices) {
         construct.toLowerCase() !== "nears" &&
         construct.toLowerCase() !== "prep" &&
         construct.toLowerCase() !== "pres" &&
-        !/near[0-9]+/.test(construct.toLowerCase()) &&
-        !/pre[0-9]+/.test(construct.toLowerCase())
+        !isNear(construct) &&
+        !isPre(construct)
       ) {
         inter = [inter.slice(0, index), "AND ", inter.slice(index)].join("");
         count++;
@@ -497,8 +519,8 @@ function fillDefaultOperator(q, startIndices, endIndices) {
         construct.toLowerCase() === "nears" ||
         construct.toLowerCase() === "prep" ||
         construct.toLowerCase() === "pres" ||
-        /near[0-9]+/.test(construct.toLowerCase()) ||
-        /pre[0-9]+/.test(construct.toLowerCase())
+        isNear(construct) ||
+        isPre(construct)
       ) {
         throw new Error("consecutive operators are not allowed");
       }
