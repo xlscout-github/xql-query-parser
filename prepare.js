@@ -309,7 +309,7 @@ function collectRemainingParts(s, i) {
   return { remain, char };
 }
 
-function removeBrackets(s) {
+function trimBrackets(s) {
   while (s.startsWith("(")) {
     s = s.slice(1).trim();
   }
@@ -431,7 +431,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
         if (!sQuote && !dQuote && !onlyBracket) {
           const { remain, char } = collectRemainingParts(inter, ch);
           if (remain === " " && char === ch + 1) {
-            construct = removeBrackets(construct);
+            construct = trimBrackets(construct);
 
             if (
               toggle &&
@@ -491,7 +491,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
       }
     }
 
-    construct = removeBrackets(construct);
+    construct = trimBrackets(construct);
 
     if (toggle) {
       if (
