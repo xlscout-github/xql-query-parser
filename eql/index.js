@@ -135,13 +135,15 @@ function makeClause(tree) {
   const slop = adjustSlop(span);
 
   if (left == null && right == null) {
-    if (value.includes("*") || value.includes("?")) {
+    const term = value.toLowerCase();
+
+    if (term.includes("*") || term.includes("?")) {
       return {
         span_multi: {
           match: {
             wildcard: {
               [field]: {
-                value,
+                value: term,
                 rewrite: "top_terms_4092",
               },
             },
@@ -150,7 +152,7 @@ function makeClause(tree) {
       };
     }
 
-    return { span_term: { [field]: value } };
+    return { span_term: { [field]: term } };
   }
 
   let clause = {};
@@ -160,8 +162,8 @@ function makeClause(tree) {
       clause = {
         span_near: {
           clauses: [makeClause(left), makeClause(right)],
-          in_order: "false",
           slop,
+          in_order: "false",
         },
       };
       break;
@@ -169,8 +171,8 @@ function makeClause(tree) {
       clause = {
         span_near: {
           clauses: [makeClause(left), makeClause(right)],
-          in_order: "true",
           slop,
+          in_order: "true",
         },
       };
       break;
