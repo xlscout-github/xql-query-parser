@@ -362,7 +362,6 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
   let nonmultiOperand = [];
   if (
     currentObj.key !== "" &&
-    currentObj.key !== "multi" &&
     currentObj.val === "multi" &&
     "child" in currentObj &&
     currentObj.child.length > 0
@@ -396,8 +395,6 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
       firstOperand.span
     );
 
-    // console.log(multiOperand.length);
-    // console.log(nonmultiOperand.length);
     if (multiOperand.length == 2) {
       secondOperand = multiOperand[1];
       if (havenearoccured === 0) {
@@ -573,7 +570,6 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
     // let currentOperator = currentObj.opt;
     let tempqueryArr2 = {};
     let tempqry = {};
-
     if (havenearoccured == 1) {
       if (
         nextObj.key !== "" &&
@@ -761,7 +757,6 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
             tempqry = maketermQuery(searchfield, searchValue);
           }
           tempquery.span_near.clauses.push(tempqry);
-          // // console.log("-----------------finalq uery here is ");
 
           if (span === "0") {
             tempquery.span_near.in_order = "true"; // case of inverted commas converted to near0
@@ -779,8 +774,6 @@ function makeElasticQuery2(strArr, havenearoccured, operator, span) {
             span = "15";
           }
           tempquery.span_near.slop = span;
-          // // console.log("-----------------finalq uery here is ");
-          // // console.log(JSON.stringify(tempquery, 0, 2));
         } else {
           //both are non multi and operator is not proximity
           str = "(" + searchfield + ":(" + searchValue + "))";
@@ -854,18 +847,10 @@ function makeFinalQuery(
   multiOperator = "AND",
   span = -1
 ) {
-  // // console.log(multiOperator);
-  // // console.log(span);
-  // // console.log("span");
-  // return;
   const finalQueryArr = [];
   tempqueryArr = [];
   let havenearoccured = varhavenearoccured;
-  // // console.log("------------------makeFinalQuery");
-  // // console.log(strArr);
-  // // console.log(multiOperator);
-  // // console.log(span);
-  // // console.log("span");
+
   if (span != -1) {
     havenearoccured = 1;
   }
@@ -913,10 +898,19 @@ function makeSingleQuery(strArr, qryoperator, query = "") {
         query = "(" + query + " " + qryoperator + " " + strArr[i]["val"] + ")";
       }
     } else {
-      if (query.trim() == "") {
-        query = strArr[i]["val"];
+      if (
+        qryoperator.toLowerCase() == "near" ||
+        qryoperator.toLowerCase() == "pre"
+      ) {
+        returnArr["proximityOperatorOccured"] = "true";
+        break;
       } else {
-        query = "(" + query + " " + qryoperator + " " + strArr[i]["val"] + ")";
+        if (query.trim() == "") {
+          query = strArr[i]["val"];
+        } else {
+          query =
+            "(" + query + " " + qryoperator + " " + strArr[i]["val"] + ")";
+        }
       }
     }
   }
