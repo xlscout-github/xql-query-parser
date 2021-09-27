@@ -135,15 +135,13 @@ function makeClause(tree) {
   const slop = adjustSlop(span);
 
   if (left == null && right == null) {
-    const term = value.toLowerCase();
-
-    if (term.includes("*") || term.includes("?")) {
+    if (value.includes("*") || value.includes("?")) {
       return {
         span_multi: {
           match: {
             wildcard: {
               [field]: {
-                value: term,
+                value,
                 rewrite: "top_terms_4092",
               },
             },
@@ -152,7 +150,7 @@ function makeClause(tree) {
       };
     }
 
-    return { span_term: { [field]: term } };
+    return { span_term: { [field]: value.toLowerCase() } };
   }
 
   let clause = {};
