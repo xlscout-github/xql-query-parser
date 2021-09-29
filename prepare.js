@@ -42,7 +42,7 @@ function todeduct(q, start, end) {
   const original = start;
 
   while (q[start - 1] === "(" || q[start - 1] === " ") {
-    start = start - 1;
+    start--;
   }
 
   let countBefore = 0;
@@ -80,7 +80,7 @@ function evalDeduction(q, start, end) {
 
 function evalSpaces(q, i) {
   let count = 0;
-  for (let ch = i; ch <= q.length; ch++) {
+  for (let ch = i; ch < q.length; ch++) {
     if (q[ch] === " ") count++;
     else break;
   }
@@ -141,18 +141,29 @@ function getFields(q) {
 }
 
 function isNear(s) {
-  const parts = s.toLowerCase().split("near");
+  const parts = s.split("near");
 
   return parts.length === 2 &&
     parts[0] === "" &&
     parts[1] !== "" &&
     (Number(parts[1]) > -1 ? true : false)
+    ? true
+    : false;
+}
+
+function _isNear(s) {
+  const parts = s.split("raen");
+
+  return parts.length === 2 &&
+    parts[1] === "" &&
+    parts[0] !== "" &&
+    (Number(parts[0]) > -1 ? true : false)
     ? true
     : false;
 }
 
 function isPre(s) {
-  const parts = s.toLowerCase().split("pre");
+  const parts = s.split("pre");
 
   return parts.length === 2 &&
     parts[0] === "" &&
@@ -162,7 +173,50 @@ function isPre(s) {
     : false;
 }
 
-function prepare(q) {
+function _isPre(s) {
+  const parts = s.split("erp");
+
+  return parts.length === 2 &&
+    parts[1] === "" &&
+    parts[0] !== "" &&
+    (Number(parts[0]) > -1 ? true : false)
+    ? true
+    : false;
+}
+
+function isOperator(s) {
+  s = s.toLowerCase();
+
+  return (
+    s === "and" ||
+    s === "or" ||
+    s === "not" ||
+    s === "nearp" ||
+    s === "nears" ||
+    s === "prep" ||
+    s === "pres" ||
+    isNear(s) ||
+    isPre(s)
+  );
+}
+
+function _isOperator(s) {
+  s = s.toLowerCase();
+
+  return (
+    s === "dna" ||
+    s === "ro" ||
+    s === "ton" ||
+    s === "praen" ||
+    s === "sraen" ||
+    s === "perp" ||
+    s === "serp" ||
+    _isNear(s) ||
+    _isPre(s)
+  );
+}
+
+function _prepare(q) {
   if (!isMatchingBrackets(q)) {
     throw new Error("Unbalanced Brackets");
   }
@@ -184,24 +238,16 @@ function prepare(q) {
       let operator = "";
       let operatorIndex;
 
-      for (let j = nextFieldIndex - 1; j >= currentFieldIndex; j--) {
-        if (
-          operator.toLowerCase() === "ro" ||
-          operator.toLowerCase() === "dna" ||
-          operator.toLowerCase() === "ton" ||
-          operator.toLowerCase() === "praen" ||
-          operator.toLowerCase() === "sraen" ||
-          operator.toLowerCase() === "perp" ||
-          operator.toLowerCase() === "serp" ||
-          isNear(operator) ||
-          isPre(operator)
-        ) {
+      for (let j = nextFieldIndex - 1; j > currentFieldIndex; j--) {
+        if (_isOperator(operator)) {
           break;
         }
+
         if (q[j] === " " || q[j] === "(") {
           operator = "";
           continue;
         }
+
         operator += q[j];
         operatorIndex = j;
       }
@@ -274,7 +320,7 @@ function pickKey(q, field) {
     startFieldIndices,
     startValIndices,
     endValIndices,
-  } = prepare(q);
+  } = _prepare(q);
 
   const startEnd = [];
   for (let i = 0; i < foundwords.length; i++) {
@@ -291,10 +337,10 @@ function pickKey(q, field) {
   return startEnd;
 }
 
-function prepareQ(q) {
-  const { q: query, startValIndices, endValIndices } = prepare(q);
+function prepare(q) {
+  const { q: query, startValIndices, endValIndices } = _prepare(q);
 
-  return fillDefaultOperator(query, startValIndices, endValIndices);
+  return transform(query, startValIndices, endValIndices);
 }
 
 function collectRemainingParts(s, i) {
@@ -310,18 +356,58 @@ function collectRemainingParts(s, i) {
 }
 
 function trimBrackets(s) {
+  let frontCount = 0;
+
   while (s.startsWith("(")) {
-    s = s.slice(1).trim();
+    s = s.slice(1);
+    if (s.startsWith(" ")) frontCount++;
+    s = s.trim();
+    frontCount++;
   }
 
   while (s.endsWith(")")) {
     s = s.slice(0, -1).trim();
   }
 
-  return s;
+  return { s, frontCount };
 }
 
-function fillDefaultOperator(q, startIndices, endIndices) {
+function isProximitySearch(s) {
+  const parts = s.split("~");
+
+  return (
+    parts.length === 2 &&
+    ((parts[0].startsWith('"') && parts[0].endsWith('"')) ||
+      (parts[0].startsWith("'") && parts[0].endsWith("'"))) &&
+    (Number(parts[1]) > -1 ? true : false)
+  );
+}
+
+function transformProximitySearch(s, q, start) {
+  const [searchPhrase, distance] = s.split("~");
+  const terms = searchPhrase.slice(1, -1).split(" ");
+
+  if (terms.length < 2) {
+    throw new Error("Proximity search requires at least 2 terms");
+  }
+
+  const result = [
+    q.slice(0, start),
+    `(${terms.join(` NEAR${distance} `)})`,
+    q.slice(start + s.length),
+  ].join("");
+
+  const increment =
+    (terms.length - 1) * ("NEAR".length + distance.length + " ".length) -
+    ("~".length + distance.length);
+
+  return {
+    result,
+    increment,
+  };
+}
+
+function transform(q, startIndices, endIndices) {
   if (q.length > 0 && startIndices.length === 0 && endIndices.length === 0) {
     startIndices.push(0);
     endIndices.push(q.length - 1);
@@ -390,7 +476,8 @@ function fillDefaultOperator(q, startIndices, endIndices) {
     }
 
     let toggle = false;
-    let count = 0;
+    let noOperator = 0;
+    let noProximity = 0;
     let start = false;
     let index = 0;
     let construct = "";
@@ -431,39 +518,43 @@ function fillDefaultOperator(q, startIndices, endIndices) {
         if (!sQuote && !dQuote && !onlyBracket) {
           const { remain, char } = collectRemainingParts(inter, ch);
           if (remain === " " && char === ch + 1) {
-            construct = trimBrackets(construct);
+            const { s, frontCount } = trimBrackets(construct);
 
-            if (
-              toggle &&
-              construct.toLowerCase() !== "and" &&
-              construct.toLowerCase() !== "or" &&
-              construct.toLowerCase() !== "not" &&
-              construct.toLowerCase() !== "nearp" &&
-              construct.toLowerCase() !== "nears" &&
-              construct.toLowerCase() !== "prep" &&
-              construct.toLowerCase() !== "pres" &&
-              !isNear(construct) &&
-              !isPre(construct)
-            ) {
+            construct = s;
+
+            if (toggle && !isOperator(construct)) {
               inter = [inter.slice(0, index), "AND ", inter.slice(index)].join(
                 ""
               );
-              count++;
-              ch = ch + 4;
-              toggle = true;
+              noOperator++;
+              ch += "AND".length + " ".length;
+
+              if (isProximitySearch(construct)) {
+                const { result, increment } = transformProximitySearch(
+                  construct,
+                  inter,
+                  index + "AND".length + " ".length + frontCount
+                );
+
+                inter = result;
+                noProximity += increment;
+                ch += increment;
+              }
             } else if (!toggle) {
-              if (
-                construct.toLowerCase() === "and" ||
-                construct.toLowerCase() === "or" ||
-                construct.toLowerCase() === "not" ||
-                construct.toLowerCase() === "nearp" ||
-                construct.toLowerCase() === "nears" ||
-                construct.toLowerCase() === "prep" ||
-                construct.toLowerCase() === "pres" ||
-                isNear(construct) ||
-                isPre(construct)
-              ) {
+              if (isOperator(construct)) {
                 throw new Error("consecutive operators are not allowed");
+              }
+
+              if (isProximitySearch(construct)) {
+                const { result, increment } = transformProximitySearch(
+                  construct,
+                  inter,
+                  index + frontCount
+                );
+
+                inter = result;
+                noProximity += increment;
+                ch += increment;
               }
 
               toggle = !toggle;
@@ -491,38 +582,42 @@ function fillDefaultOperator(q, startIndices, endIndices) {
       }
     }
 
-    construct = trimBrackets(construct);
+    const { s, frontCount } = trimBrackets(construct);
+
+    construct = s;
 
     if (toggle) {
-      if (
-        construct.toLowerCase() !== "and" &&
-        construct.toLowerCase() !== "or" &&
-        construct.toLowerCase() !== "not" &&
-        construct.toLowerCase() !== "nearp" &&
-        construct.toLowerCase() !== "nears" &&
-        construct.toLowerCase() !== "prep" &&
-        construct.toLowerCase() !== "pres" &&
-        !isNear(construct) &&
-        !isPre(construct)
-      ) {
+      if (!isOperator(construct)) {
         inter = [inter.slice(0, index), "AND ", inter.slice(index)].join("");
-        count++;
+        noOperator++;
+
+        if (isProximitySearch(construct)) {
+          const { result, increment } = transformProximitySearch(
+            construct,
+            inter,
+            index + "AND".length + " ".length + frontCount
+          );
+
+          inter = result;
+          noProximity += increment;
+        }
       } else {
         throw new Error("trailing operators are not allowed");
       }
     } else {
-      if (
-        construct.toLowerCase() === "and" ||
-        construct.toLowerCase() === "or" ||
-        construct.toLowerCase() === "not" ||
-        construct.toLowerCase() === "nearp" ||
-        construct.toLowerCase() === "nears" ||
-        construct.toLowerCase() === "prep" ||
-        construct.toLowerCase() === "pres" ||
-        isNear(construct) ||
-        isPre(construct)
-      ) {
+      if (isOperator(construct)) {
         throw new Error("consecutive operators are not allowed");
+      } else {
+        if (isProximitySearch(construct)) {
+          const { result, increment } = transformProximitySearch(
+            construct,
+            inter,
+            index + frontCount
+          );
+
+          inter = result;
+          noProximity += increment;
+        }
       }
     }
 
@@ -532,12 +627,12 @@ function fillDefaultOperator(q, startIndices, endIndices) {
 
     startIndices = startIndices.map((val, idx) => {
       if (idx <= i) return val;
-      else return val + 4 * count - noSpaces;
+      else return val + 4 * noOperator - noSpaces + noProximity;
     });
 
     endIndices = endIndices.map((val, idx) => {
       if (idx < i) return val;
-      else return val + 4 * count - noSpaces;
+      else return val + 4 * noOperator - noSpaces + noProximity;
     });
   }
 
@@ -545,7 +640,7 @@ function fillDefaultOperator(q, startIndices, endIndices) {
 }
 
 module.exports = {
-  prepareQ,
+  prepare,
   pickKey,
   getFields,
 };

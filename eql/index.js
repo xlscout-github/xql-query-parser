@@ -150,7 +150,9 @@ function makeClause(tree) {
       };
     }
 
-    return { span_term: { [field]: value.toLowerCase() } };
+    const term = value.toLowerCase();
+
+    return { span_term: { [field]: term } };
   }
 
   let clause = {};
