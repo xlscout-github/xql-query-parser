@@ -3,11 +3,10 @@ const { parse } = require("../parser");
 const DEFAULT_OPERATOR = "AND";
 const ANALYZE_WILDCARD = true;
 const COMBINABLE_OPERATORS = ["AND", "OR", "NOT"];
+const REWRITE = "top_terms_4092";
 
 function main(q) {
   const tree = parse(q);
-
-  // console.dir(tree, { depth: null });
 
   const { child: [left, right] = [] } = tree;
 
@@ -142,7 +141,7 @@ function makeClause(tree) {
             wildcard: {
               [field]: {
                 value,
-                rewrite: "top_terms_4092",
+                rewrite: REWRITE,
               },
             },
           },
