@@ -134,24 +134,17 @@ function makeClause(tree) {
   const slop = adjustSlop(span);
 
   if (left == null && right == null) {
-    if (value.includes("*") || value.includes("?")) {
-      return {
-        span_multi: {
-          match: {
-            wildcard: {
-              [field]: {
-                value,
-                rewrite: REWRITE,
-              },
-            },
-          },
-        },
-      };
+    let clause = {};
+
+    if (isPhrase(value)) {
+      clause = makePhrase(field, trimPhrase(value));
+    } else if (containsWildcard(value)) {
+      clause = makeSpanMulti(field, value);
+    } else {
+      clause = makeSpanTerm(field, value);
     }
 
-    const term = value.toLowerCase();
-
-    return { span_term: { [field]: term } };
+    return clause;
   }
 
   let clause = {};
@@ -187,6 +180,75 @@ function makeClause(tree) {
   }
 
   return clause;
+}
+
+function makePhrase(field, value) {
+  let clause = {};
+  const terms = value.split(/ +/);
+
+  if (terms.length > 1) {
+    const clauses = terms.reduce((previousValue, currentValue) => {
+      if (containsWildcard(currentValue)) {
+        previousValue = [...previousValue, makeSpanMulti(field, currentValue)];
+      } else {
+        previousValue = [...previousValue, makeSpanTerm(field, currentValue)];
+      }
+
+      return previousValue;
+    }, []);
+
+    clause = {
+      span_near: {
+        clauses,
+        slop: 0,
+        in_order: "true",
+      },
+    };
+  } else {
+    if (containsWildcard(value)) {
+      clause = makeSpanMulti(field, value);
+    } else {
+      clause = makeSpanTerm(field, value);
+    }
+  }
+
+  return clause;
+}
+
+function isPhrase(value) {
+  return (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  );
+}
+
+function trimPhrase(value) {
+  return value.slice(1, -1).trim();
+}
+
+function containsWildcard(value) {
+  return value.includes("*") || value.includes("?");
+}
+
+function makeSpanMulti(field, value) {
+  return {
+    span_multi: {
+      match: {
+        wildcard: {
+          [field]: {
+            value,
+            rewrite: REWRITE,
+          },
+        },
+      },
+    },
+  };
+}
+
+function makeSpanTerm(field, value) {
+  const term = value.toLowerCase();
+
+  return { span_term: { [field]: term } };
 }
 
 function shouldCombine(tree, fallback) {
