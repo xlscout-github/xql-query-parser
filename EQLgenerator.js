@@ -105,23 +105,32 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
       mySearchArr[j].child.length > 0
     ) {
       // console.log("***multi value");
-      output = makeSingleQuery(mySearchArr[j].child, mySearchArr[j].opt);
-      if (
-        "proximityOperatorOccured" in output &&
-        output["proximityOperatorOccured"] == "false" &&
-        output["query"] != ""
-      ) {
-        modifiedQuery = output["query"].trim();
-        str = "(" + currentField + ":(" + modifiedQuery + "))";
-        const temp = {};
-        temp.query_string = {};
-        temp.query_string = {
-          default_operator: "AND",
-          query: str,
-          analyze_wildcard: true,
-        };
-        qry = temp;
+      fireFinalQuery = false;
+      if (operator.toLowerCase() == "near" || operator.toLowerCase() == "pre") {
+        fireFinalQuery = true;
       } else {
+        output = makeSingleQuery(mySearchArr[j].child, mySearchArr[j].opt);
+        if (
+          "proximityOperatorOccured" in output &&
+          output["proximityOperatorOccured"] == "false" &&
+          output["query"] != ""
+        ) {
+          modifiedQuery = output["query"].trim();
+          str = "(" + currentField + ":(" + modifiedQuery + "))";
+          const temp = {};
+          temp.query_string = {};
+          temp.query_string = {
+            default_operator: "AND",
+            query: str,
+            analyze_wildcard: true,
+          };
+          qry = temp;
+        } else {
+          fireFinalQuery = true;
+        }
+      }
+
+      if (fireFinalQuery == true) {
         const nearOccurence = 0;
         temphavenearoccured = 0;
         if (span != -1) {
@@ -894,6 +903,7 @@ function makeSingleQuery(strArr, qryoperator, query = "") {
         strArr[i]["opt"].toLowerCase() == "near"
       ) {
         returnArr["proximityOperatorOccured"] = "true";
+        break;
       } else {
         query = "(" + query + " " + qryoperator + " " + strArr[i]["val"] + ")";
       }
