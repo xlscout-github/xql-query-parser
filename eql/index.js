@@ -53,62 +53,65 @@ function _main(tree) {
     }
   }
 
-  let bool = {};
-
   switch (operator) {
     case "AND":
-      bool = shouldCombine(tree, () => ({
-        must: [_main(left), _main(right)],
-      }));
-      break;
+      return {
+        bool: shouldCombine(tree, () => ({
+          must: [_main(left), _main(right)],
+        })),
+      };
     case "OR":
-      bool = shouldCombine(tree, () => ({
-        should: [_main(left), _main(right)],
-      }));
-      break;
+      return {
+        bool: shouldCombine(tree, () => ({
+          should: [_main(left), _main(right)],
+        })),
+      };
     case "NOT":
-      bool = shouldCombine(tree, () => ({
-        must: [_main(left)],
-        must_not: [_main(right)],
-      }));
-      break;
+      return {
+        bool: shouldCombine(tree, () => ({
+          must: [_main(left)],
+          must_not: [_main(right)],
+        })),
+      };
     case "NEAR":
       if (isMulti(tree)) {
         throw Error(`${operator} Operator must be scoped to the same field.`);
       }
 
-      bool = {
-        must: [
-          {
-            span_near: {
-              clauses: [makeClause(left), makeClause(right)],
-              slop,
-              in_order: "false",
-            },
-          },
-        ],
+      return {
+        bool: {
+          must: [buildNear([makeClause(left), makeClause(right)], slop)],
+        },
       };
-      break;
     case "PRE":
       if (isMulti(tree)) {
         throw Error(`${operator} Operator must be scoped to the same field.`);
       }
 
-      bool = {
-        must: [
-          {
-            span_near: {
-              clauses: [makeClause(left), makeClause(right)],
-              slop,
-              in_order: "true",
-            },
-          },
-        ],
+      return {
+        bool: {
+          must: [buildPre([makeClause(left), makeClause(right)], slop)],
+        },
       };
-      break;
   }
+}
 
-  return { bool };
+function buildProximity(clauses, slop, in_order) {
+  return {
+    span_near: {
+      clauses,
+      slop,
+      in_order,
+    },
+  };
+}
+
+function buildNear(clauses, slop) {
+  return buildProximity(clauses, slop, false);
+}
+
+function buildPre(clauses, slop) {
+  return buildProximity(clauses, slop, true);
 }
 
 function adjustSlop(span) {
@@ -134,56 +137,34 @@ function makeClause(tree) {
   const slop = adjustSlop(span);
 
   if (left == null && right == null) {
-    let clause = {};
-
     if (isPhrase(value)) {
-      clause = makePhrase(field, trimPhrase(value));
-    } else if (containsWildcard(value)) {
-      clause = makeSpanMulti(field, value);
-    } else {
-      clause = makeSpanTerm(field, value);
+      return makePhrase(field, trimPhrase(value));
     }
 
-    return clause;
-  }
+    if (containsWildcard(value)) {
+      return makeSpanMulti(field, value);
+    }
 
-  let clause = {};
+    return makeSpanTerm(field, value);
+  }
 
   switch (operator) {
     case "NEAR":
-      clause = {
-        span_near: {
-          clauses: [makeClause(left), makeClause(right)],
-          slop,
-          in_order: "false",
-        },
-      };
-      break;
+      return buildNear([makeClause(left), makeClause(right)], slop);
     case "PRE":
-      clause = {
-        span_near: {
-          clauses: [makeClause(left), makeClause(right)],
-          slop,
-          in_order: "true",
-        },
-      };
-      break;
+      return buildPre([makeClause(left), makeClause(right)], slop);
     case "OR":
-      clause = {
+      return {
         span_or: {
           clauses: [makeClause(left), makeClause(right)],
         },
       };
-      break;
     default:
       throw Error(`Operator ${operator} Not Allowed!`);
   }
-
-  return clause;
 }
 
 function makePhrase(field, value) {
-  let clause = {};
   const terms = value.split(/ +/);
 
   if (terms.length > 1) {
@@ -197,22 +178,14 @@ function makePhrase(field, value) {
       return previousValue;
     }, []);
 
-    clause = {
-      span_near: {
-        clauses,
-        slop: 0,
-        in_order: "true",
-      },
-    };
-  } else {
-    if (containsWildcard(value)) {
-      clause = makeSpanMulti(field, value);
-    } else {
-      clause = makeSpanTerm(field, value);
-    }
+    return buildPre(clauses, 0);
   }
 
-  return clause;
+  if (containsWildcard(value)) {
+    return makeSpanMulti(field, value);
+  }
+
+  return makeSpanTerm(field, value);
 }
 
 function isPhrase(value) {
