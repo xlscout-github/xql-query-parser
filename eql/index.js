@@ -270,9 +270,9 @@ function combine(tree) {
 
   if (left != null && right != null) {
     return `(${combine(left)} ${operator} ${combine(right)})`;
-  } else {
-    return value;
   }
+
+  return value;
 }
 
 module.exports = main;
