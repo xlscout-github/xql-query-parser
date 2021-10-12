@@ -20,6 +20,7 @@ function convertXQLtoEQL(strQry) {
 
 module.exports = {
   parse,
+  pickKey,
   pickKeyParsed,
   getUniqueFields,
   convertXQLtoEQL,

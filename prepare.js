@@ -324,7 +324,7 @@ function pickKey(q, field) {
 
   const startEnd = [];
   for (let i = 0; i < foundwords.length; i++) {
-    if (foundwords[i].slice(0, -1) === field) {
+    if (foundwords[i].trimEnd().slice(0, -1) === field) {
       startEnd.push({
         field: field,
         value: query.substring(startValIndices[i], endValIndices[i] + 1),
