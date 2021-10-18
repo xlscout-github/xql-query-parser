@@ -322,15 +322,46 @@ function makeWildCardSpanQuery(field, value) {
   return wildcardquery;
 }
 
+function makeInvertedCommaQuery(field, value) {
+  matches = value.match(/"/g);
+  cntt = matches ? matches.length : 0;
+  if (cntt == 2) {
+    value = value.replace(/\"/g, "");
+    console.log("value");
+    console.log(value);
+    valarr = value.split(" ");
+    if (valarr.length == 1) {
+      value = valarr[0];
+    } else {
+      spanquery = { span_near: { clauses: [] } };
+      for (const x in valarr) {
+        spanquery.span_near.clauses.push(maketermQuery(field, valarr[x]));
+      }
+      spanquery.span_near.in_order = "true";
+      spanquery.span_near.slop = 0;
+      value = spanquery;
+    }
+  } else {
+    //"vertically 'movable' platform" near5 rechargeable
+    console.log("unhandled case");
+  }
+  return value;
+}
 function maketermQuery(field, value) {
-  const x = {};
+  let x = {};
   x.span_term = {};
   if (value.indexOf('"') != -1) {
+    // var wtf = '"""'
+    value = makeInvertedCommaQuery(field, value);
     //no conversion of '"' encountered
   } else {
     value = value.toLowerCase();
   }
-  x.span_term[field] = value;
+  if (typeof value != "object") {
+    x.span_term[field] = value;
+  } else {
+    x = value;
+  }
   return x;
 }
 
