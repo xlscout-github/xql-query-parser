@@ -891,12 +891,19 @@ function makeSingleQuery(strArr, qryoperator, query = "") {
               if (query == "") {
                 query = returnArr["query"];
               } else {
-                query = query + " " + qryoperator + " " + returnArr["query"];
+                query =
+                  "(" +
+                  query +
+                  " " +
+                  qryoperator +
+                  " " +
+                  returnArr["query"] +
+                  ")";
               }
             }
           }
         } else {
-          query = query + strArr[i]["val"];
+          query = "(" + query + strArr[i]["val"] + ")";
         }
       } else if (
         strArr[i]["opt"].toLowerCase() == "pre" ||
