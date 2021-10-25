@@ -106,7 +106,12 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
     ) {
       // console.log("***multi value");
       fireFinalQuery = false;
-      if (operator.toLowerCase() == "near" || operator.toLowerCase() == "pre") {
+      if (
+        operator.toLowerCase() == "near" ||
+        operator.toLowerCase() == "pre" ||
+        mySearchArr[j].opt.toLowerCase() == "near" ||
+        mySearchArr[j].opt.toLowerCase() == "pre"
+      ) {
         fireFinalQuery = true;
       } else {
         output = makeSingleQuery(mySearchArr[j].child, mySearchArr[j].opt);
@@ -129,7 +134,6 @@ function makeSearchQuery(mySearchArr, operator, span = -1) {
           fireFinalQuery = true;
         }
       }
-
       if (fireFinalQuery == true) {
         const nearOccurence = 0;
         temphavenearoccured = 0;
