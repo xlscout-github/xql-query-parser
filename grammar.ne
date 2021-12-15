@@ -34,7 +34,7 @@ main -> P {% id %} |
         main __ OP __ P 
         {% 
         (d) => {
-          if (typeof d[2] === "object" && d[2].type && d[2].span) {
+          if (typeof d[2] === "object") {
             return {
               operator: d[2].type.toUpperCase(),
               span: d[2].span,
@@ -94,7 +94,7 @@ PORS -> "p"i {% id %} |
 V -> V __ OP __ P 
       {% 
       (d) => {
-        if (typeof d[2] === "object" && d[2].type && d[2].span) {
+        if (typeof d[2] === "object") {
           return {
             operator: d[2].type.toUpperCase(),
             span: d[2].span,
@@ -106,6 +106,42 @@ V -> V __ OP __ P
           operator: d[2].toUpperCase(),
           leftOperand: d[0],
           rightOperand: d[4],
+        };
+      }
+      %} |
+     V __ OP __ NOT __ P
+      {%
+      (d) => {
+        if (typeof d[2] === "object") {
+          return {
+            operator: d[2].type.toUpperCase(),
+            span: d[2].span,
+            leftOperand: d[0],
+            rightOperand: {
+              operator: d[4].toUpperCase(),
+              leftOperand: null,
+              rightOperand: d[6],
+            }
+          };
+        }
+        return {
+          operator: d[2].toUpperCase(),
+          leftOperand: d[0],
+          rightOperand: {
+            operator: d[4].toUpperCase(),
+            leftOperand: null,
+            rightOperand: d[6],
+          }
+        };
+      }
+      %} |
+     NOT __ P 
+      {%
+      (d) => {
+        return {
+          operator: d[0].toUpperCase(),
+          leftOperand: null,
+          rightOperand: d[2],
         };
       }
       %} |

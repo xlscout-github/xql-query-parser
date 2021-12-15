@@ -221,6 +221,8 @@ function _prepare(q) {
     throw new Error("Unbalanced Brackets");
   }
 
+  q = `(${q})`;
+
   const fields = getFields(q);
 
   const { foundwords } = fields;
@@ -542,10 +544,10 @@ function transform(q, startIndices, endIndices) {
               }
             } else if (!toggle) {
               if (isOperator(construct)) {
-                throw new Error("consecutive operators are not allowed");
-              }
-
-              if (isProximitySearch(construct)) {
+                if (construct.toUpperCase() !== "NOT") {
+                  throw new Error("consecutive operators are not allowed");
+                }
+              } else if (isProximitySearch(construct)) {
                 const { result, increment } = transformProximitySearch(
                   construct,
                   inter,
@@ -555,9 +557,11 @@ function transform(q, startIndices, endIndices) {
                 inter = result;
                 noProximity += increment;
                 ch += increment;
-              }
 
-              toggle = !toggle;
+                toggle = !toggle;
+              } else {
+                toggle = !toggle;
+              }
             } else {
               toggle = !toggle;
             }

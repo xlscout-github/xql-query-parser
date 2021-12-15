@@ -8,6 +8,8 @@ const REWRITE = "top_terms_4092";
 function main(q) {
   const tree = parse(q);
 
+  console.dir(tree, { depth: null });
+
   const { child: [left, right] = [] } = tree;
 
   if (left == null && right == null) {
@@ -67,12 +69,20 @@ function _main(tree) {
         })),
       };
     case "NOT":
-      return {
-        bool: shouldCombine(tree, () => ({
-          must: [_main(left)],
-          must_not: [_main(right)],
-        })),
-      };
+      if (left != null) {
+        return {
+          bool: shouldCombine(tree, () => ({
+            must: [_main(left)],
+            must_not: [_main(right)],
+          })),
+        };
+      } else {
+        return {
+          bool: shouldCombine(tree, () => ({
+            must_not: [_main(right)],
+          })),
+        };
+      }
     case "NEAR":
       if (isMulti(tree)) {
         throw Error(`${operator} Operator must be scoped to the same field.`);
@@ -245,7 +255,6 @@ function shouldCombine(tree, fallback) {
 }
 
 function isMulti(tree) {
-  // left, right must exist
   const { val: value } = tree;
 
   return !value;
@@ -262,6 +271,14 @@ function isCombinableTree(tree) {
     }
   }
 
+  if (right != null) {
+    if (COMBINABLE_OPERATORS.includes(operator)) {
+      return isCombinableTree(right);
+    } else {
+      return false;
+    }
+  }
+
   return typeof value === "string";
 }
 
@@ -270,6 +287,10 @@ function combine(tree) {
 
   if (left != null && right != null) {
     return `(${combine(left)} ${operator} ${combine(right)})`;
+  }
+
+  if (right != null) {
+    return `(${operator} ${combine(right)})`;
   }
 
   return value;

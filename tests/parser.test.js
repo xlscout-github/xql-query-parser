@@ -7,7 +7,7 @@ test("should throw error if empty string is passed", () => {
     parse("");
   } catch (error) {
     expect(error).toBeInstanceOf(Error);
-    expect(error).toHaveProperty("message", "NO parsings found");
+    expect(error).toHaveProperty("message", "Empty grouping expression");
   }
 });
 
@@ -389,6 +389,36 @@ test("should parse if date fields contains asterisk in their value", () => {
         ],
       },
       { key: "pdyear", val: { from: "*", to: "*" } },
+    ],
+  });
+});
+
+test("should parse if NOT operator is used without any preceding value", () => {
+  const query = `NOT xlpat-litig:*`;
+
+  expect(parse(query)).toEqual({
+    key: "xlpat-litig",
+    val: "multi",
+    opt: "NOT",
+    child: [null, { key: "xlpat-litig", val: "*" }],
+  });
+});
+
+test("should parse if NOT operator is close to other operators", () => {
+  const query = `ttl: motor OR NOT auto`;
+
+  expect(parse(query)).toEqual({
+    key: "ttl",
+    val: "multi",
+    opt: "OR",
+    child: [
+      { key: "ttl", val: "motor" },
+      {
+        key: "ttl",
+        val: "multi",
+        opt: "NOT",
+        child: [null, { key: "ttl", val: "auto" }],
+      },
     ],
   });
 });
