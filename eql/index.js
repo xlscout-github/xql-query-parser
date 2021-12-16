@@ -8,7 +8,7 @@ const REWRITE = "top_terms_4092";
 function main(q) {
   const tree = parse(q);
 
-  console.dir(tree, { depth: null });
+  // console.dir(tree, { depth: null });
 
   const { child: [left, right] = [] } = tree;
 

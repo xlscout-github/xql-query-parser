@@ -12,12 +12,13 @@ function parse(q, condense = false) {
 
   // console.dir(res, { depth: null });
 
-  if (res.length === 0) {
-    throw new Error("NO parsings found"); // incomplete grouping
-  } else {
-    if (res[0] === null) throw new Error("Empty grouping expression"); // `()`
-    return condense ? transform_condense(res[0]) : transform(res[0]);
+  if (res[res.length - 1] === null) {
+    throw new Error("Empty grouping expression"); // `()`
   }
+
+  return condense
+    ? transform_condense(res[res.length - 1])
+    : transform(res[res.length - 1]);
 }
 
 module.exports = { parse };

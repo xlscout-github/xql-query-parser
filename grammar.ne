@@ -109,8 +109,8 @@ V -> V __ OP __ P
         };
       }
       %} |
-     V __ OP __ NOT __ P
-      {%
+     P __ OP __ NOT __ V
+     {%
       (d) => {
         if (typeof d[2] === "object") {
           return {
@@ -135,7 +135,7 @@ V -> V __ OP __ P
         };
       }
       %} |
-     NOT __ P 
+     NOT __ V 
       {%
       (d) => {
         return {

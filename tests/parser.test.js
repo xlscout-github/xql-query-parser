@@ -422,3 +422,38 @@ test("should parse if NOT operator is close to other operators", () => {
     ],
   });
 });
+
+test("should parse if there are consecutive NOT operators", () => {
+  const query = `ttl: motor OR NOT NOT NOT auto`;
+
+  expect(parse(query)).toEqual({
+    key: "ttl",
+    val: "multi",
+    opt: "OR",
+    child: [
+      { key: "ttl", val: "motor" },
+      {
+        key: "ttl",
+        val: "multi",
+        opt: "NOT",
+        child: [
+          null,
+          {
+            key: "ttl",
+            val: "multi",
+            opt: "NOT",
+            child: [
+              null,
+              {
+                key: "ttl",
+                val: "multi",
+                opt: "NOT",
+                child: [null, { key: "ttl", val: "auto" }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+});
