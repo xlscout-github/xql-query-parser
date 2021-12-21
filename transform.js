@@ -1,111 +1,126 @@
-function findLeftField(lObj) {
-  if (lObj.leftOperand) {
-    return findLeftField(lObj.leftOperand);
-  }
+const Queue = require("./util/Queue");
 
-  return lObj.field;
-}
+const NOT = "NOT";
 
-function findRightField(lObj) {
-  if (lObj.rightOperand) {
-    return findRightField(lObj.rightOperand);
-  }
+function getSingularField(tree) {
+  let field = null;
 
-  return lObj.field;
-}
+  const queue = new Queue();
+  queue.enqueue(tree);
 
-function filterNullOperand(lrObj) {
-  if (lrObj.leftOperand === null && lrObj.rightOperand === null) {
-    return null;
-  } else if (lrObj.leftOperand === null && lrObj.rightOperand) {
-    if (lrObj.operator === "NOT") {
-      return { ...lrObj, rightOperand: filterNullOperand(lrObj.rightOperand) };
-    } else {
-      return filterNullOperand(lrObj.rightOperand);
+  while (!queue.isEmpty()) {
+    tree = queue.dequeue();
+
+    if (tree.leftOperand == null && tree.rightOperand == null) {
+      if (!field) {
+        field = tree.field;
+        continue;
+      }
+
+      if (field !== tree.field) {
+        field = null;
+        break;
+      }
     }
-  } else if (lrObj.rightOperand === null && lrObj.leftOperand) {
-    return filterNullOperand(lrObj.leftOperand);
-  } else if (lrObj.leftOperand && lrObj.rightOperand) {
-    lrObj.leftOperand = filterNullOperand(lrObj.leftOperand);
-    lrObj.rightOperand = filterNullOperand(lrObj.rightOperand);
 
-    if (lrObj.leftOperand === null && lrObj.rightOperand) {
-      return lrObj.rightOperand;
-    } else if (lrObj.rightOperand === null && lrObj.leftOperand) {
-      return lrObj.leftOperand;
-    } else if (lrObj.leftOperand === null && lrObj.rightOperand === null) {
+    if (tree.leftOperand != null) {
+      queue.enqueue(tree.leftOperand);
+    }
+
+    if (tree.rightOperand != null) {
+      queue.enqueue(tree.rightOperand);
+    }
+  }
+
+  return field;
+}
+
+function filterNullOperand(tree) {
+  if (tree.leftOperand === null && tree.rightOperand === null) {
+    return null;
+  } else if (tree.leftOperand === null && tree.rightOperand) {
+    if (tree.operator === NOT) {
+      // hold on to null
+      return { ...tree, rightOperand: filterNullOperand(tree.rightOperand) };
+    } else {
+      return filterNullOperand(tree.rightOperand);
+    }
+  } else if (tree.rightOperand === null && tree.leftOperand) {
+    return filterNullOperand(tree.leftOperand);
+  } else if (tree.leftOperand && tree.rightOperand) {
+    tree.leftOperand = filterNullOperand(tree.leftOperand);
+    tree.rightOperand = filterNullOperand(tree.rightOperand);
+
+    if (tree.leftOperand === null && tree.rightOperand) {
+      return tree.rightOperand;
+    } else if (tree.rightOperand === null && tree.leftOperand) {
+      return tree.leftOperand;
+    } else if (tree.leftOperand === null && tree.rightOperand === null) {
       return null;
     }
   }
 
-  return lrObj;
+  return tree;
 }
 
-function _transform(lrObj) {
-  if (!lrObj) throw new Error("Empty grouping expressions");
+function _transform(tree) {
+  if (!tree) throw new Error("Empty grouping expressions");
 
-  if (lrObj.leftOperand && lrObj.rightOperand) {
+  if (tree.leftOperand && tree.rightOperand) {
     const res = {};
 
-    const LL = findLeftField(lrObj.leftOperand);
-    const LR = findRightField(lrObj.leftOperand);
-    const RL = findLeftField(lrObj.rightOperand);
-    const RR = findRightField(lrObj.rightOperand);
+    const key = getSingularField(tree);
 
-    if ((!LL || LL === LR) && (!RL || RL === RR) && LR === RR) {
-      res["key"] = LR;
-      res["val"] = "multi";
+    if (key) {
+      res.key = key;
+      res.val = "multi";
     } else {
-      res["key"] = "multi";
+      res.key = "multi";
     }
 
-    if (lrObj.span) {
-      res["span"] = lrObj.span;
+    if (tree.span) {
+      res.span = tree.span;
     }
 
-    res["opt"] = lrObj.operator;
-    res["child"] = [
-      _transform(lrObj.leftOperand),
-      _transform(lrObj.rightOperand),
-    ];
+    res.opt = tree.operator;
+    res.child = [_transform(tree.leftOperand), _transform(tree.rightOperand)];
 
     return res;
   }
 
-  if (lrObj.rightOperand) {
+  if (tree.rightOperand) {
     const res = {};
 
-    const RL = findLeftField(lrObj.rightOperand);
-    const RR = findRightField(lrObj.rightOperand);
+    const key = getSingularField(tree);
 
-    if (!RL || RL === RR) {
-      res["key"] = RR;
-      res["val"] = "multi";
+    if (key) {
+      res.key = key;
+      res.val = "multi";
     } else {
-      res["key"] = "multi";
+      res.key = "multi";
     }
 
-    res["opt"] = lrObj.operator;
-    res["child"] = [null, _transform(lrObj.rightOperand)];
+    res.opt = tree.operator;
+    res.child = [null, _transform(tree.rightOperand)];
 
     return res;
   }
 
-  if (lrObj.type === "DATE") {
-    return { key: lrObj.field, val: { from: lrObj.from, to: lrObj.to } };
+  if (tree.type === "DATE") {
+    return { key: tree.field, val: { from: tree.from, to: tree.to } };
   }
 
-  return { key: lrObj.field, val: lrObj.value };
+  return { key: tree.field, val: tree.value };
 }
 
-function transform(lrObj) {
-  return _transform(filterNullOperand(lrObj));
+function transform(tree) {
+  return _transform(filterNullOperand(tree));
 }
 
-function _transform_condense(lrObj) {
-  if (!lrObj) throw new Error("Empty grouping expressions");
+function _transform_condense(tree) {
+  if (!tree) throw new Error("Empty grouping expressions");
 
-  if (lrObj.leftOperand && lrObj.rightOperand) {
+  if (tree.leftOperand && tree.rightOperand) {
     const res = {
       field: "",
       keyword: "",
@@ -113,38 +128,31 @@ function _transform_condense(lrObj) {
       children: [],
     };
 
-    const LL = findLeftField(lrObj.leftOperand);
-    const LR = findRightField(lrObj.leftOperand);
-    const RL = findLeftField(lrObj.rightOperand);
-    const RR = findRightField(lrObj.rightOperand);
+    const key = getSingularField(tree);
 
-    if ((!LL || LL === LR) && (!RL || RL === RR) && LR === RR) {
-      res.field = LR;
-      if (lrObj.explicit) {
-        res.keyword = `(${_transform_condense(lrObj.leftOperand).keyword} ${
-          lrObj.operator
-        }${lrObj.span || ""} ${
-          _transform_condense(lrObj.rightOperand).keyword
-        })`;
+    if (key) {
+      res.field = key;
+      if (tree.explicit) {
+        res.keyword = `(${_transform_condense(tree.leftOperand).keyword} ${
+          tree.operator
+        }${tree.span || ""} ${_transform_condense(tree.rightOperand).keyword})`;
       } else {
-        res.keyword = `${_transform_condense(lrObj.leftOperand).keyword} ${
-          lrObj.operator
-        }${lrObj.span || ""} ${
-          _transform_condense(lrObj.rightOperand).keyword
-        }`;
+        res.keyword = `${_transform_condense(tree.leftOperand).keyword} ${
+          tree.operator
+        }${tree.span || ""} ${_transform_condense(tree.rightOperand).keyword}`;
       }
     } else {
-      res.operator = lrObj.operator;
+      res.operator = tree.operator;
       res.children = [
-        _transform_condense(lrObj.leftOperand),
-        _transform_condense(lrObj.rightOperand),
+        _transform_condense(tree.leftOperand),
+        _transform_condense(tree.rightOperand),
       ];
     }
 
     return res;
   }
 
-  if (lrObj.rightOperand) {
+  if (tree.rightOperand) {
     const res = {
       field: "",
       keyword: "",
@@ -152,65 +160,64 @@ function _transform_condense(lrObj) {
       children: [],
     };
 
-    const RL = findLeftField(lrObj.rightOperand);
-    const RR = findRightField(lrObj.rightOperand);
+    const key = getSingularField(tree);
 
-    if (!RL || RL === RR) {
-      res.field = RR;
-      if (lrObj.explicit) {
-        res.keyword = `(${lrObj.operator} ${
-          _transform_condense(lrObj.rightOperand).keyword
+    if (key) {
+      res.field = key;
+      if (tree.explicit) {
+        res.keyword = `(${tree.operator} ${
+          _transform_condense(tree.rightOperand).keyword
         })`;
       } else {
-        res.keyword = `${lrObj.operator} ${
-          _transform_condense(lrObj.rightOperand).keyword
+        res.keyword = `${tree.operator} ${
+          _transform_condense(tree.rightOperand).keyword
         }`;
       }
     } else {
-      res.operator = lrObj.operator;
-      res.children = [null, _transform_condense(lrObj.rightOperand)];
+      res.operator = tree.operator;
+      res.children = [null, _transform_condense(tree.rightOperand)];
     }
 
     return res;
   }
 
-  if (lrObj.type === "DATE") {
-    if (lrObj.explicit) {
+  if (tree.type === "DATE") {
+    if (tree.explicit) {
       return {
-        field: lrObj.field,
-        keyword: `(from${lrObj.from} to${lrObj.to})`,
+        field: tree.field,
+        keyword: `(from${tree.from} to${tree.to})`,
         operator: "",
         children: [],
       };
     } else {
       return {
-        field: lrObj.field,
-        keyword: `from${lrObj.from} to${lrObj.to}`,
+        field: tree.field,
+        keyword: `from${tree.from} to${tree.to}`,
         operator: "",
         children: [],
       };
     }
   }
 
-  if (lrObj.explicit) {
+  if (tree.explicit) {
     return {
-      field: lrObj.field,
-      keyword: `(${lrObj.value})`,
+      field: tree.field,
+      keyword: `(${tree.value})`,
       operator: "",
       children: [],
     };
   } else {
     return {
-      field: lrObj.field,
-      keyword: lrObj.value,
+      field: tree.field,
+      keyword: tree.value,
       operator: "",
       children: [],
     };
   }
 }
 
-function transform_condense(lrObj) {
-  return _transform_condense(filterNullOperand(lrObj));
+function transform_condense(tree) {
+  return _transform_condense(filterNullOperand(tree));
 }
 
 module.exports = {
