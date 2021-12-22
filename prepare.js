@@ -330,8 +330,8 @@ function pickKey(q, field) {
       startEnd.push({
         field: field,
         value: query.substring(startValIndices[i], endValIndices[i] + 1),
-        start: startFieldIndices[i] - (2 * i + 1),
-        end: endValIndices[i] - (2 * i + 1),
+        start: startFieldIndices[i] - (2 * i + 2),
+        end: endValIndices[i] - (2 * i + 2),
       });
     }
   }
