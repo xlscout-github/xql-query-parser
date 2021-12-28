@@ -1,7 +1,5 @@
 const Queue = require("./util/Queue");
 
-const NOT = "NOT";
-
 function getSingularField(tree) {
   let field = null;
 
@@ -35,37 +33,7 @@ function getSingularField(tree) {
   return field;
 }
 
-function filterNullOperand(tree) {
-  if (tree.leftOperand === null && tree.rightOperand === null) {
-    return null;
-  } else if (tree.leftOperand === null && tree.rightOperand) {
-    if (tree.operator === NOT) {
-      // hold on to null
-      return { ...tree, rightOperand: filterNullOperand(tree.rightOperand) };
-    } else {
-      return filterNullOperand(tree.rightOperand);
-    }
-  } else if (tree.rightOperand === null && tree.leftOperand) {
-    return filterNullOperand(tree.leftOperand);
-  } else if (tree.leftOperand && tree.rightOperand) {
-    tree.leftOperand = filterNullOperand(tree.leftOperand);
-    tree.rightOperand = filterNullOperand(tree.rightOperand);
-
-    if (tree.leftOperand === null && tree.rightOperand) {
-      return tree.rightOperand;
-    } else if (tree.rightOperand === null && tree.leftOperand) {
-      return tree.leftOperand;
-    } else if (tree.leftOperand === null && tree.rightOperand === null) {
-      return null;
-    }
-  }
-
-  return tree;
-}
-
-function _transform(tree) {
-  if (!tree) throw new Error("Empty grouping expressions");
-
+function transform(tree) {
   if (tree.leftOperand && tree.rightOperand) {
     const res = {};
 
@@ -83,7 +51,7 @@ function _transform(tree) {
     }
 
     res.opt = tree.operator;
-    res.child = [_transform(tree.leftOperand), _transform(tree.rightOperand)];
+    res.child = [transform(tree.leftOperand), transform(tree.rightOperand)];
 
     return res;
   }
@@ -101,7 +69,7 @@ function _transform(tree) {
     }
 
     res.opt = tree.operator;
-    res.child = [null, _transform(tree.rightOperand)];
+    res.child = [null, transform(tree.rightOperand)];
 
     return res;
   }
@@ -113,13 +81,7 @@ function _transform(tree) {
   return { key: tree.field, val: tree.value };
 }
 
-function transform(tree) {
-  return _transform(filterNullOperand(tree));
-}
-
-function _transform_condense(tree) {
-  if (!tree) throw new Error("Empty grouping expressions");
-
+function transform_condense(tree) {
   if (tree.leftOperand && tree.rightOperand) {
     const res = {
       field: "",
@@ -133,19 +95,19 @@ function _transform_condense(tree) {
     if (key) {
       res.field = key;
       if (tree.explicit) {
-        res.keyword = `(${_transform_condense(tree.leftOperand).keyword} ${
+        res.keyword = `(${transform_condense(tree.leftOperand).keyword} ${
           tree.operator
-        }${tree.span || ""} ${_transform_condense(tree.rightOperand).keyword})`;
+        }${tree.span || ""} ${transform_condense(tree.rightOperand).keyword})`;
       } else {
-        res.keyword = `${_transform_condense(tree.leftOperand).keyword} ${
+        res.keyword = `${transform_condense(tree.leftOperand).keyword} ${
           tree.operator
-        }${tree.span || ""} ${_transform_condense(tree.rightOperand).keyword}`;
+        }${tree.span || ""} ${transform_condense(tree.rightOperand).keyword}`;
       }
     } else {
       res.operator = tree.operator;
       res.children = [
-        _transform_condense(tree.leftOperand),
-        _transform_condense(tree.rightOperand),
+        transform_condense(tree.leftOperand),
+        transform_condense(tree.rightOperand),
       ];
     }
 
@@ -166,16 +128,16 @@ function _transform_condense(tree) {
       res.field = key;
       if (tree.explicit) {
         res.keyword = `(${tree.operator} ${
-          _transform_condense(tree.rightOperand).keyword
+          transform_condense(tree.rightOperand).keyword
         })`;
       } else {
         res.keyword = `${tree.operator} ${
-          _transform_condense(tree.rightOperand).keyword
+          transform_condense(tree.rightOperand).keyword
         }`;
       }
     } else {
       res.operator = tree.operator;
-      res.children = [null, _transform_condense(tree.rightOperand)];
+      res.children = [null, transform_condense(tree.rightOperand)];
     }
 
     return res;
@@ -214,10 +176,6 @@ function _transform_condense(tree) {
       children: [],
     };
   }
-}
-
-function transform_condense(tree) {
-  return _transform_condense(filterNullOperand(tree));
 }
 
 module.exports = {

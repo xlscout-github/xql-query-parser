@@ -12,10 +12,6 @@ function parse(q, condense = false) {
 
   // console.dir(res, { depth: null });
 
-  if (res[res.length - 1] === null) {
-    throw new Error("Empty grouping expression"); // `()`
-  }
-
   return condense
     ? transform_condense(res[res.length - 1])
     : transform(res[res.length - 1]);

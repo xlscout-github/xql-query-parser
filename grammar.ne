@@ -3,79 +3,50 @@
 @{%
 
 function setField(field, value) {
-  if (value === null) return null;
-  else if (value.leftOperand || value.rightOperand) {
+  if (value.leftOperand || value.rightOperand) {
     if (value.leftOperand) {
-      value.leftOperand = setField(field, value.leftOperand);
+      value.leftOperand = setField(field, value.leftOperand)
     }
     if (value.rightOperand) {
-      value.rightOperand = setField(field, value.rightOperand);
+      value.rightOperand = setField(field, value.rightOperand)
     }
   } else {
-    return { ...value, field };
+    return { ...value, field }
   }
 
-  return value;
+  return value
 }
 
 function setDefaultField(value, field = "text") {
   // DATE VALUE
   if (typeof value === "object" && value.type === "DATE") {
-    return { ...value, field };
+    return { ...value, field }
   }
 
   // STRING VALUE
-  return { field, value };
+  return { field, value }
 }
 
 %}
 
-main -> P {% id %} |
-        main __ OP __ P 
-        {% 
-        (d) => {
-          if (typeof d[2] === "object") {
-            return {
-              operator: d[2].type.toUpperCase(),
-              span: d[2].span,
-              leftOperand: d[0],
-              rightOperand: d[4],
-            };
-          }
-          return {
-            operator: d[2].toUpperCase(),
-            leftOperand: d[0],
-            rightOperand: d[4],
-          };
-        }
-        %}
+main -> P {% id %}
 
 # Parentheses
-P -> "(" _ F _ ")" {% (d) => d[2] %} |
-     "(" _ V _ ")" 
-     {% 
-     ([, , val]) => {
-       if (val != null) {
-         return { ...val, explicit: true };
-       } else {
-         return null;
-       }
-      } 
-     %} |
-     "(" _ ")" {% (d) => null %} |
-     VAL {% (d) => setDefaultField(d[0]) %}
+P -> "(" _ F _ ")" {% ([, , f]) => f %} |
+     "(" _ V _ ")" {% ([, , val]) => ({ ...val, explicit: true }) %} |
+     VAL {% ([v]) => setDefaultField(v) %}
 
 # Field
-F -> FIELD _ ":" _ V {% (d) => setField(d[0], d[4]) %}
+F -> FIELD _ ":" _ V {% ([f, , , , v]) => setField(f, v) %}
 
 # Operator
 OP -> AND {% id %} |
       OR {% id %} |
       NOT {% id %} |
-      NEAR NUM {% (d) => ({ type: d[0], span: d[1] }) %} |
-      NEAR PORS {% (d) => ({ type: d[0], span: d[1].toUpperCase() }) %} |
-      PRE NUM {% (d) => ({ type: d[0], span: d[1] }) %} |
-      PRE PORS {% (d) => ({ type: d[0], span: d[1].toUpperCase() }) %}
+      NEAR NUM {% ([type, span]) => ({ type, span }) %} |
+      NEAR PORS {% ([type, span]) => ({ type, span: span.toUpperCase() }) %} |
+      PRE NUM {% ([type, span]) => ({ type, span }) %} |
+      PRE PORS {% ([type, span]) => ({ type, span: span.toUpperCase() }) %}
 
 AND -> "and"i {% id %}
 
@@ -93,56 +64,56 @@ PORS -> "p"i {% id %} |
 # Value
 V -> V __ OP __ P 
       {% 
-      (d) => {
-        if (typeof d[2] === "object") {
+      ([l, , o, , r]) => {
+        if (typeof o === "object") {
           return {
-            operator: d[2].type.toUpperCase(),
-            span: d[2].span,
-            leftOperand: d[0],
-            rightOperand: d[4],
-          };
+            operator: o.type.toUpperCase(),
+            span: o.span,
+            leftOperand: l,
+            rightOperand: r
+          }
         }
         return {
-          operator: d[2].toUpperCase(),
-          leftOperand: d[0],
-          rightOperand: d[4],
-        };
+          operator: o.toUpperCase(),
+          leftOperand: l,
+          rightOperand: r
+        }
       }
       %} |
      P __ OP __ NOT __ V
      {%
-      (d) => {
-        if (typeof d[2] === "object") {
+      ([l, , o, , , , r]) => {
+        if (typeof o === "object") {
           return {
-            operator: d[2].type.toUpperCase(),
-            span: d[2].span,
-            leftOperand: d[0],
+            operator: o.type.toUpperCase(),
+            span: o.span,
+            leftOperand: l,
             rightOperand: {
-              operator: d[4].toUpperCase(),
+              operator: "NOT",
               leftOperand: null,
-              rightOperand: d[6],
+              rightOperand: r
             }
-          };
+          }
         }
         return {
-          operator: d[2].toUpperCase(),
-          leftOperand: d[0],
+          operator: o.toUpperCase(),
+          leftOperand: l,
           rightOperand: {
-            operator: d[4].toUpperCase(),
+            operator: "NOT",
             leftOperand: null,
-            rightOperand: d[6],
+            rightOperand: r
           }
-        };
+        }
       }
       %} |
      NOT __ V 
       {%
-      (d) => {
+      ([, , v]) => {
         return {
-          operator: d[0].toUpperCase(),
+          operator: "NOT",
           leftOperand: null,
-          rightOperand: d[2],
-        };
+          rightOperand: v
+        }
       }
       %} |
      P {% id %}
@@ -150,9 +121,9 @@ V -> V __ OP __ P
 # Value Content
 VAL ->
     NVAL {% id %} |
-    "\"" DSVAL "\"" {% (d) => d[0] + d[1] + d[2] %} |
-    "'" SSVAL "'" {% (d) => d[0] + d[1] + d[2] %} |
-    "[" _ NUMORSTAR __ TO __ NUMORSTAR _ "]" {% (d) => ({ type: "DATE", from: d[2], to: d[6] }) %}
+    "\"" DSVAL "\"" {% ([, v]) => "\"" + v + "\"" %} |
+    "'" SSVAL "'" {% ([, v]) => "'" + v + "'" %} |
+    "[" _ NUMORSTAR __ TO __ NUMORSTAR _ "]" {% ([, , from, , , , to]) => ({ type: "DATE", from, to }) %}
 
 NUMORSTAR -> NUM {% id %} |
              "*" {% id %}
@@ -276,10 +247,10 @@ TO -> "to"i {% id %}
 
 # Field Content
 FIELD ->
-    [a-zA-Z*\\]:+ {% (d) => d[0].join("") %} |
-    [a-zA-Z*\\]:+ SEPERATOR FIELD {% (d) => d[0].join("") + d[1] + d[2] %} |
-    SEPERATOR FIELD {% (d) => d[0] + d[1] %} |
-    FIELD SEPERATOR {% (d) => d[0] + d[1] %}
+    [a-zA-Z*\\]:+ {% ([v]) => v.join("") %} |
+    [a-zA-Z*\\]:+ SEPERATOR FIELD {% ([v, s, f]) => v.join("") + s + f %} |
+    SEPERATOR FIELD {% ([s, f]) => s + f %} |
+    FIELD SEPERATOR {% ([f, s]) => f + s %}
 
 # Field Seperator
 SEPERATOR -> "." {% id %} |
@@ -288,4 +259,4 @@ SEPERATOR -> "." {% id %} |
 
 # Number
 NUM ->
-    [0-9]:+ {% (d) => d[0].join("") %}
+    [0-9]:+ {% ([n]) => n.join("") %}

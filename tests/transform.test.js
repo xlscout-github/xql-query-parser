@@ -1,13 +1,13 @@
 const { transform, transform_condense } = require("../transform");
 
 test("should transform provided left-right object format to parent-child relationship format", () => {
-  const lrObjData = {
+  const tree = {
     operator: "OR",
     leftOperand: { field: "desc", value: "DETECT*" },
     rightOperand: { field: "pn", value: "US7420295B2" },
   };
 
-  expect(transform(lrObjData)).toEqual({
+  expect(transform(tree)).toEqual({
     key: "multi",
     opt: "OR",
     child: [
@@ -18,14 +18,14 @@ test("should transform provided left-right object format to parent-child relatio
 });
 
 test("should transform left-right object containing date fields", () => {
-  const lrObjData = {
+  const tree = {
     type: "DATE",
     from: "16990101",
     to: "20010316",
     field: "pd",
   };
 
-  expect(transform(lrObjData)).toEqual({
+  expect(transform(tree)).toEqual({
     key: "pd",
     val: {
       from: "16990101",
@@ -35,7 +35,7 @@ test("should transform left-right object containing date fields", () => {
 });
 
 test("should establish value as multi if left side and right side have same fields", () => {
-  const lrObjData = {
+  const tree = {
     operator: "NEAR5",
     leftOperand: { field: "desc", value: "DETECT*" },
     rightOperand: {
@@ -45,7 +45,7 @@ test("should establish value as multi if left side and right side have same fiel
     },
   };
 
-  expect(transform(lrObjData)).toEqual({
+  expect(transform(tree)).toEqual({
     key: "desc",
     val: "multi",
     opt: "NEAR5",
@@ -65,7 +65,7 @@ test("should establish value as multi if left side and right side have same fiel
 });
 
 test("should produce a condensed ouput where values are merged and hide implicit grouping", () => {
-  const lrObjData = {
+  const tree = {
     operator: "OR",
     leftOperand: {
       operator: "NEAR",
@@ -83,7 +83,7 @@ test("should produce a condensed ouput where values are merged and hide implicit
     rightOperand: { field: "pn", value: "US7420295B2" },
   };
 
-  expect(transform_condense(lrObjData)).toEqual({
+  expect(transform_condense(tree)).toEqual({
     field: "",
     keyword: "",
     operator: "OR",

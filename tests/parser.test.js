@@ -1,13 +1,12 @@
 const { parse } = require("../parser");
 
 test("should throw error if empty string is passed", () => {
-  expect.assertions(2);
+  expect.assertions(1);
 
   try {
     parse("");
   } catch (error) {
     expect(error).toBeInstanceOf(Error);
-    expect(error).toHaveProperty("message", "Empty grouping expression");
   }
 });
 
@@ -231,57 +230,33 @@ test("should correctly parse the query if field signature occur inside quotation
   });
 });
 
-test("should ignore empty grouping expressions", () => {
-  const query = `(tac:detect AND (() AND ())) OR () OR (ttl:connect* OR ppl*)`;
-
-  expect(parse(query)).toEqual({
-    key: "multi",
-    opt: "OR",
-    child: [
-      { key: "tac", val: "detect" },
-      {
-        key: "ttl",
-        val: "multi",
-        opt: "OR",
-        child: [
-          { key: "ttl", val: "connect*" },
-          { key: "ttl", val: "ppl*" },
-        ],
-      },
-    ],
-  });
-});
-
 test("should throw error if singleton empty brackets are passed", () => {
-  expect.assertions(2);
+  expect.assertions(1);
 
   try {
     parse("()");
   } catch (error) {
     expect(error).toBeInstanceOf(Error);
-    expect(error).toHaveProperty("message", "Empty grouping expression");
   }
 });
 
 test("should throw error if brackets within brackets are passed", () => {
-  expect.assertions(2);
+  expect.assertions(1);
 
   try {
     parse("(())");
   } catch (error) {
     expect(error).toBeInstanceOf(Error);
-    expect(error).toHaveProperty("message", "Empty grouping expression");
   }
 });
 
 test("should throw error if combination of empty brackets are passed", () => {
-  expect.assertions(2);
+  expect.assertions(1);
 
   try {
     parse("(() OR ()) AND ()");
   } catch (error) {
     expect(error).toBeInstanceOf(Error);
-    expect(error).toHaveProperty("message", "Empty grouping expressions");
   }
 });
 

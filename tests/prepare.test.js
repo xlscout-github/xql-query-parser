@@ -52,18 +52,18 @@ test("should throw error in case of unbalanced circular brackets", () => {
 });
 
 test("should not throw error if unbalanced circular brackets are inside quotations", () => {
-  const query = `(tac:"((detect" AND (() AND ())) OR () OR (ttl:"c))onnect*" OR ppl*)`;
+  const query = `(tac:"((detect") OR (ttl:"c))onnect*" OR ppl*)`;
 
   expect(prepare(query)).toBe(
-    `(((tac:"((detect" AND (() AND ())) OR ()) OR ((ttl:"c))onnect*" OR ppl*)))`
+    `(((tac:"((detect")) OR ((ttl:"c))onnect*" OR ppl*)))`
   );
 });
 
 test("should not throw error if unbalanced square brackets are inside quotations", () => {
-  const query = `(tac:"[[detect" AND (() AND ())) OR () OR (ttl:"connect]]*" OR ppl*)`;
+  const query = `(tac:"[[detect") OR (ttl:"connect]]*" OR ppl*)`;
 
   expect(prepare(query)).toBe(
-    `(((tac:"[[detect" AND (() AND ())) OR ()) OR ((ttl:"connect]]*" OR ppl*)))`
+    `(((tac:"[[detect")) OR ((ttl:"connect]]*" OR ppl*)))`
   );
 });
 
