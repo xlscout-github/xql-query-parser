@@ -1,19 +1,18 @@
 const { parse } = require("./parser");
 const eql = require("./eql");
 const { EQLgenerator } = require("./EQLgenerator");
-const {pickKeyParsed} = require("./")
 
 const result = parse(
-  `(text:NOT (apple))`
+  `(text: (NOT A OR (A AND B)))`
 );
 
 console.dir(result, {
   depth: null,
 });
 
-console.dir(EQLgenerator(result), {
-  depth: null,
-});
+// console.dir(EQLgenerator(result), {
+//   depth: null,
+// });
 
 // console.dir(
 //   eql(
