@@ -2,9 +2,7 @@ const { parse } = require("./parser");
 const eql = require("./eql");
 const { EQLgenerator } = require("./EQLgenerator");
 
-const result = parse(
-  `(text: (NOT A OR (A AND B)))`
-);
+const result = parse(`(text: (NOT A OR (A AND B)))`);
 
 console.dir(result, {
   depth: null,

@@ -483,7 +483,7 @@ function transform(q, startIndices, endIndices) {
     let start = false;
     let index = 0;
     let construct = "";
-    let prevConstruct = ""
+    let prevConstruct = "";
     let onlyBracket = false;
     let sQuote = false;
     let dQuote = false;
@@ -570,7 +570,7 @@ function transform(q, startIndices, endIndices) {
               toggle = !toggle;
             }
 
-            prevConstruct = construct
+            prevConstruct = construct;
             construct = "";
             start = false;
             index = 0;

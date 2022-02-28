@@ -12,9 +12,7 @@ function parse(q, condense = false) {
 
   // console.dir(tree, { depth: null });
 
-  return condense
-    ? transform_condense(tree)
-    : transform(tree);
+  return condense ? transform_condense(tree) : transform(tree);
 }
 
 module.exports = { parse };
