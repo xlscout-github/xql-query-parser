@@ -8,13 +8,11 @@ function parse(q, condense = false) {
 
   parser.feed(prepare(q));
 
-  const res = parser.results;
+  const [tree] = parser.results;
 
-  // console.dir(res, { depth: null });
+  // console.dir(tree, { depth: null });
 
-  return condense
-    ? transform_condense(res[res.length - 1])
-    : transform(res[res.length - 1]);
+  return condense ? transform_condense(tree) : transform(tree);
 }
 
 module.exports = { parse };

@@ -483,6 +483,7 @@ function transform(q, startIndices, endIndices) {
     let start = false;
     let index = 0;
     let construct = "";
+    let prevConstruct = "";
     let onlyBracket = false;
     let sQuote = false;
     let dQuote = false;
@@ -547,6 +548,9 @@ function transform(q, startIndices, endIndices) {
                 if (construct.toUpperCase() !== "NOT") {
                   throw new Error("consecutive operators are not allowed");
                 }
+                if (prevConstruct.toUpperCase() === "NOT") {
+                  throw new Error("consecutive operators are not allowed");
+                }
               } else if (isProximitySearch(construct)) {
                 const { result, increment } = transformProximitySearch(
                   construct,
@@ -566,6 +570,7 @@ function transform(q, startIndices, endIndices) {
               toggle = !toggle;
             }
 
+            prevConstruct = construct;
             construct = "";
             start = false;
             index = 0;
