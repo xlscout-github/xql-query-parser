@@ -7,11 +7,11 @@ const fieldq1 = '(tac:((((autonomous vehicles) OR (automated vehicle) OR (self d
 const fieldq2 = '(ttl:(wireles? AND communicatio?) NOT (ttl:(netwo* AND sign*)))'
 
 console.log('final ->', JSON.stringify(genEQL('US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845', (node) => {
-    // console.log(node.key, node.val);
-    if (node.key === 'pn') {
-        // node.key = 'pn-nok.keyword'
-        node.key = 'ucid-alt.keyword'
-    }
+  // console.log(node.key, node.val);
+  if (node.key === 'pn') {
+    // node.key = 'pn-nok.keyword'
+    node.key = 'ucid-alt.keyword'
+  }
 }), null, 2))
 
 // console.log(JSON.stringify(qp, null, 2))
