@@ -147,21 +147,78 @@ function gen (node, nodeTransformer) {
         nodeTransformer(element)
       }
 
-      const p = {}
-      p[element.key] = element.val
-      const fp = {}
+      if ((element.val.startsWith('"') && element.val.endsWith('"')) ||
+      (element.val.startsWith("'") && element.val.endsWith("'"))) {
+        element.val = element.val.slice(1, -1).trim()
+        const terms = element.val.split(/ +/)
 
-      if (element.val.includes('*') || element.val.includes('?')) {
-        fp.span_multi = { match: { wildcard: {} } }
-        fp.span_multi.match.wildcard[element.key] = {
-          value: element.val,
-          case_insensitive: true
+        if (terms.length > 1) {
+          const clauses = terms.reduce((previousValue, currentValue) => {
+            if (currentValue.includes('*') || currentValue.includes('?')) {
+              previousValue.push({
+                span_multi: {
+                  match: {
+                    wildcard: {
+                      [element.key]: {
+                        value: currentValue,
+                        case_insensitive: true
+                      }
+                    }
+                  }
+                }
+              })
+            } else {
+              previousValue.push({
+                span_term: {
+                  [element.key]: currentValue
+                }
+              })
+            }
+
+            return previousValue
+          }, [])
+
+          span_near.clauses.push({
+            span_near: {
+              clauses,
+              in_order: true,
+              slop: 0
+            }
+          })
+        } else {
+          const p = {}
+          p[element.key] = element.val
+          const fp = {}
+
+          if (element.val.includes('*') || element.val.includes('?')) {
+            fp.span_multi = { match: { wildcard: {} } }
+            fp.span_multi.match.wildcard[element.key] = {
+              value: element.val,
+              case_insensitive: true
+            }
+          } else {
+            fp.span_term = p
+          }
+
+          span_near.clauses.push(fp)
         }
       } else {
-        fp.span_term = p
-      }
+        const p = {}
+        p[element.key] = element.val
+        const fp = {}
 
-      span_near.clauses.push(fp)
+        if (element.val.includes('*') || element.val.includes('?')) {
+          fp.span_multi = { match: { wildcard: {} } }
+          fp.span_multi.match.wildcard[element.key] = {
+            value: element.val,
+            case_insensitive: true
+          }
+        } else {
+          fp.span_term = p
+        }
+
+        span_near.clauses.push(fp)
+      }
     })
 
     result.must.push({ span_near })

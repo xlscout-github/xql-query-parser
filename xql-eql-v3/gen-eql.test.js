@@ -1,7 +1,7 @@
 const genEQL = require('./gen-eql')
 
-describe('Proximity Slop', () => {
-  it('Check Sentence', () => {
+describe('Proximity Queries', () => {
+  it('Check Sentence Slop', () => {
     const query = '(ttl:(apple NEARS banana))'
     const pq = genEQL(query)
 
@@ -23,7 +23,7 @@ describe('Proximity Slop', () => {
     })
   })
 
-  it('Check Paragraph', () => {
+  it('Check Paragraph Slop', () => {
     const query = '(ttl:(apple PREP banana))'
     const pq = genEQL(query)
 
@@ -38,6 +38,79 @@ describe('Proximity Slop', () => {
               ],
               slop: '50',
               in_order: true
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('Check Phrase with multiple terms', () => {
+    const query = '(ttl:("app* tree" NEAR2 de*))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                {
+                  span_near: {
+                    clauses: [
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: { value: 'app*', case_insensitive: true }
+                            }
+                          }
+                        }
+                      },
+                      { span_term: { ttl: 'tree' } }
+                    ],
+                    in_order: true,
+                    slop: 0
+                  }
+                },
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: { ttl: { value: 'de*', case_insensitive: true } }
+                    }
+                  }
+                }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('Check Phrase with single term', () => {
+    const query = '(ttl:("tree" NEAR2 "de*"))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'tree' } },
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: { ttl: { value: 'de*', case_insensitive: true } }
+                    }
+                  }
+                }
+              ],
+              slop: '2',
+              in_order: false
             }
           }
         ]
