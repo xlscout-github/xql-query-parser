@@ -1,11 +1,7 @@
 const { parse } = require('../parser')
 
 function gen (node, nodeTransformer) {
-  if (!Array.isArray(node.child)) {
-    return
-  }
-
-  // console.log(node);
+  if (!node || !Array.isArray(node.child)) return
 
   const result = {}
 
@@ -15,9 +11,7 @@ function gen (node, nodeTransformer) {
     }
 
     node.child.forEach(element => {
-      if (element.val === 'multi') {
-        return
-      }
+      if (Array.isArray(element.child)) return
 
       if (nodeTransformer) {
         nodeTransformer(element)
@@ -47,15 +41,13 @@ function gen (node, nodeTransformer) {
 
       result.should.push(fp)
     })
-  } else if (node.opt === 'AND' || (node.opt === 'NOT' && !node.child[0].opt)) {
+  } else if (node.opt === 'AND') {
     if (!result.must) {
       result.must = []
     }
 
     node.child.forEach(element => {
-      if (element.val === 'multi') {
-        return
-      }
+      if (Array.isArray(element.child)) return
 
       if (nodeTransformer) {
         nodeTransformer(element)
@@ -90,9 +82,11 @@ function gen (node, nodeTransformer) {
       result.must_not = []
     }
 
-    node.child.forEach(element => {
-      if (element.val === 'multi') {
-        return
+    node.child.forEach((element, i) => {
+      if (!element || Array.isArray(element.child)) return
+
+      if (!i && !result.must) {
+        result.must = []
       }
 
       if (nodeTransformer) {
@@ -121,19 +115,33 @@ function gen (node, nodeTransformer) {
         }
       }
 
-      result.must_not.push(fp)
+      if (!i) result.must.push(fp)
+      else result.must_not.push(fp)
     })
-  } else if (node.opt === 'NEAR') {
+  } else if (node.opt === 'NEAR' || node.opt === 'PRE') {
     if (!result.must) {
       result.must = []
     }
 
-    const span_near = { clauses: [], slop: node.span, in_order: false }
+    const in_order = node.opt === 'PRE'
+
+    let slop
+
+    switch (node.span) {
+      case 'S':
+        slop = '15'
+        break
+      case 'P':
+        slop = '50'
+        break
+      default:
+        slop = node.span
+    }
+
+    const span_near = { clauses: [], slop, in_order }
 
     node.child.forEach(element => {
-      if (element.val === 'multi') {
-        return
-      }
+      if (Array.isArray(element.child)) return
 
       if (nodeTransformer) {
         nodeTransformer(element)
@@ -143,22 +151,14 @@ function gen (node, nodeTransformer) {
       p[element.key] = element.val
       const fp = {}
 
-      if (typeof element.val === 'string') {
-        if (element.val.includes('*') || element.val.includes('?')) {
-          fp.span_multi = { match: { wildcard: {} } }
-          fp.span_multi.match.wildcard[element.key] = {
-            value: element.val,
-            case_insensitive: true
-          }
-        } else {
-          fp.span_term = p
+      if (element.val.includes('*') || element.val.includes('?')) {
+        fp.span_multi = { match: { wildcard: {} } }
+        fp.span_multi.match.wildcard[element.key] = {
+          value: element.val,
+          case_insensitive: true
         }
-      } else if (typeof element.val === 'object' && (element.val.from || element.val.to)) {
-        fp.range = {}
-        fp.range[element.key] = {
-          gte: isNaN(element.val.from) ? 0 : element.val.from || 0,
-          lte: isNaN(element.val.to) ? 0 : element.val.to || 0
-        }
+      } else {
+        fp.span_term = p
       }
 
       span_near.clauses.push(fp)
@@ -171,105 +171,75 @@ function gen (node, nodeTransformer) {
 
   // first recur on left subtree
   const left = gen(node.child[0], nodeTransformer)
+
   if (left) {
     nextClause = left
-    ncKeys = Object.keys(nextClause)
+    const ncKeys = Object.keys(nextClause)
 
-    if (node.opt === 'AND' && ncKeys.length === 1 && ncKeys[0] !== 'must') {
+    if (node.opt === 'AND' && ((ncKeys.length > 1) || (ncKeys.length === 1 && ncKeys[0] !== 'must'))) {
       result.must.push({ bool: nextClause })
     } else if (node.opt === 'AND' && ncKeys.length === 1 && ncKeys[0] === 'must') {
-      // if (!hasDupes(result.must, nextClause.must )) {
-      //     result.must.push(...nextClause.must)
-      // }
+      const x = result.must.map(i => JSON.stringify(i))
       nextClause.must.forEach(s => {
-        if (!result.must.map(x => JSON.stringify(x)).includes(JSON.stringify(s))) {
+        if (!x.includes(JSON.stringify(s))) {
           result.must.push(s)
         }
       })
-      // result.must.push(...nextClause.must)
-    } else if (node.opt === 'OR' && ncKeys.length === 1 && ncKeys[0] !== 'should') {
+    } else if (node.opt === 'OR' && ((ncKeys.length > 1) || (ncKeys.length === 1 && ncKeys[0] !== 'should'))) {
       result.should.push({ bool: nextClause })
     } else if (node.opt === 'OR' && ncKeys.length === 1 && ncKeys[0] === 'should') {
-      // if (!hasDupes(result.should, nextClause.should )) {
-      //     result.should.push(...nextClause.should)
-      // }
+      const x = result.should.map(i => JSON.stringify(i))
       nextClause.should.forEach(s => {
-        if (!result.should.map(x => JSON.stringify(x)).includes(JSON.stringify(s))) {
+        if (!x.includes(JSON.stringify(s))) {
           result.should.push(s)
         }
       })
-      // result.should.push(...nextClause.should)
-    }
-    // Problematic block below
-    // else if (node.opt === 'NOT' && ncKeys.length === 1 && !node.child[1].opt) {
-    //     if (!result.must_not) {
-    //         result.must_not = []
-    //     }
-
-    //     result.must_not.push(...nextClause[ncKeys[0]])
-
-    //     // nextClause.must.forEach(s => {
-    //     //     if (!result.must.map(x => JSON.stringify(x)).includes(JSON.stringify(s))) {
-    //     //         result.must.push(s)
-    //     //     }
-    //     // })
-    // }
-
-    else if (node.opt === 'NOT' && ncKeys.length === 1 && ncKeys[0] === 'must_not') {
-      // if (!hasDupes(result.must_not, nextClause.must_not )) {
-      //     result.must_not.push(...nextClause.must_not)
-      // }
-      nextClause.must_not.forEach(s => {
-        if (!result.must_not.map(x => JSON.stringify(x)).includes(JSON.stringify(s))) {
-          result.must_not.push(s)
-        }
-      })
-      // result.must_not.push(...nextClause.should)
-    } else if (node.opt === 'NOT' && ncKeys.length === 1 && ncKeys[0] === 'must') {
-      if (!result.must) {
-        result.must = []
-      }
-
-      // if (!hasDupes(result.must, nextClause.must )) {
-      //     result.must.push(...nextClause.must)
-      // }
-      nextClause.must.forEach(s => {
-        if (!result.must.map(x => JSON.stringify(x)).includes(JSON.stringify(s))) {
-          result.must.push(s)
-        }
-      })
-      // result.must.push(...nextClause.should)
-    } else if (node.opt === 'NOT' && ncKeys.length === 1 && ncKeys[0] === 'should') {
-      if (!result.should) {
-        result.should = []
-      }
-
-      // if (!hasDupes(result.should, nextClause.should )) {
-      //     result.should.push(...nextClause.should)
-      // }
-      nextClause.should.forEach(s => {
-        if (!result.should.map(x => JSON.stringify(x)).includes(JSON.stringify(s))) {
-          result.should.push(s)
-        }
-      })
-      // result.should.push(...nextClause.should)
-    } else if (node.opt === 'OR' && ncKeys.length > 1) {
-      result.should.push({ bool: nextClause })
-    } else if (node.opt === 'NEAR' && ncKeys.length === 1 && ncKeys[0] === 'should') {
-      result.must[0].span_near.clauses.push({
-        span_or: {
-          clauses: nextClause.should.map(x => {
-            return {
-              span_term: x.term
+    } else if (node.opt === 'NOT') {
+      ncKeys.forEach(key => {
+        if (!result[key]) result[key] = nextClause[key]
+        else {
+          const x = result[key].map(i => JSON.stringify(i))
+          nextClause[key].forEach(s => {
+            if (!x.includes(JSON.stringify(s))) {
+              result[key].push(s)
             }
           })
         }
       })
-    } else if (node.opt === 'NEAR' && ncKeys.length === 1 && ncKeys[0] === 'must') {
+    } else if ((node.opt === 'NEAR' || node.opt === 'PRE') && ((ncKeys.length > 1) || (ncKeys.length === 1 && ncKeys[0] === 'must_not'))) {
+      throw new Error('malformed query')
+    } else if ((node.opt === 'NEAR' || node.opt === 'PRE') && ncKeys.length === 1 && ncKeys[0] === 'should') {
+      result.must[0].span_near.clauses.push({
+        span_or: {
+          clauses: nextClause.should.map(x => {
+            if (x.term) {
+              return {
+                span_term: x.term
+              }
+            } else if (x.wildcard) {
+              return {
+                span_multi: {
+                  match: x
+                }
+              }
+            } else if (x.bool.must && x.bool.must[0].span_near) {
+              return x.bool.must[0]
+            } else {
+              throw new Error('malformed query')
+            }
+          })
+        }
+      })
+    } else if ((node.opt === 'NEAR' || node.opt === 'PRE') && ncKeys.length === 1 && ncKeys[0] === 'must') {
       nextClause.must.forEach(x => {
         if (x.term) {
           x.span_term = x.term
           delete x.term
+        } else if (x.wildcard) {
+          x.span_multi = { match: { wildcard: x.wildcard } }
+          delete x.wildcard
+        } else if (!x.span_near) {
+          throw new Error('malformed query')
         }
       })
 
@@ -279,112 +249,65 @@ function gen (node, nodeTransformer) {
 
   // first recur on right subtree
   const right = gen(node.child[1], nodeTransformer)
+
   if (right) {
     nextClause = right
-    ncKeys = Object.keys(nextClause)
+    const ncKeys = Object.keys(nextClause)
 
-    if (node.opt === 'AND' && ncKeys.length === 1 && ncKeys[0] !== 'must') {
+    if (node.opt === 'AND' && ((ncKeys.length > 1) || (ncKeys.length === 1 && ncKeys[0] !== 'must'))) {
       result.must.push({ bool: nextClause })
     } else if (node.opt === 'AND' && ncKeys.length === 1 && ncKeys[0] === 'must') {
-      // if (!hasDupes(result.must, nextClause.must )) {
-      //     result.must.push(...nextClause.must)
-      // }
+      const x = result.must.map(i => JSON.stringify(i))
       nextClause.must.forEach(s => {
-        if (!result.must.map(x => JSON.stringify(x)).includes(JSON.stringify(s))) {
+        if (!x.includes(JSON.stringify(s))) {
           result.must.push(s)
         }
       })
-      // result.must.push(...nextClause.must)
-    } else if (node.opt === 'OR' && ncKeys.length === 1 && ncKeys[0] !== 'should') {
+    } else if (node.opt === 'OR' && ((ncKeys.length > 1) || (ncKeys.length === 1 && ncKeys[0] !== 'should'))) {
       result.should.push({ bool: nextClause })
     } else if (node.opt === 'OR' && ncKeys.length === 1 && ncKeys[0] === 'should') {
-      // if (!hasDupes(result.should, nextClause.should )) {
-      //     result.should.push(...nextClause.should)
-      // }
+      const x = result.should.map(i => JSON.stringify(i))
       nextClause.should.forEach(s => {
-        if (!result.should.map(x => JSON.stringify(x)).includes(JSON.stringify(s))) {
+        if (!x.includes(JSON.stringify(s))) {
           result.should.push(s)
         }
       })
-      // result.should.push(...nextClause.should)
-    }
-    // Problematic block below
-    // else if (node.opt === 'NOT' && ncKeys.length === 1 && !node.child[0].opt) {
-    //     if (!result.must_not) {
-    //         result.must_not = []
-    //     }
-
-    //     result.must_not.push(...nextClause[ncKeys[0]])
-
-    //     // nextClause.must.forEach(s => {
-    //     //     if (!result.must.map(x => JSON.stringify(x)).includes(JSON.stringify(s))) {
-    //     //         result.must.push(s)
-    //     //     }
-    //     // })
-    // }
-    else if (node.opt === 'NOT' && ncKeys.length === 1 && ncKeys[0] === 'must_not') {
-      // if (!hasDupes(result.must_not, nextClause.must_not )) {
-      //     result.must_not.push(...nextClause.must_not)
-      // }
-      nextClause.must_not.forEach(s => {
-        if (!result.must_not.map(x => JSON.stringify(x)).includes(JSON.stringify(s))) {
-          result.must_not.push(s)
-        }
-      })
-      // result.must_not.push(...nextClause.should)
-    }
-    // trouble maker
-    else if (node.opt === 'NOT' && ncKeys.length === 1 && (ncKeys[0] === 'should' || ncKeys[0] === 'must') && node.child[1].opt && (node.child[1].opt === 'OR' || node.child[1].opt === 'AND')) {
-      if (!result.must_not) {
-        result.must_not = []
-      }
-
-      const mnq = { bool: {} }
-      mnq.bool[ncKeys[0]] = nextClause[ncKeys[0]]
-      result.must_not.push(mnq)
-    } else if (node.opt === 'NOT' && ncKeys.length === 1 && ncKeys[0] === 'must') {
-      if (!result.must) {
-        result.must = []
-      }
-
-      // if (!hasDupes(result.must, nextClause.must )) {
-      //     result.must.push(...nextClause.must)
-      // }
-      nextClause.must.forEach(s => {
-        if (!result.must.map(x => JSON.stringify(x)).includes(JSON.stringify(s))) {
-          result.must.push(s)
-        }
-      })
-      // result.must.push(...nextClause.should)
-    } else if (node.opt === 'NOT' && ncKeys.length === 1 && ncKeys[0] === 'should') {
-      if (!result.should) {
-        result.should = []
-      }
-
-      // if (!hasDupes(result.should, nextClause.should )) {
-      //     result.should.push(...nextClause.should)
-      // }
-      nextClause.should.forEach(s => {
-        if (!result.should.map(x => JSON.stringify(x)).includes(JSON.stringify(s))) {
-          result.should.push(s)
-        }
-      })
-      // result.should.push(...nextClause.should)
-    } else if (node.opt === 'NEAR' && ncKeys.length === 1 && ncKeys[0] === 'should') {
+    } else if (node.opt === 'NOT') {
+      result.must_not.push({ bool: nextClause })
+    } else if ((node.opt === 'NEAR' || node.opt === 'PRE') && ((ncKeys.length > 1) || (ncKeys.length === 1 && ncKeys[0] === 'must_not'))) {
+      throw new Error('malformed query')
+    } else if ((node.opt === 'NEAR' || node.opt === 'PRE') && ncKeys.length === 1 && ncKeys[0] === 'should') {
       result.must[0].span_near.clauses.push({
         span_or: {
           clauses: nextClause.should.map(x => {
-            return {
-              span_term: x.term
+            if (x.term) {
+              return {
+                span_term: x.term
+              }
+            } else if (x.wildcard) {
+              return {
+                span_multi: {
+                  match: x
+                }
+              }
+            } else if (x.bool.must && x.bool.must[0].span_near) {
+              return x.bool.must[0]
+            } else {
+              throw new Error('malformed query')
             }
           })
         }
       })
-    } else if (node.opt === 'NEAR' && ncKeys.length === 1 && ncKeys[0] === 'must') {
+    } else if ((node.opt === 'NEAR' || node.opt === 'PRE') && ncKeys.length === 1 && ncKeys[0] === 'must') {
       nextClause.must.forEach(x => {
         if (x.term) {
           x.span_term = x.term
           delete x.term
+        } else if (x.wildcard) {
+          x.span_multi = { match: { wildcard: x.wildcard } }
+          delete x.wildcard
+        } else if (!x.span_near) {
+          throw new Error('malformed query')
         }
       })
 
@@ -396,10 +319,44 @@ function gen (node, nodeTransformer) {
 }
 
 function finalGen (q = '', nodeTransformer) {
-  return {
-    bool: {
-      ...(gen(parse(q), nodeTransformer))
+  const tree = parse(q)
+
+  if (!Array.isArray(tree.child)) {
+    if (nodeTransformer) {
+      nodeTransformer(tree)
     }
+
+    const p = {}
+    p[tree.key] = tree.val
+    const fp = {}
+
+    if (typeof tree.val === 'string') {
+      if (tree.val.includes('*') || tree.val.includes('?')) {
+        fp.wildcard = {}
+        fp.wildcard[tree.key] = {
+          value: tree.val,
+          case_insensitive: true
+        }
+      } else {
+        fp.term = p
+      }
+    } else if (typeof tree.val === 'object' && (tree.val.from || tree.val.to)) {
+      fp.range = {}
+      fp.range[tree.key] = {
+        gte: isNaN(tree.val.from) ? 0 : tree.val.from || 0,
+        lte: isNaN(tree.val.to) ? 0 : tree.val.to || 0
+      }
+    }
+
+    return {
+      bool: {
+        must: fp
+      }
+    }
+  }
+
+  return {
+    bool: gen(tree, nodeTransformer)
   }
 }
 

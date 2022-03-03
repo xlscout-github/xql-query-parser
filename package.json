@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --verbose --coverage",
+    "test:v3": "jest xql-eql-v3 --verbose",
     "start": "node sample.js",
     "gen": "nearleyc ./grammar.ne -o ./grammar.js",
     "test:gram": "nearley-test ./grammar.js -i",

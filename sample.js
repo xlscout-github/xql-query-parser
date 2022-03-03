@@ -2,21 +2,18 @@ const { parse } = require("./parser");
 const eql = require("./eql");
 const { EQLgenerator } = require("./EQLgenerator");
 
-const result = parse(`(text: (NOT A OR (A AND B)))`);
+const query = `(ttl:("apple banana" PRE2 orange PRE2 ball))`;
+
+const result = parse(query);
 
 console.dir(result, {
   depth: null,
 });
 
-// console.dir(EQLgenerator(result), {
+console.dir(EQLgenerator(result), {
+  depth: null,
+});
+
+// console.dir(eql(query), {
 //   depth: null,
 // });
-
-// console.dir(
-//   eql(
-//     `(((((tac:((tracking*))) AND epridate: [16990101 TO 20050102]) AND tac:((location*))) AND tac:((request*))) AND tac:((request*)))`
-//   ),
-//   {
-//     depth: null,
-//   }
-// );
