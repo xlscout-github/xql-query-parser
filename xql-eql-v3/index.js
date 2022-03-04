@@ -14,12 +14,7 @@ const fieldq2 = '(ttl:(wireles? AND communicatio?) NOT (ttl:(netwo* AND sign*)))
 //     }
 // }), null, 2))
 
-// (ttl:(apple NOT (ball OR base)))
-// (ttl:(apple NOT ball NOT base))
-// (ttl:((mobile AND phone) NOT screen NOT aluminum))
-
-//
-console.dir(genEQL('(ttl:("tree" NEAR2 "de*"))'), { depth: null })
+console.dir(genEQL('(ttl:("dragon ball" NOT game*))'), { depth: null })
 
 // TO CHECK
 // ttl: mobile

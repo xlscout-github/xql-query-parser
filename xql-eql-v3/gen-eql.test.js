@@ -46,7 +46,7 @@ describe('Proximity Queries', () => {
   })
 
   it('Check Phrase with multiple terms', () => {
-    const query = '(ttl:("app* tree" NEAR2 de*))'
+    const query = "(ttl:('app* tree' NEAR2 de*))"
     const pq = genEQL(query)
 
     expect(pq).toEqual({
@@ -505,6 +505,24 @@ describe('Singleton Queries', () => {
     })
   })
 
+  it('Check Singleton Phrase Text Query in double quotes', () => {
+    const query = '(ttl:("apple grader"))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: { must: { match_phrase: { ttl: '"apple grader"' } } }
+    })
+  })
+
+  it('Check Singleton Phrase Text Query in single quotes', () => {
+    const query = "(ttl:('apple grader'))"
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: { must: { match_phrase: { ttl: "'apple grader'" } } }
+    })
+  })
+
   it('Check Singleton Search Text Wildcard Query', () => {
     const query = '(ttl:(mobi*))'
     const pq = genEQL(query)
@@ -523,6 +541,134 @@ describe('Singleton Queries', () => {
     expect(pq).toEqual({
       bool: {
         must: { range: { pd: { gte: '20220218', lte: '20220228' } } }
+      }
+    })
+  })
+})
+
+describe('"OR" Queries', () => {
+  it('Check Phrase Text Query in double quotes', () => {
+    const query = '(ttl:(apple OR "coconut jam"))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { term: { ttl: 'apple' } },
+          { match_phrase: { ttl: '"coconut jam"' } }
+        ]
+      }
+    })
+  })
+
+  it('Check Phrase Text Query in single quotes', () => {
+    const query = "(ttl:(apple OR 'coconut jam'))"
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { term: { ttl: 'apple' } },
+          { match_phrase: { ttl: "'coconut jam'" } }
+        ]
+      }
+    })
+  })
+
+  it('Check Combination with Range Query', () => {
+    const query = '(ttl:("dragon ball") OR pd:([20200825 TO 20201027]))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { match_phrase: { ttl: '"dragon ball"' } },
+          { range: { pd: { gte: '20200825', lte: '20201027' } } }
+        ]
+      }
+    })
+  })
+})
+
+describe('"AND" Queries', () => {
+  it('Check Phrase Text Query in double quotes', () => {
+    const query = '(ttl:(banana AND "stuffed bunny"))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { term: { ttl: 'banana' } },
+          { match_phrase: { ttl: '"stuffed bunny"' } }
+        ]
+      }
+    })
+  })
+
+  it('Check Phrase Text Query in single quotes', () => {
+    const query = "(ttl:(banana AND 'stuffed bunny'))"
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { term: { ttl: 'banana' } },
+          { match_phrase: { ttl: "'stuffed bunny'" } }
+        ]
+      }
+    })
+  })
+})
+
+describe('"NOT" Queries', () => {
+  it('Check Phrase Text Query in double quotes', () => {
+    const query = "(ttl:(apple NOT 'apple tree'))"
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [{ match_phrase: { ttl: "'apple tree'" } }],
+        must: [{ term: { ttl: 'apple' } }]
+      }
+    })
+  })
+
+  it('Check Phrase Text Query in single quotes', () => {
+    const query = '(ttl:(apple NOT "apple tree"))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [{ match_phrase: { ttl: '"apple tree"' } }],
+        must: [{ term: { ttl: 'apple' } }]
+      }
+    })
+  })
+
+  it('Check Combination with Range Query', () => {
+    const query = '(ttl:("dragon ball") NOT pd:([20200825 TO 20201027]))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          { range: { pd: { gte: '20200825', lte: '20201027' } } }
+        ],
+        must: [{ match_phrase: { ttl: '"dragon ball"' } }]
+      }
+    })
+  })
+
+  it('Check Combination with Wildcard Query', () => {
+    const query = '(ttl:("dragon ball" NOT game*))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          { wildcard: { ttl: { value: 'game*', case_insensitive: true } } }
+        ],
+        must: [{ match_phrase: { ttl: '"dragon ball"' } }]
       }
     })
   })
