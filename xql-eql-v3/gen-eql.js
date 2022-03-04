@@ -32,11 +32,22 @@ function gen (node, nodeTransformer) {
         } else {
           fp.term = p
         }
-      } else if (typeof element.val === 'object' && (element.val.from || element.val.to)) {
-        fp.range = {}
-        fp.range[element.key] = {
-          gte: isNaN(element.val.from) ? 0 : element.val.from || 0,
-          lte: isNaN(element.val.to) ? 0 : element.val.to || 0
+      } else if (typeof element.val === 'object' && (element.val.from && element.val.to)) {
+        fp.range = {
+          [element.key]: {}
+        }
+
+        if (!isNaN(element.val.from)) {
+          fp.range[element.key] = {
+            gte: element.val.from
+          }
+        }
+
+        if (!isNaN(element.val.to)) {
+          fp.range[element.key] = {
+            ...fp.range[element.key],
+            lte: element.val.to
+          }
         }
       }
 
@@ -69,11 +80,22 @@ function gen (node, nodeTransformer) {
         } else {
           fp.term = p
         }
-      } else if (typeof element.val === 'object' && (element.val.from || element.val.to)) {
-        fp.range = {}
-        fp.range[element.key] = {
-          gte: isNaN(element.val.from) ? 0 : element.val.from || 0,
-          lte: isNaN(element.val.to) ? 0 : element.val.to || 0
+      } else if (typeof element.val === 'object' && (element.val.from && element.val.to)) {
+        fp.range = {
+          [element.key]: {}
+        }
+
+        if (!isNaN(element.val.from)) {
+          fp.range[element.key] = {
+            gte: element.val.from
+          }
+        }
+
+        if (!isNaN(element.val.to)) {
+          fp.range[element.key] = {
+            ...fp.range[element.key],
+            lte: element.val.to
+          }
         }
       }
 
@@ -110,11 +132,22 @@ function gen (node, nodeTransformer) {
         } else {
           fp.term = p
         }
-      } else if (typeof element.val === 'object' && (element.val.from || element.val.to)) {
-        fp.range = {}
-        fp.range[element.key] = {
-          gte: isNaN(element.val.from) ? 0 : element.val.from || 0,
-          lte: isNaN(element.val.to) ? 0 : element.val.to || 0
+      } else if (typeof element.val === 'object' && (element.val.from && element.val.to)) {
+        fp.range = {
+          [element.key]: {}
+        }
+
+        if (!isNaN(element.val.from)) {
+          fp.range[element.key] = {
+            gte: element.val.from
+          }
+        }
+
+        if (!isNaN(element.val.to)) {
+          fp.range[element.key] = {
+            ...fp.range[element.key],
+            lte: element.val.to
+          }
         }
       }
 
@@ -401,11 +434,22 @@ function finalGen (q = '', nodeTransformer) {
       } else {
         fp.term = p
       }
-    } else if (typeof tree.val === 'object' && (tree.val.from || tree.val.to)) {
-      fp.range = {}
-      fp.range[tree.key] = {
-        gte: isNaN(tree.val.from) ? 0 : tree.val.from || 0,
-        lte: isNaN(tree.val.to) ? 0 : tree.val.to || 0
+    } else if (typeof tree.val === 'object' && (tree.val.from && tree.val.to)) {
+      fp.range = {
+        [tree.key]: {}
+      }
+
+      if (!isNaN(tree.val.from)) {
+        fp.range[tree.key] = {
+          gte: tree.val.from
+        }
+      }
+
+      if (!isNaN(tree.val.to)) {
+        fp.range[tree.key] = {
+          ...fp.range[tree.key],
+          lte: tree.val.to
+        }
       }
     }
 

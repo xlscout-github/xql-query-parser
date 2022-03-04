@@ -588,6 +588,20 @@ describe('"OR" Queries', () => {
       }
     })
   })
+
+  it('Check Combination with Range Query with unspecified bounds', () => {
+    const query = '(ttl:("dragon ball") OR pd:([* TO *]))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { match_phrase: { ttl: '"dragon ball"' } },
+          { range: { pd: {} } }
+        ]
+      }
+    })
+  })
 })
 
 describe('"AND" Queries', () => {
@@ -614,6 +628,20 @@ describe('"AND" Queries', () => {
         must: [
           { term: { ttl: 'banana' } },
           { match_phrase: { ttl: "'stuffed bunny'" } }
+        ]
+      }
+    })
+  })
+
+  it('Check Combination with Range Query', () => {
+    const query = '(ttl:("dragon ball") AND pd:([* TO *]))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { match_phrase: { ttl: '"dragon ball"' } },
+          { range: { pd: {} } }
         ]
       }
     })
@@ -653,6 +681,20 @@ describe('"NOT" Queries', () => {
       bool: {
         must_not: [
           { range: { pd: { gte: '20200825', lte: '20201027' } } }
+        ],
+        must: [{ match_phrase: { ttl: '"dragon ball"' } }]
+      }
+    })
+  })
+
+  it('Check Combination with Range Query with unspecified bounds', () => {
+    const query = '(ttl:("dragon ball") NOT pd:([* TO *]))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          { range: { pd: {} } }
         ],
         must: [{ match_phrase: { ttl: '"dragon ball"' } }]
       }
@@ -2111,6 +2153,37 @@ describe('Range Queries', () => {
           }
         ]
       }
+    })
+  })
+
+  it('Check Range with unspecified lower bound', () => {
+    const query = '(pd:([* TO 20201027]))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: { range: { pd: { lte: '20201027' } } }
+      }
+    })
+  })
+
+  it('Check Range with unspecified upper bound', () => {
+    const query = '(pd:([20200825 TO *]))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: { range: { pd: { gte: '20200825' } } }
+      }
+    })
+  })
+
+  it('Check Range with unspecified lower bound and upper bound', () => {
+    const query = '(pd:([* TO *]))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: { must: { range: { pd: {} } } }
     })
   })
 })

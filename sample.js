@@ -2,7 +2,7 @@ const { parse } = require("./parser");
 const eql = require("./eql");
 const { EQLgenerator } = require("./EQLgenerator");
 
-const query = `(ttl:("apple banana" PRE2 orange PRE2 ball))`;
+const query = `(pd:([* TO *]))`;
 
 const result = parse(query);
 
