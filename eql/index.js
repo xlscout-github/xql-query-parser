@@ -199,10 +199,7 @@ function makePhrase(field, value) {
 }
 
 function isPhrase(value) {
-  return (
-    (value.startsWith('"') && value.endsWith('"')) ||
-    (value.startsWith("'") && value.endsWith("'"))
-  );
+  return (value.startsWith('"') && value.endsWith('"'));
 }
 
 function trimPhrase(value) {

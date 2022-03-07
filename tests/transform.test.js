@@ -36,10 +36,12 @@ test("should transform left-right object containing date fields", () => {
 
 test("should establish value as multi if left side and right side have same fields", () => {
   const tree = {
-    operator: "NEAR5",
+    operator: "NEAR",
+    span: "5",
     leftOperand: { field: "desc", value: "DETECT*" },
     rightOperand: {
-      operator: "NEAR6",
+      operator: "NEAR",
+      span: "6",
       leftOperand: { field: "desc", value: "CONNECT*" },
       rightOperand: { field: "desc", value: "SOURCE*" },
     },
@@ -48,13 +50,15 @@ test("should establish value as multi if left side and right side have same fiel
   expect(transform(tree)).toEqual({
     key: "desc",
     val: "multi",
-    opt: "NEAR5",
+    opt: "NEAR",
+    span: "5",
     child: [
       { key: "desc", val: "DETECT*" },
       {
         key: "desc",
         val: "multi",
-        opt: "NEAR6",
+        opt: "NEAR",
+        span: "6",
         child: [
           { key: "desc", val: "CONNECT*" },
           { key: "desc", val: "SOURCE*" },

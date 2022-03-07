@@ -46,7 +46,7 @@ describe('Proximity Queries', () => {
   })
 
   it('Check Phrase with multiple terms', () => {
-    const query = "(ttl:('app* tree' NEAR2 de*))"
+    const query = '(ttl:("app* tree" NEAR2 de*))'
     const pq = genEQL(query)
 
     expect(pq).toEqual({
@@ -58,15 +58,7 @@ describe('Proximity Queries', () => {
                 {
                   span_near: {
                     clauses: [
-                      {
-                        span_multi: {
-                          match: {
-                            wildcard: {
-                              ttl: { value: 'app*', case_insensitive: true }
-                            }
-                          }
-                        }
-                      },
+                      { span_term: { ttl: 'app*' } },
                       { span_term: { ttl: 'tree' } }
                     ],
                     in_order: true,
@@ -101,13 +93,7 @@ describe('Proximity Queries', () => {
             span_near: {
               clauses: [
                 { span_term: { ttl: 'tree' } },
-                {
-                  span_multi: {
-                    match: {
-                      wildcard: { ttl: { value: 'de*', case_insensitive: true } }
-                    }
-                  }
-                }
+                { span_term: { ttl: 'de*' } }
               ],
               slop: '2',
               in_order: false
@@ -505,21 +491,12 @@ describe('Singleton Queries', () => {
     })
   })
 
-  it('Check Singleton Phrase Text Query in double quotes', () => {
+  it('Check Singleton Phrase Text Query in quotes', () => {
     const query = '(ttl:("apple grader"))'
     const pq = genEQL(query)
 
     expect(pq).toEqual({
       bool: { must: { match_phrase: { ttl: '"apple grader"' } } }
-    })
-  })
-
-  it('Check Singleton Phrase Text Query in single quotes', () => {
-    const query = "(ttl:('apple grader'))"
-    const pq = genEQL(query)
-
-    expect(pq).toEqual({
-      bool: { must: { match_phrase: { ttl: "'apple grader'" } } }
     })
   })
 
@@ -547,7 +524,7 @@ describe('Singleton Queries', () => {
 })
 
 describe('"OR" Queries', () => {
-  it('Check Phrase Text Query in double quotes', () => {
+  it('Check Phrase Text Query in quotes', () => {
     const query = '(ttl:(apple OR "coconut jam"))'
     const pq = genEQL(query)
 
@@ -556,20 +533,6 @@ describe('"OR" Queries', () => {
         should: [
           { term: { ttl: 'apple' } },
           { match_phrase: { ttl: '"coconut jam"' } }
-        ]
-      }
-    })
-  })
-
-  it('Check Phrase Text Query in single quotes', () => {
-    const query = "(ttl:(apple OR 'coconut jam'))"
-    const pq = genEQL(query)
-
-    expect(pq).toEqual({
-      bool: {
-        should: [
-          { term: { ttl: 'apple' } },
-          { match_phrase: { ttl: "'coconut jam'" } }
         ]
       }
     })
@@ -605,7 +568,7 @@ describe('"OR" Queries', () => {
 })
 
 describe('"AND" Queries', () => {
-  it('Check Phrase Text Query in double quotes', () => {
+  it('Check Phrase Text Query in quotes', () => {
     const query = '(ttl:(banana AND "stuffed bunny"))'
     const pq = genEQL(query)
 
@@ -614,20 +577,6 @@ describe('"AND" Queries', () => {
         must: [
           { term: { ttl: 'banana' } },
           { match_phrase: { ttl: '"stuffed bunny"' } }
-        ]
-      }
-    })
-  })
-
-  it('Check Phrase Text Query in single quotes', () => {
-    const query = "(ttl:(banana AND 'stuffed bunny'))"
-    const pq = genEQL(query)
-
-    expect(pq).toEqual({
-      bool: {
-        must: [
-          { term: { ttl: 'banana' } },
-          { match_phrase: { ttl: "'stuffed bunny'" } }
         ]
       }
     })
@@ -649,19 +598,7 @@ describe('"AND" Queries', () => {
 })
 
 describe('"NOT" Queries', () => {
-  it('Check Phrase Text Query in double quotes', () => {
-    const query = "(ttl:(apple NOT 'apple tree'))"
-    const pq = genEQL(query)
-
-    expect(pq).toEqual({
-      bool: {
-        must_not: [{ match_phrase: { ttl: "'apple tree'" } }],
-        must: [{ term: { ttl: 'apple' } }]
-      }
-    })
-  })
-
-  it('Check Phrase Text Query in single quotes', () => {
+  it('Check Phrase Text Query in quotes', () => {
     const query = '(ttl:(apple NOT "apple tree"))'
     const pq = genEQL(query)
 

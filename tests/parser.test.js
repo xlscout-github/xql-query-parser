@@ -125,26 +125,26 @@ test("should correctly parse query provided if operators are in uppercase", () =
 });
 
 test("should correctly parse string enclosed in quotations", () => {
-  const query = `((desc:("DETECT OBSTACLE" near5 ('FEELING PAIN' pre6 XXXTENTACION))))`;
+  const query = `((desc:("DETECT OBSTACLE" near5 ("Jocelyn Flores" pre6 XXXTENTACION))))`;
 
   expect(parse(query)).toEqual({
-    key: "desc",
-    val: "multi",
-    opt: "NEAR",
-    span: "5",
+    key: 'desc',
+    val: 'multi',
+    span: '5',
+    opt: 'NEAR',
     child: [
-      { key: "desc", val: '"DETECT OBSTACLE"' },
+      { key: 'desc', val: '"DETECT OBSTACLE"' },
       {
-        key: "desc",
-        val: "multi",
-        opt: "PRE",
-        span: "6",
+        key: 'desc',
+        val: 'multi',
+        span: '6',
+        opt: 'PRE',
         child: [
-          { key: "desc", val: "'FEELING PAIN'" },
-          { key: "desc", val: "XXXTENTACION" },
-        ],
-      },
-    ],
+          { key: 'desc', val: '"Jocelyn Flores"' },
+          { key: 'desc', val: 'XXXTENTACION' }
+        ]
+      }
+    ]
   });
 });
 
@@ -200,33 +200,33 @@ test("should correctly parse the query containing asterix character", () => {
 });
 
 test("should correctly parse the query if field signature occur inside quotations", () => {
-  const query = `((desc:("DETECT:" near5 (CONNECT* near6 'SOURCE:')))) OR pn:US7420295B2`;
+  const query = `((desc:("DETECT:" near5 (CONNECT* near6 "SOURCE:")))) OR pn:US7420295B2`;
 
   expect(parse(query)).toEqual({
-    key: "multi",
-    opt: "OR",
+    key: 'multi',
+    opt: 'OR',
     child: [
       {
-        key: "desc",
-        val: "multi",
-        span: "5",
-        opt: "NEAR",
+        key: 'desc',
+        val: 'multi',
+        span: '5',
+        opt: 'NEAR',
         child: [
-          { key: "desc", val: '"DETECT:"' },
+          { key: 'desc', val: '"DETECT:"' },
           {
-            key: "desc",
-            val: "multi",
-            span: "6",
-            opt: "NEAR",
+            key: 'desc',
+            val: 'multi',
+            span: '6',
+            opt: 'NEAR',
             child: [
-              { key: "desc", val: "CONNECT*" },
-              { key: "desc", val: "'SOURCE:'" },
-            ],
-          },
-        ],
+              { key: 'desc', val: 'CONNECT*' },
+              { key: 'desc', val: '"SOURCE:"' }
+            ]
+          }
+        ]
       },
-      { key: "pn", val: "US7420295B2" },
-    ],
+      { key: 'pn', val: 'US7420295B2' }
+    ]
   });
 });
 
@@ -320,29 +320,6 @@ test("should parse if query contains various paragraph and sentence proximity op
           { key: "text", val: "RADIO*" },
         ],
       },
-    ],
-  });
-});
-
-test("should parse if single quotes occur inside double quotes or vice versa", () => {
-  const query = `ab:("DETECT' CONNECT'" PREP SHOCK) PRES text:'MICROWAVE" RADIO"'`;
-
-  expect(parse(query)).toEqual({
-    key: "multi",
-    span: "S",
-    opt: "PRE",
-    child: [
-      {
-        key: "ab",
-        val: "multi",
-        span: "P",
-        opt: "PRE",
-        child: [
-          { key: "ab", val: `"DETECT' CONNECT'"` },
-          { key: "ab", val: "SHOCK" },
-        ],
-      },
-      { key: "text", val: `'MICROWAVE" RADIO"'` },
     ],
   });
 });

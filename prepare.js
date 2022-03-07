@@ -4,25 +4,14 @@ function isMatchingBrackets(q) {
     "(": ")",
     "[": "]",
   };
-  let sQuote = false;
-  let dQuote = false;
+  let quote = false;
 
   for (let i = 0; i < q.length; i++) {
-    if (!dQuote && q[i] === "'") {
-      sQuote = !sQuote;
-    } else if (!sQuote && q[i] === '"') {
-      dQuote = !dQuote;
-    } else if (
-      sQuote === false &&
-      dQuote === false &&
-      (q[i] === "(" || q[i] === "[")
-    ) {
+    if (q[i] === '"') {
+      quote = !quote;
+    } else if (!quote && (q[i] === "(" || q[i] === "[")) {
       stack.push(q[i]);
-    } else if (
-      sQuote === false &&
-      dQuote === false &&
-      (q[i] === ")" || q[i] === "]")
-    ) {
+    } else if (!quote && (q[i] === ")" || q[i] === "]")) {
       const last = stack.pop();
 
       if (q[i] !== map[last]) {
@@ -95,16 +84,13 @@ function getFields(q) {
   let construct = "";
   let start = false;
   let index = 0;
-  let sQuote = false;
-  let dQuote = false;
+  let quote = false;
 
   for (let ch = 0; ch < q.length; ch++) {
-    if (!dQuote && q[ch] === "'") {
-      sQuote = !sQuote;
-    } else if (!sQuote && q[ch] === '"') {
-      dQuote = !dQuote;
+    if (q[ch] === '"') {
+      quote = !quote;
     } else if (q[ch] !== " " && q[ch] !== "(" && q[ch] !== ")") {
-      if (sQuote === false && dQuote === false) {
+      if (!quote) {
         if (q[ch] === ":" && construct !== "") {
           construct += q[ch];
           construct += evalSpaces(q, ch + 1);
@@ -113,8 +99,6 @@ function getFields(q) {
           construct = "";
           start = false;
           index = 0;
-          sQuote = false;
-          dQuote = false;
         } else {
           construct += q[ch];
           if (!start) {
@@ -124,12 +108,10 @@ function getFields(q) {
         }
       }
     } else if (q[ch] === " ") {
-      if (sQuote === false && dQuote === false) {
+      if (!quote) {
         construct = "";
         start = false;
         index = 0;
-        sQuote = false;
-        dQuote = false;
       }
     }
   }
@@ -379,8 +361,7 @@ function isProximitySearch(s) {
 
   return (
     parts.length === 2 &&
-    ((parts[0].startsWith('"') && parts[0].endsWith('"')) ||
-      (parts[0].startsWith("'") && parts[0].endsWith("'"))) &&
+    (parts[0].startsWith('"') && parts[0].endsWith('"')) &&
     (Number(parts[1]) > -1 ? true : false)
   );
 }
@@ -486,24 +467,17 @@ function transform(q, startIndices, endIndices) {
     let prevConstruct = "";
     let onlyBracket = false;
     let sQuote = false;
-    let dQuote = false;
+    let quote = false;
 
     for (let ch = 0; ch < inter.length; ch++) {
-      if (!dQuote && inter[ch] === "'") {
-        sQuote = !sQuote;
+      if (inter[ch] === '"') {
+        quote = !quote;
         construct += inter[ch];
         if (!start) {
           index = ch;
           start = true;
         }
-      } else if (!sQuote && inter[ch] === '"') {
-        dQuote = !dQuote;
-        construct += inter[ch];
-        if (!start) {
-          index = ch;
-          start = true;
-        }
-      } else if (!sQuote && !dQuote && inter[ch] === "(") {
+      } else if (!quote && inter[ch] === "(") {
         onlyBracket = true;
         construct += inter[ch];
         if (!start) {
@@ -518,7 +492,7 @@ function transform(q, startIndices, endIndices) {
           start = true;
         }
       } else if (inter[ch] === " ") {
-        if (!sQuote && !dQuote && !onlyBracket) {
+        if (!quote && !onlyBracket) {
           const { remain, char } = collectRemainingParts(inter, ch);
           if (remain === " " && char === ch + 1) {
             const { s, frontCount } = trimBrackets(construct);
@@ -574,8 +548,6 @@ function transform(q, startIndices, endIndices) {
             construct = "";
             start = false;
             index = 0;
-            sQuote = false;
-            dQuote = false;
           } else {
             construct += remain.trimEnd();
 

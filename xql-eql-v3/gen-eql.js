@@ -20,8 +20,7 @@ function gen (node, nodeTransformer) {
       const fp = {}
 
       if (typeof element.val === 'string') {
-        if ((element.val.startsWith('"') && element.val.endsWith('"')) ||
-      (element.val.startsWith("'") && element.val.endsWith("'"))) {
+        if (element.val.startsWith('"') && element.val.endsWith('"')) {
           fp.match_phrase = p
         } else if (element.val.includes('*') || element.val.includes('?')) {
           fp.wildcard = {}
@@ -68,8 +67,7 @@ function gen (node, nodeTransformer) {
       const fp = {}
 
       if (typeof element.val === 'string') {
-        if ((element.val.startsWith('"') && element.val.endsWith('"')) ||
-        (element.val.startsWith("'") && element.val.endsWith("'"))) {
+        if (element.val.startsWith('"') && element.val.endsWith('"')) {
           fp.match_phrase = p
         } else if (element.val.includes('*') || element.val.includes('?')) {
           fp.wildcard = {}
@@ -120,8 +118,7 @@ function gen (node, nodeTransformer) {
       const fp = {}
 
       if (typeof element.val === 'string') {
-        if ((element.val.startsWith('"') && element.val.endsWith('"')) ||
-      (element.val.startsWith("'") && element.val.endsWith("'"))) {
+        if (element.val.startsWith('"') && element.val.endsWith('"')) {
           fp.match_phrase = p
         } else if (element.val.includes('*') || element.val.includes('?')) {
           fp.wildcard = {}
@@ -181,33 +178,17 @@ function gen (node, nodeTransformer) {
         nodeTransformer(element)
       }
 
-      if ((element.val.startsWith('"') && element.val.endsWith('"')) ||
-      (element.val.startsWith("'") && element.val.endsWith("'"))) {
+      if (element.val.startsWith('"') && element.val.endsWith('"')) {
         element.val = element.val.slice(1, -1).trim()
         const terms = element.val.split(/ +/)
 
         if (terms.length > 1) {
           const clauses = terms.reduce((previousValue, currentValue) => {
-            if (currentValue.includes('*') || currentValue.includes('?')) {
-              previousValue.push({
-                span_multi: {
-                  match: {
-                    wildcard: {
-                      [element.key]: {
-                        value: currentValue,
-                        case_insensitive: true
-                      }
-                    }
-                  }
-                }
-              })
-            } else {
-              previousValue.push({
-                span_term: {
-                  [element.key]: currentValue
-                }
-              })
-            }
+            previousValue.push({
+              span_term: {
+                [element.key]: currentValue
+              }
+            })
 
             return previousValue
           }, [])
@@ -224,15 +205,7 @@ function gen (node, nodeTransformer) {
           p[element.key] = element.val
           const fp = {}
 
-          if (element.val.includes('*') || element.val.includes('?')) {
-            fp.span_multi = { match: { wildcard: {} } }
-            fp.span_multi.match.wildcard[element.key] = {
-              value: element.val,
-              case_insensitive: true
-            }
-          } else {
-            fp.span_term = p
-          }
+          fp.span_term = p
 
           span_near.clauses.push(fp)
         }
@@ -422,8 +395,7 @@ function finalGen (q = '', nodeTransformer) {
     const fp = {}
 
     if (typeof tree.val === 'string') {
-      if ((tree.val.startsWith('"') && tree.val.endsWith('"')) ||
-      (tree.val.startsWith("'") && tree.val.endsWith("'"))) {
+      if (tree.val.startsWith('"') && tree.val.endsWith('"')) {
         fp.match_phrase = p
       } else if (tree.val.includes('*') || tree.val.includes('?')) {
         fp.wildcard = {}
