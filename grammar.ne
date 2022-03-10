@@ -235,8 +235,8 @@ TO -> "to"i {% id %}
 
 # Field Content
 FIELD ->
-    [a-zA-Z*\\]:+ {% ([v]) => v.join("") %} |
-    [a-zA-Z*\\]:+ SEPERATOR FIELD {% ([v, s, f]) => v.join("") + s + f %} |
+    [a-zA-Z0-9*\\]:+ {% ([v]) => v.join("") %} |
+    [a-zA-Z0-9*\\]:+ SEPERATOR FIELD {% ([v, s, f]) => v.join("") + s + f %} |
     SEPERATOR FIELD {% ([s, f]) => s + f %} |
     FIELD SEPERATOR {% ([f, s]) => f + s %}
 
