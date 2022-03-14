@@ -8,7 +8,7 @@ function gen (node, nodeTransformer) {
   if (node.opt === 'OR') {
     result.should = []
 
-    node.child.forEach(element => {
+    node.child.forEach((element, i) => {
       if (Array.isArray(element.child)) return
 
       if (nodeTransformer) {
@@ -47,6 +47,18 @@ function gen (node, nodeTransformer) {
             ...fp.range[element.key],
             lte: element.val.to
           }
+        }
+      }
+
+      if (i > 0) {
+        const [prev = {}] = result.should
+        if ((prev.term && prev.term[element.key]) && fp.term) {
+          if (prev.term[element.key] === p[element.key]) return
+          prev.terms = {
+            [element.key]: [prev.term[element.key], p[element.key]]
+          }
+          delete prev.term
+          return
         }
       }
 
@@ -252,10 +264,32 @@ function gen (node, nodeTransformer) {
     } else if (node.opt === 'OR' && ((ncKeys.length > 1) || (ncKeys.length === 1 && ncKeys[0] !== 'should'))) {
       result.should.push({ bool: nextClause })
     } else if (node.opt === 'OR' && ncKeys.length === 1 && ncKeys[0] === 'should') {
+      const [prev = {}] = result.should
+      let key
+      if (prev.term) key = Object.keys(prev.term)[0]
       const x = result.should.map(i => JSON.stringify(i))
       nextClause.should.forEach(s => {
-        if (!x.includes(JSON.stringify(s))) {
-          result.should.push(s)
+        if (s.terms && s.terms[key]) {
+          prev.terms = {
+            [key]: [prev.term[key]]
+          }
+          s.terms[key].forEach(t => {
+            if (!prev.terms[key].includes(t)) {
+              prev.terms[key].push(t)
+            }
+          })
+          delete prev.term
+        } else if (s.term && s.term[key]) {
+          if ((prev.term[key] !== s.term[key])) {
+            prev.terms = {
+              [key]: [prev.term[key], s.term[key]]
+            }
+            delete prev.term
+          }
+        } else {
+          if (!x.includes(JSON.stringify(s))) {
+            result.should.push(s)
+          }
         }
       })
     } else if (node.opt === 'NOT') {
@@ -330,10 +364,43 @@ function gen (node, nodeTransformer) {
     } else if (node.opt === 'OR' && ((ncKeys.length > 1) || (ncKeys.length === 1 && ncKeys[0] !== 'should'))) {
       result.should.push({ bool: nextClause })
     } else if (node.opt === 'OR' && ncKeys.length === 1 && ncKeys[0] === 'should') {
+      const [prev] = result.should
+      let key
+      if (prev.term) key = Object.keys(prev.term)[0]
+      else if (prev.terms) key = Object.keys(prev.terms)[0]
       const x = result.should.map(i => JSON.stringify(i))
       nextClause.should.forEach(s => {
-        if (!x.includes(JSON.stringify(s))) {
-          result.should.push(s)
+        if (prev.term && s.terms && s.terms[key]) {
+          prev.terms = {
+            [key]: [prev.term[key]]
+          }
+          s.terms[key].forEach(t => {
+            if (!prev.terms[key].includes(t)) {
+              prev.terms[key].push(t)
+            }
+          })
+          delete prev.term
+        } else if (prev.terms && s.terms && s.terms[key]) {
+          s.terms[key].forEach(t => {
+            if (!prev.terms[key].includes(t)) {
+              prev.terms[key].push(t)
+            }
+          })
+        } else if (prev.term && s.term && s.term[key]) {
+          if ((prev.term[key] !== s.term[key])) {
+            prev.terms = {
+              [key]: [prev.term[key], s.term[key]]
+            }
+            delete prev.term
+          }
+        } else if (prev.terms && s.term && s.term[key]) {
+          if (!prev.terms[key].includes(s.term[key])) {
+            prev.terms[key].push(s.term[key])
+          }
+        } else {
+          if (!x.includes(JSON.stringify(s))) {
+            result.should.push(s)
+          }
         }
       })
     } else if (node.opt === 'NOT') {
@@ -427,7 +494,7 @@ function finalGen (q = '', nodeTransformer) {
 
     return {
       bool: {
-        must: fp
+        must: [fp]
       }
     }
   }

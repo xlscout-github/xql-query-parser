@@ -105,6 +105,123 @@ describe('Proximity Queries', () => {
   })
 })
 
+describe('Terms Queries', () => {
+  it('Check Terms Query while ignore duplicates on creation with non left-right recursion', () => {
+    const query = '(pn:(US9774086 OR US9774086))'
+    const pq = genEQL(query, (node) => {
+      if (node.key === 'pn') {
+        node.key = 'pn-nok.keyword'
+      }
+    })
+
+    expect(pq).toEqual({
+      bool: {
+        should: [{ term: { 'pn-nok.keyword': 'US9774086' } }]
+      }
+    })
+  })
+
+  it('Check Terms Query on left recursive duplicate query with duplicate non-recursive right term', () => {
+    const query = '(pa:(coco OR coco) OR coco)'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [{ term: { pa: 'coco' } }]
+      }
+    })
+  })
+
+  it('Check Terms Query on right recursive duplicate query with duplicate non-recursive left term', () => {
+    const query = '(pa:(coco OR (coco OR coco)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [{ term: { pa: 'coco' } }]
+      }
+    })
+  })
+
+  it('Check Terms Query on left recursive duplicate query with non-recursive right term', () => {
+    const query = '(pa:(coco OR coco) OR milk)'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { terms: { pa: ['milk', 'coco'] } }
+        ]
+      }
+    })
+  })
+
+  it('Check Terms Query on right recursive duplicate query with non-recursive left term', () => {
+    const query = '(pa:(milk OR (coco OR coco)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { terms: { pa: ['milk', 'coco'] } }
+        ]
+      }
+    })
+  })
+
+  it('Check Terms Query if left and right both are compound queries', () => {
+    const query = '(pa:(coco OR powder) OR (milk OR cream))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { terms: { pa: ['coco', 'powder', 'milk', 'cream'] } }
+        ]
+      }
+    })
+  })
+
+  it('Check Terms Query if left is compound query and right is a duplicate compound query', () => {
+    const query = '(pa:((milk OR powder) OR (coco OR coco)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { terms: { pa: ['milk', 'powder', 'coco'] } }
+        ]
+      }
+    })
+  })
+
+  it('Check Terms Query if left is compound query and right is a duplicate compound query with duplicate values between them', () => {
+    const query = '(pa:((milk OR coco) OR (coco OR coco)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { terms: { pa: ['milk', 'coco'] } }
+        ]
+      }
+    })
+  })
+
+  it('Check Terms Query if left and right both are compound queries with duplicate values between them', () => {
+    const query = '(pa:(coco OR mocha) OR (coco OR powder))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { terms: { pa: ['coco', 'mocha', 'powder'] } }
+        ]
+      }
+    })
+  })
+})
+
 describe('PN Queries', () => {
   it('Check PN search query', () => {
     const query = '(pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845))'
@@ -118,33 +235,15 @@ describe('PN Queries', () => {
       bool: {
         should: [
           {
-            term: {
-              'pn-nok.keyword': 'US7545845'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'WO2019165110'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'EP3856098'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'WO2020251708'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'US20200233814'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'US9774086'
+            terms: {
+              'pn-nok.keyword': [
+                'US7545845',
+                'WO2019165110',
+                'EP3856098',
+                'WO2020251708',
+                'US20200233814',
+                'US9774086'
+              ]
             }
           }
         ]
@@ -162,42 +261,18 @@ describe('PN Queries', () => {
 
     expect(pq).toEqual({
       bool: {
-        must_not: [
-          {
-            term: {
-              ttl: 'wireless'
-            }
-          }
-        ],
+        must_not: [{ term: { ttl: 'wireless' } }],
         should: [
           {
-            term: {
-              'pn-nok.keyword': 'US7545845'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'WO2019165110'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'EP3856098'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'WO2020251708'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'US20200233814'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'US9774086'
+            terms: {
+              'pn-nok.keyword': [
+                'US7545845',
+                'WO2019165110',
+                'EP3856098',
+                'WO2020251708',
+                'US20200233814',
+                'US9774086'
+              ]
             }
           }
         ]
@@ -215,51 +290,27 @@ describe('PN Queries', () => {
 
     expect(pq).toEqual({
       bool: {
-        must: [
-          {
-            term: {
-              ttl: 'wireless'
-            }
-          }
-        ],
         must_not: [
           {
             bool: {
               should: [
                 {
-                  term: {
-                    'pn-nok.keyword': 'US7545845'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'WO2019165110'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'EP3856098'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'WO2020251708'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'US20200233814'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'US9774086'
+                  terms: {
+                    'pn-nok.keyword': [
+                      'US7545845',
+                      'WO2019165110',
+                      'EP3856098',
+                      'WO2020251708',
+                      'US20200233814',
+                      'US9774086'
+                    ]
                   }
                 }
               ]
             }
           }
-        ]
+        ],
+        must: [{ term: { ttl: 'wireless' } }]
       }
     })
   })
@@ -275,42 +326,20 @@ describe('PN Queries', () => {
     expect(pq).toEqual({
       bool: {
         must: [
-          {
-            term: {
-              ttl: 'wireless'
-            }
-          },
+          { term: { ttl: 'wireless' } },
           {
             bool: {
               should: [
                 {
-                  term: {
-                    'pn-nok.keyword': 'US7545845'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'WO2019165110'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'EP3856098'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'WO2020251708'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'US20200233814'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'US9774086'
+                  terms: {
+                    'pn-nok.keyword': [
+                      'US7545845',
+                      'WO2019165110',
+                      'EP3856098',
+                      'WO2020251708',
+                      'US20200233814',
+                      'US9774086'
+                    ]
                   }
                 }
               ]
@@ -332,42 +361,20 @@ describe('PN Queries', () => {
     expect(pq).toEqual({
       bool: {
         must: [
-          {
-            term: {
-              ttl: 'wireless'
-            }
-          },
+          { term: { ttl: 'wireless' } },
           {
             bool: {
               should: [
                 {
-                  term: {
-                    'pn-nok.keyword': 'US7545845'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'WO2019165110'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'EP3856098'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'WO2020251708'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'US20200233814'
-                  }
-                },
-                {
-                  term: {
-                    'pn-nok.keyword': 'US9774086'
+                  terms: {
+                    'pn-nok.keyword': [
+                      'US7545845',
+                      'WO2019165110',
+                      'EP3856098',
+                      'WO2020251708',
+                      'US20200233814',
+                      'US9774086'
+                    ]
                   }
                 }
               ]
@@ -389,39 +396,17 @@ describe('PN Queries', () => {
     expect(pq).toEqual({
       bool: {
         should: [
+          { term: { ttl: 'wireless' } },
           {
-            term: {
-              ttl: 'wireless'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'US7545845'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'WO2019165110'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'EP3856098'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'WO2020251708'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'US20200233814'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'US9774086'
+            terms: {
+              'pn-nok.keyword': [
+                'US7545845',
+                'WO2019165110',
+                'EP3856098',
+                'WO2020251708',
+                'US20200233814',
+                'US9774086'
+              ]
             }
           }
         ]
@@ -440,39 +425,17 @@ describe('PN Queries', () => {
     expect(pq).toEqual({
       bool: {
         should: [
+          { term: { ttl: 'wireless' } },
           {
-            term: {
-              ttl: 'wireless'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'US7545845'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'WO2019165110'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'EP3856098'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'WO2020251708'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'US20200233814'
-            }
-          },
-          {
-            term: {
-              'pn-nok.keyword': 'US9774086'
+            terms: {
+              'pn-nok.keyword': [
+                'US7545845',
+                'WO2019165110',
+                'EP3856098',
+                'WO2020251708',
+                'US20200233814',
+                'US9774086'
+              ]
             }
           }
         ]
@@ -487,7 +450,7 @@ describe('Singleton Queries', () => {
     const pq = genEQL(query)
 
     expect(pq).toEqual({
-      bool: { must: { term: { ttl: 'mobile' } } }
+      bool: { must: [{ term: { ttl: 'mobile' } }] }
     })
   })
 
@@ -496,7 +459,7 @@ describe('Singleton Queries', () => {
     const pq = genEQL(query)
 
     expect(pq).toEqual({
-      bool: { must: { match_phrase: { ttl: '"apple grader"' } } }
+      bool: { must: [{ match_phrase: { ttl: '"apple grader"' } }] }
     })
   })
 
@@ -506,7 +469,7 @@ describe('Singleton Queries', () => {
 
     expect(pq).toEqual({
       bool: {
-        must: { wildcard: { ttl: { value: 'mobi*', case_insensitive: true } } }
+        must: [{ wildcard: { ttl: { value: 'mobi*', case_insensitive: true } } }]
       }
     })
   })
@@ -517,7 +480,7 @@ describe('Singleton Queries', () => {
 
     expect(pq).toEqual({
       bool: {
-        must: { range: { pd: { gte: '20220218', lte: '20220228' } } }
+        must: [{ range: { pd: { gte: '20220218', lte: '20220228' } } }]
       }
     })
   })
@@ -683,7 +646,9 @@ describe('Left Recursive Queries', () => {
           { term: { ttl: 'ball' } },
           {
             bool: {
-              should: [{ term: { ttl: 'apple' } }, { term: { ttl: 'banana' } }]
+              should: [
+                { terms: { ttl: ['apple', 'banana'] } }
+              ]
             }
           }
         ]
@@ -761,10 +726,7 @@ describe('Left Recursive Queries', () => {
     expect(pq).toEqual({
       bool: {
         should: [
-          { term: { ttl: 'ball' } },
-          { term: { ttl: 'orange' } },
-          { term: { ttl: 'apple' } },
-          { term: { ttl: 'banana' } }
+          { terms: { ttl: ['ball', 'orange', 'apple', 'banana'] } }
         ]
       }
     })
@@ -777,10 +739,19 @@ describe('Left Recursive Queries', () => {
     expect(pq).toEqual({
       bool: {
         should: [
-          { term: { ttl: 'ball' } },
-          { term: { ttl: 'orange' } },
-          { term: { ttl: 'apple' } }
+          { terms: { ttl: ['ball', 'orange', 'apple'] } }
         ]
+      }
+    })
+  })
+
+  it('Check "OR" when left is a bool should query while ignoring duplicate phrases', () => {
+    const query = '(pa:("coco" OR powder) OR "coco")'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [{ match_phrase: { pa: '"coco"' } }, { term: { pa: 'powder' } }]
       }
     })
   })
@@ -1234,7 +1205,9 @@ describe('Right Recursive Queries', () => {
           { term: { ttl: 'ball' } },
           {
             bool: {
-              should: [{ term: { ttl: 'apple' } }, { term: { ttl: 'banana' } }]
+              should: [
+                { terms: { ttl: ['apple', 'banana'] } }
+              ]
             }
           }
         ]
@@ -1264,6 +1237,17 @@ describe('Right Recursive Queries', () => {
     expect(pq).toEqual({
       bool: {
         must: [{ term: { ttl: 'ball' } }, { term: { ttl: 'apple' } }]
+      }
+    })
+  })
+
+  it('Check "OR" when right is a bool should query while ignoring duplicate phrases', () => {
+    const query = '(pa:"coco" OR ("coco" OR powder))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [{ match_phrase: { pa: '"coco"' } }, { term: { pa: 'powder' } }]
       }
     })
   })
@@ -1312,10 +1296,7 @@ describe('Right Recursive Queries', () => {
     expect(pq).toEqual({
       bool: {
         should: [
-          { term: { ttl: 'ball' } },
-          { term: { ttl: 'orange' } },
-          { term: { ttl: 'apple' } },
-          { term: { ttl: 'banana' } }
+          { terms: { ttl: ['ball', 'orange', 'apple', 'banana'] } }
         ]
       }
     })
@@ -1328,9 +1309,7 @@ describe('Right Recursive Queries', () => {
     expect(pq).toEqual({
       bool: {
         should: [
-          { term: { ttl: 'ball' } },
-          { term: { ttl: 'orange' } },
-          { term: { ttl: 'apple' } }
+          { terms: { ttl: ['ball', 'orange', 'apple'] } }
         ]
       }
     })
@@ -1346,7 +1325,9 @@ describe('Right Recursive Queries', () => {
           { term: { ttl: 'tree' } },
           {
             bool: {
-              should: [{ term: { ttl: 'orange' } }, { term: { ttl: 'banana' } }]
+              should: [
+                { terms: { ttl: ['orange', 'banana'] } }
+              ]
             }
           }
         ],
@@ -2099,7 +2080,7 @@ describe('Range Queries', () => {
 
     expect(pq).toEqual({
       bool: {
-        must: { range: { pd: { lte: '20201027' } } }
+        must: [{ range: { pd: { lte: '20201027' } } }]
       }
     })
   })
@@ -2110,7 +2091,7 @@ describe('Range Queries', () => {
 
     expect(pq).toEqual({
       bool: {
-        must: { range: { pd: { gte: '20200825' } } }
+        must: [{ range: { pd: { gte: '20200825' } } }]
       }
     })
   })
@@ -2120,7 +2101,7 @@ describe('Range Queries', () => {
     const pq = genEQL(query)
 
     expect(pq).toEqual({
-      bool: { must: { range: { pd: {} } } }
+      bool: { must: [{ range: { pd: {} } }] }
     })
   })
 })
