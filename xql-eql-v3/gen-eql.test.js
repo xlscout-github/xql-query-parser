@@ -1227,6 +1227,188 @@ describe('Left Recursive Queries', () => {
       )
     }
   })
+
+  it('Check "OR" Compound Query including Phrase with one term', () => {
+    const query = '(ttl: (electr* OR "AC") NEAR3 vehicle*)'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: {
+                        ttl: { value: 'vehicle*', case_insensitive: true }
+                      }
+                    }
+                  }
+                },
+                {
+                  span_or: {
+                    clauses: [
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: { value: 'electr*', case_insensitive: true }
+                            }
+                          }
+                        }
+                      },
+                      { span_term: { ttl: 'AC' } }
+                    ]
+                  }
+                }
+              ],
+              slop: '3',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('Check "OR" Compound Query including Phrase with multiple term', () => {
+    const query = '(ttl: (electr* OR "AC DC") NEAR3 vehicle*)'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: {
+                        ttl: { value: 'vehicle*', case_insensitive: true }
+                      }
+                    }
+                  }
+                },
+                {
+                  span_or: {
+                    clauses: [
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: { value: 'electr*', case_insensitive: true }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        span_near: {
+                          clauses: [
+                            { span_term: { ttl: 'AC' } },
+                            { span_term: { ttl: 'DC' } }
+                          ],
+                          in_order: true,
+                          slop: 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              slop: '3',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('Check "AND" Compound Query including Phrase with one term', () => {
+    const query = '(ttl: (electr* AND "battery") NEAR3 vehicle*)'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: {
+                        ttl: { value: 'vehicle*', case_insensitive: true }
+                      }
+                    }
+                  }
+                },
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: { ttl: { value: 'electr*', case_insensitive: true } }
+                    }
+                  }
+                },
+                { span_term: { ttl: 'battery' } }
+              ],
+              slop: '3',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('Check "AND" Compound Query including Phrase with multiple term', () => {
+    const query = '(ttl: (electr* AND "battery charging") NEAR3 vehicle*)'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: {
+                        ttl: { value: 'vehicle*', case_insensitive: true }
+                      }
+                    }
+                  }
+                },
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: { ttl: { value: 'electr*', case_insensitive: true } }
+                    }
+                  }
+                },
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'battery' } },
+                      { span_term: { ttl: 'charging' } }
+                    ],
+                    in_order: true,
+                    slop: 0
+                  }
+                }
+              ],
+              slop: '3',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
 })
 
 describe('Right Recursive Queries', () => {
@@ -1782,6 +1964,188 @@ describe('Right Recursive Queries', () => {
         'malformed query'
       )
     }
+  })
+
+  it('Check "OR" Compound Query including Phrase with one term', () => {
+    const query = '(ttl: vehicle* NEAR3 (electr* OR "AC"))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: {
+                        ttl: { value: 'vehicle*', case_insensitive: true }
+                      }
+                    }
+                  }
+                },
+                {
+                  span_or: {
+                    clauses: [
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: { value: 'electr*', case_insensitive: true }
+                            }
+                          }
+                        }
+                      },
+                      { span_term: { ttl: 'AC' } }
+                    ]
+                  }
+                }
+              ],
+              slop: '3',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('Check "OR" Compound Query including Phrase with multiple term', () => {
+    const query = '(ttl: vehicle* NEAR3 (electr* OR "AC DC"))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: {
+                        ttl: { value: 'vehicle*', case_insensitive: true }
+                      }
+                    }
+                  }
+                },
+                {
+                  span_or: {
+                    clauses: [
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: { value: 'electr*', case_insensitive: true }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        span_near: {
+                          clauses: [
+                            { span_term: { ttl: 'AC' } },
+                            { span_term: { ttl: 'DC' } }
+                          ],
+                          in_order: true,
+                          slop: 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              slop: '3',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('Check "AND" Compound Query including Phrase with one term', () => {
+    const query = '(ttl: vehicle* NEAR3 (electr* AND "battery"))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: {
+                        ttl: { value: 'vehicle*', case_insensitive: true }
+                      }
+                    }
+                  }
+                },
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: { ttl: { value: 'electr*', case_insensitive: true } }
+                    }
+                  }
+                },
+                { span_term: { ttl: 'battery' } }
+              ],
+              slop: '3',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('Check "AND" Compound Query including Phrase with multiple term', () => {
+    const query = '(ttl: vehicle* NEAR3 (electr* AND "battery charging"))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: {
+                        ttl: { value: 'vehicle*', case_insensitive: true }
+                      }
+                    }
+                  }
+                },
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: { ttl: { value: 'electr*', case_insensitive: true } }
+                    }
+                  }
+                },
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'battery' } },
+                      { span_term: { ttl: 'charging' } }
+                    ],
+                    in_order: true,
+                    slop: 0
+                  }
+                }
+              ],
+              slop: '3',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
   })
 })
 
