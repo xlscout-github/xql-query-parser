@@ -243,10 +243,18 @@ function gen (node, nodeTransformer) {
     result.must.push({ span_near })
   }
 
+  // console.log('RESULT')
+  // console.dir(result, { depth: null })
+  // console.log('RESULT')
+
   let nextClause = null
 
   // first recur on left subtree
   const left = gen(node.child[0], nodeTransformer)
+
+  // console.log('LEFT')
+  // console.dir(left, { depth: null })
+  // console.log('LEFT')
 
   if (left) {
     nextClause = left
@@ -293,15 +301,38 @@ function gen (node, nodeTransformer) {
         }
       })
     } else if (node.opt === 'NOT') {
-      ncKeys.forEach(key => {
-        if (!result[key]) result[key] = nextClause[key]
+      const [prev = {}] = result.must_not
+      let key
+      if (prev.term) key = Object.keys(prev.term)[0]
+
+      ncKeys.forEach(k => {
+        if (!result[k]) result[k] = nextClause[k]
         else {
-          const x = result[key].map(i => JSON.stringify(i))
-          nextClause[key].forEach(s => {
+          const x = result[k].map(i => JSON.stringify(i))
+          if (k === 'must_not' && key) {
+            prev.terms = {
+              [key]: [prev.term[key]]
+            }
+          }
+          nextClause[k].forEach(s => {
             if (!x.includes(JSON.stringify(s))) {
-              result[key].push(s)
+              if (k === 'must_not' && s.term && s.term[key]) {
+                prev.terms[key].push(s.term[key])
+              } else if (k === 'must_not' && s.terms && s.terms[key]) {
+                s.terms[key].forEach(el => {
+                  if (!prev.terms[key].includes(el)) {
+                    prev.terms[key].push(el)
+                  }
+                })
+              } else result[k].push(s)
             }
           })
+
+          if (k === 'must_not' && key) {
+            if (prev.terms[key].length > 1) {
+              delete prev.term
+            } else delete prev.terms
+          }
         }
       })
     } else if ((node.opt === 'NEAR' || node.opt === 'PRE') && ((ncKeys.length > 1) || (ncKeys.length === 1 && ncKeys[0] === 'must_not'))) {
@@ -347,6 +378,9 @@ function gen (node, nodeTransformer) {
 
   // first recur on right subtree
   const right = gen(node.child[1], nodeTransformer)
+  // console.log('RIGHT')
+  // console.dir(right, { depth: null })
+  // console.log('RIGHT')
 
   if (right) {
     nextClause = right
@@ -451,6 +485,9 @@ function gen (node, nodeTransformer) {
 
 function finalGen (q = '', nodeTransformer) {
   const tree = parse(q)
+
+  // console.log('TREE')
+  // console.dir(tree, { depth: null })
 
   if (!Array.isArray(tree.child)) {
     if (nodeTransformer) {

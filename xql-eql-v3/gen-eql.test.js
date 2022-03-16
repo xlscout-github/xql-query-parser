@@ -614,6 +614,58 @@ describe('"NOT" Queries', () => {
       }
     })
   })
+
+  it('Check Wrapping of Terms with leading "NOT"', () => {
+    const query = 'ttl: NOT apple NOT banana NOT orange'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          { terms: { ttl: ['orange', 'banana', 'apple'] } }
+        ]
+      }
+    })
+  })
+
+  it('Check Wrapping of Terms with leading "NOT" containing duplicate', () => {
+    const query = 'ttl: NOT apple NOT banana NOT banana'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          { terms: { ttl: ['banana', 'apple'] } }
+        ]
+      }
+    })
+  })
+
+  it('Check Wrapping of Terms without leading "NOT"', () => {
+    const query = 'ttl: apple NOT banana NOT orange'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          { terms: { ttl: ['orange', 'banana'] } }
+        ],
+        must: [{ term: { ttl: 'apple' } }]
+      }
+    })
+  })
+
+  it('Check Wrapping of Terms without leading "NOT" containing duplicate', () => {
+    const query = 'ttl: apple NOT banana NOT banana'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [{ term: { ttl: 'banana' } }],
+        must: [{ term: { ttl: 'apple' } }]
+      }
+    })
+  })
 })
 
 describe('Left Recursive Queries', () => {
@@ -762,7 +814,9 @@ describe('Left Recursive Queries', () => {
 
     expect(pq).toEqual({
       bool: {
-        must_not: [{ term: { ttl: 'ball' } }, { term: { ttl: 'orange' } }],
+        must_not: [
+          { terms: { ttl: ['ball', 'orange'] } }
+        ],
         must: [{ term: { ttl: 'apple' } }]
       }
     })
