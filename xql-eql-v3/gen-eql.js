@@ -243,10 +243,18 @@ function gen (node, nodeTransformer) {
     result.must.push({ span_near })
   }
 
+  // console.log('RESULT')
+  // console.dir(result, { depth: null })
+  // console.log('RESULT')
+
   let nextClause = null
 
   // first recur on left subtree
   const left = gen(node.child[0], nodeTransformer)
+
+  // console.log('LEFT')
+  // console.dir(left, { depth: null })
+  // console.log('LEFT')
 
   if (left) {
     nextClause = left
@@ -332,51 +340,59 @@ function gen (node, nodeTransformer) {
     } else if ((node.opt === 'NEAR' || node.opt === 'PRE') && ncKeys.length === 1 && ncKeys[0] === 'should') {
       result.must[0].span_near.clauses.push({
         span_or: {
-          clauses: nextClause.should.map(x => {
-            if (x.term) {
-              return {
-                span_term: x.term
-              }
-            } else if (x.wildcard) {
-              return {
+          clauses: nextClause.should.reduce((previousValue, currentValue) => {
+            if (currentValue.term) {
+              previousValue.push({
+                span_term: currentValue.term
+              })
+            } else if (currentValue.terms) {
+              const key = Object.keys(currentValue.terms)[0]
+
+              currentValue.terms[key].forEach(term => {
+                previousValue.push({
+                  span_term: { [key]: term }
+                })
+              })
+            } else if (currentValue.wildcard) {
+              previousValue.push({
                 span_multi: {
-                  match: x
+                  match: currentValue
                 }
-              }
-            } else if (x.match_phrase) {
-              const key = Object.keys(x.match_phrase)[0]
-              const phrase = x.match_phrase[key].slice(1, -1).trim()
+              })
+            } else if (currentValue.match_phrase) {
+              const key = Object.keys(currentValue.match_phrase)[0]
+              const phrase = currentValue.match_phrase[key].slice(1, -1).trim()
               const terms = phrase.split(/ +/)
 
               if (terms.length > 1) {
-                const clauses = terms.reduce((previousValue, currentValue) => {
-                  previousValue.push({
-                    span_term: {
-                      [key]: currentValue
-                    }
-                  })
-
-                  return previousValue
-                }, [])
-
-                return {
+                previousValue.push({
                   span_near: {
-                    clauses,
+                    clauses: terms.reduce((previousValue, currentValue) => {
+                      previousValue.push({
+                        span_term: {
+                          [key]: currentValue
+                        }
+                      })
+
+                      return previousValue
+                    }, []),
                     in_order: true,
                     slop: 0
                   }
-                }
+                })
               } else {
-                return {
+                previousValue.push({
                   span_term: { [key]: phrase }
-                }
+                })
               }
-            } else if (x.bool.must && x.bool.must[0].span_near) {
-              return x.bool.must[0]
+            } else if (currentValue.bool.must && currentValue.bool.must[0].span_near) {
+              previousValue.push(currentValue.bool.must[0])
             } else {
               throw new Error('malformed query')
             }
-          })
+
+            return previousValue
+          }, [])
         }
       })
     } else if ((node.opt === 'NEAR' || node.opt === 'PRE') && ncKeys.length === 1 && ncKeys[0] === 'must') {
@@ -423,6 +439,9 @@ function gen (node, nodeTransformer) {
 
   // first recur on right subtree
   const right = gen(node.child[1], nodeTransformer)
+  // console.log('RIGHT')
+  // console.dir(right, { depth: null })
+  // console.log('RIGHT')
 
   if (right) {
     nextClause = right
@@ -486,51 +505,59 @@ function gen (node, nodeTransformer) {
     } else if ((node.opt === 'NEAR' || node.opt === 'PRE') && ncKeys.length === 1 && ncKeys[0] === 'should') {
       result.must[0].span_near.clauses.push({
         span_or: {
-          clauses: nextClause.should.map(x => {
-            if (x.term) {
-              return {
-                span_term: x.term
-              }
-            } else if (x.wildcard) {
-              return {
+          clauses: nextClause.should.reduce((previousValue, currentValue) => {
+            if (currentValue.term) {
+              previousValue.push({
+                span_term: currentValue.term
+              })
+            } else if (currentValue.terms) {
+              const key = Object.keys(currentValue.terms)[0]
+
+              currentValue.terms[key].forEach(term => {
+                previousValue.push({
+                  span_term: { [key]: term }
+                })
+              })
+            } else if (currentValue.wildcard) {
+              previousValue.push({
                 span_multi: {
-                  match: x
+                  match: currentValue
                 }
-              }
-            } else if (x.match_phrase) {
-              const key = Object.keys(x.match_phrase)[0]
-              const phrase = x.match_phrase[key].slice(1, -1).trim()
+              })
+            } else if (currentValue.match_phrase) {
+              const key = Object.keys(currentValue.match_phrase)[0]
+              const phrase = currentValue.match_phrase[key].slice(1, -1).trim()
               const terms = phrase.split(/ +/)
 
               if (terms.length > 1) {
-                const clauses = terms.reduce((previousValue, currentValue) => {
-                  previousValue.push({
-                    span_term: {
-                      [key]: currentValue
-                    }
-                  })
-
-                  return previousValue
-                }, [])
-
-                return {
+                previousValue.push({
                   span_near: {
-                    clauses,
+                    clauses: terms.reduce((previousValue, currentValue) => {
+                      previousValue.push({
+                        span_term: {
+                          [key]: currentValue
+                        }
+                      })
+
+                      return previousValue
+                    }, []),
                     in_order: true,
                     slop: 0
                   }
-                }
+                })
               } else {
-                return {
+                previousValue.push({
                   span_term: { [key]: phrase }
-                }
+                })
               }
-            } else if (x.bool.must && x.bool.must[0].span_near) {
-              return x.bool.must[0]
+            } else if (currentValue.bool.must && currentValue.bool.must[0].span_near) {
+              previousValue.push(currentValue.bool.must[0])
             } else {
               throw new Error('malformed query')
             }
-          })
+
+            return previousValue
+          }, [])
         }
       })
     } else if ((node.opt === 'NEAR' || node.opt === 'PRE') && ncKeys.length === 1 && ncKeys[0] === 'must') {
@@ -580,6 +607,9 @@ function gen (node, nodeTransformer) {
 
 function finalGen (q = '', nodeTransformer) {
   const tree = parse(q)
+
+  // console.log('TREE')
+  // console.dir(tree, { depth: null })
 
   if (!Array.isArray(tree.child)) {
     if (nodeTransformer) {

@@ -2523,3 +2523,136 @@ describe('Range Queries', () => {
     })
   })
 })
+
+describe('Miscellaneous Queries', () => {
+  it('#1', () => {
+    const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) NEAR3 (Fruit* OR Vegetable*))))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                {
+                  span_or: {
+                    clauses: [
+                      { span_term: { ttl: 'Carrot' } },
+                      { span_term: { ttl: 'juice' } },
+                      {
+                        span_near: {
+                          clauses: [
+                            { span_term: { ttl: 'banana' } },
+                            { span_term: { ttl: 'shake' } }
+                          ],
+                          slop: '3',
+                          in_order: false
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  span_or: {
+                    clauses: [
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: { value: 'Fruit*', case_insensitive: true }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: {
+                                value: 'Vegetable*',
+                                case_insensitive: true
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              slop: '3',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#2', () => {
+    const query = '(ttl:(((Fruit* OR Vegetable*) NEAR3 ((Carrot OR juice) OR (banana NEAR3 shake)))))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                {
+                  span_or: {
+                    clauses: [
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: { value: 'Fruit*', case_insensitive: true }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: {
+                                value: 'Vegetable*',
+                                case_insensitive: true
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  span_or: {
+                    clauses: [
+                      { span_term: { ttl: 'Carrot' } },
+                      { span_term: { ttl: 'juice' } },
+                      {
+                        span_near: {
+                          clauses: [
+                            { span_term: { ttl: 'banana' } },
+                            { span_term: { ttl: 'shake' } }
+                          ],
+                          slop: '3',
+                          in_order: false
+                        }
+                      }
+                    ]
+                  }
+                }
+
+              ],
+              slop: '3',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+})

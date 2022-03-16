@@ -14,4 +14,4 @@ const genEQL = require('./gen-eql')
 //     }
 // }), null, 2))
 
-console.dir(genEQL('(ttl: vehicle* NEAR3 (electr* AND "battery charging"))'), { depth: null })
+console.dir(genEQL('(ttl:(((Fruit* OR Vegetable*) NEAR3 ((Carrot OR juice) OR (banana NEAR3 shake)))))'), { depth: null })
