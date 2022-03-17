@@ -1273,7 +1273,7 @@ describe('Left Recursive Queries', () => {
     })
   })
 
-  it('Check "OR" Compound Query including Phrase with multiple term', () => {
+  it('Check "OR" Compound Query including Phrase with multiple terms', () => {
     const query = '(ttl: (electr* OR "AC DC") NEAR3 vehicle*)'
     const pq = genEQL(query)
 
@@ -1364,7 +1364,7 @@ describe('Left Recursive Queries', () => {
     })
   })
 
-  it('Check "AND" Compound Query including Phrase with multiple term', () => {
+  it('Check "AND" Compound Query including Phrase with multiple terms', () => {
     const query = '(ttl: (electr* AND "battery charging") NEAR3 vehicle*)'
     const pq = genEQL(query)
 
@@ -2011,7 +2011,7 @@ describe('Right Recursive Queries', () => {
     })
   })
 
-  it('Check "OR" Compound Query including Phrase with multiple term', () => {
+  it('Check "OR" Compound Query including Phrase with multiple terms', () => {
     const query = '(ttl: vehicle* NEAR3 (electr* OR "AC DC"))'
     const pq = genEQL(query)
 
@@ -2102,7 +2102,7 @@ describe('Right Recursive Queries', () => {
     })
   })
 
-  it('Check "AND" Compound Query including Phrase with multiple term', () => {
+  it('Check "AND" Compound Query including Phrase with multiple terms', () => {
     const query = '(ttl: vehicle* NEAR3 (electr* AND "battery charging"))'
     const pq = genEQL(query)
 
@@ -2649,6 +2649,2931 @@ describe('Miscellaneous Queries', () => {
               ],
               slop: '3',
               in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#3', () => {
+    const query = '(ttl:(((Fruit* OR Vegetable*) NEAR3 ((Carrot OR juice) OR (banana NEAR3 shake)))))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                {
+                  span_or: {
+                    clauses: [
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: { value: 'Fruit*', case_insensitive: true }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: {
+                                value: 'Vegetable*',
+                                case_insensitive: true
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  span_or: {
+                    clauses: [
+                      { span_term: { ttl: 'Carrot' } },
+                      { span_term: { ttl: 'juice' } },
+                      {
+                        span_near: {
+                          clauses: [
+                            { span_term: { ttl: 'banana' } },
+                            { span_term: { ttl: 'shake' } }
+                          ],
+                          slop: '3',
+                          in_order: false
+                        }
+                      }
+                    ]
+                  }
+                }
+
+              ],
+              slop: '3',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#4', () => {
+    const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*))))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['Carrot', 'juice'] } },
+                {
+                  bool: {
+                    must: [
+                      {
+                        span_near: {
+                          clauses: [
+                            { span_term: { ttl: 'banana' } },
+                            { span_term: { ttl: 'shake' } }
+                          ],
+                          slop: '3',
+                          in_order: false
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            bool: {
+              should: [
+                {
+                  wildcard: { ttl: { value: 'Fruit*', case_insensitive: true } }
+                },
+                {
+                  wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true } }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#5', () => {
+    const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*)) NOT (papaya OR melon OR lemon OR plant*)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              should: [
+                {
+                  wildcard: { ttl: { value: 'plant*', case_insensitive: true } }
+                },
+                { terms: { ttl: ['lemon', 'papaya', 'melon'] } }
+              ]
+            }
+          }
+        ],
+        must: [
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['Carrot', 'juice'] } },
+                {
+                  bool: {
+                    must: [
+                      {
+                        span_near: {
+                          clauses: [
+                            { span_term: { ttl: 'banana' } },
+                            { span_term: { ttl: 'shake' } }
+                          ],
+                          slop: '3',
+                          in_order: false
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            bool: {
+              should: [
+                {
+                  wildcard: { ttl: { value: 'Fruit*', case_insensitive: true } }
+                },
+                {
+                  wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true } }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#6', () => {
+    const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*)) NOT ((papaya OR melon OR lemon) NEAR4 (plant*))))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: { value: 'plant*', case_insensitive: true }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        span_or: {
+                          clauses: [
+                            { span_term: { ttl: 'lemon' } },
+                            { span_term: { ttl: 'papaya' } },
+                            { span_term: { ttl: 'melon' } }
+                          ]
+                        }
+                      }
+                    ],
+                    slop: '4',
+                    in_order: false
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        must: [
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['Carrot', 'juice'] } },
+                {
+                  bool: {
+                    must: [
+                      {
+                        span_near: {
+                          clauses: [
+                            { span_term: { ttl: 'banana' } },
+                            { span_term: { ttl: 'shake' } }
+                          ],
+                          slop: '3',
+                          in_order: false
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            bool: {
+              should: [
+                {
+                  wildcard: { ttl: { value: 'Fruit*', case_insensitive: true } }
+                },
+                {
+                  wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true } }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#7', () => {
+    const query = '((ttl:(smart NEAR2 (watch OR watches))) AND ttl:(heart NEAR2 rate))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                {
+                  span_or: {
+                    clauses: [
+                      { span_term: { ttl: 'watch' } },
+                      { span_term: { ttl: 'watches' } }
+                    ]
+                  }
+                }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'heart' } },
+                { span_term: { ttl: 'rate' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#8', () => {
+    const query = '(((ttl:(smart NEAR2 (watch OR watches))) NOT ttl:(heart AND (rate OR pulse* OR oxygen))) AND pd: [20220101 TO 20220307])'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { range: { pd: { gte: '20220101', lte: '20220307' } } },
+          {
+            bool: {
+              must_not: [
+                {
+                  bool: {
+                    must: [
+                      { term: { ttl: 'heart' } },
+                      {
+                        bool: {
+                          should: [
+                            { terms: { ttl: ['oxygen', 'rate'] } },
+                            {
+                              wildcard: {
+                                ttl: { value: 'pulse*', case_insensitive: true }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      {
+                        span_or: {
+                          clauses: [
+                            { span_term: { ttl: 'watch' } },
+                            { span_term: { ttl: 'watches' } }
+                          ]
+                        }
+                      }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#9', () => {
+    const query = '(ttl:(((vegetable*) NEAR15 (juice*)) NEARP ((Fruit* OR Vegetable*) NEARS (plant*))))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                {
+                  span_near: {
+                    clauses: [
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: {
+                                value: 'vegetable*',
+                                case_insensitive: true
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: { value: 'juice*', case_insensitive: true }
+                            }
+                          }
+                        }
+                      }
+                    ],
+                    slop: '15',
+                    in_order: false
+                  }
+                },
+                {
+                  span_near: {
+                    clauses: [
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: { value: 'plant*', case_insensitive: true }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        span_or: {
+                          clauses: [
+                            {
+                              span_multi: {
+                                match: {
+                                  wildcard: {
+                                    ttl: {
+                                      value: 'Fruit*',
+                                      case_insensitive: true
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              span_multi: {
+                                match: {
+                                  wildcard: {
+                                    ttl: {
+                                      value: 'Vegetable*',
+                                      case_insensitive: true
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    slop: '15',
+                    in_order: false
+                  }
+                }
+              ],
+              slop: '50',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#10', () => {
+    const query = '((ttl:(patent NEAR5 (artificial NEAR2 intelligen*))) OR ttl:(patent NEAR5 (machine NEAR2 learn*)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'patent' } },
+                      {
+                        span_near: {
+                          clauses: [
+                            { span_term: { ttl: 'artificial' } },
+                            {
+                              span_multi: {
+                                match: {
+                                  wildcard: {
+                                    ttl: {
+                                      value: 'intelligen*',
+                                      case_insensitive: true
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ],
+                          slop: '2',
+                          in_order: false
+                        }
+                      }
+                    ],
+                    slop: '5',
+                    in_order: false
+                  }
+                }
+              ]
+            }
+          },
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'patent' } },
+                      {
+                        span_near: {
+                          clauses: [
+                            { span_term: { ttl: 'machine' } },
+                            {
+                              span_multi: {
+                                match: {
+                                  wildcard: {
+                                    ttl: {
+                                      value: 'learn*',
+                                      case_insensitive: true
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ],
+                          slop: '2',
+                          in_order: false
+                        }
+                      }
+                    ],
+                    slop: '5',
+                    in_order: false
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#11', () => {
+    const query = '(((ttl:(patent NEARS (artificial PRE2 intelligen*))) OR ttl:(patent NEARP (machine PRE2 learn*))) AND pd: [20150101 TO 20220307])'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { range: { pd: { gte: '20150101', lte: '20220307' } } },
+          {
+            bool: {
+              should: [
+                {
+                  bool: {
+                    must: [
+                      {
+                        span_near: {
+                          clauses: [
+                            { span_term: { ttl: 'patent' } },
+                            {
+                              span_near: {
+                                clauses: [
+                                  { span_term: { ttl: 'artificial' } },
+                                  {
+                                    span_multi: {
+                                      match: {
+                                        wildcard: {
+                                          ttl: {
+                                            value: 'intelligen*',
+                                            case_insensitive: true
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                slop: '2',
+                                in_order: true
+                              }
+                            }
+                          ],
+                          slop: '15',
+                          in_order: false
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  bool: {
+                    must: [
+                      {
+                        span_near: {
+                          clauses: [
+                            { span_term: { ttl: 'patent' } },
+                            {
+                              span_near: {
+                                clauses: [
+                                  { span_term: { ttl: 'machine' } },
+                                  {
+                                    span_multi: {
+                                      match: {
+                                        wildcard: {
+                                          ttl: {
+                                            value: 'learn*',
+                                            case_insensitive: true
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                slop: '2',
+                                in_order: true
+                              }
+                            }
+                          ],
+                          slop: '50',
+                          in_order: false
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#12', () => {
+    const query = '(ttl:((A*) PRE10 ((veg*) NEAR15 (juice*) NEARP (Veg*) NEARS (plant*))))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: { ttl: { value: 'A*', case_insensitive: true } }
+                    }
+                  }
+                },
+                {
+                  span_near: {
+                    clauses: [
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: { value: 'plant*', case_insensitive: true }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        span_near: {
+                          clauses: [
+                            {
+                              span_multi: {
+                                match: {
+                                  wildcard: {
+                                    ttl: {
+                                      value: 'Veg*',
+                                      case_insensitive: true
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              span_near: {
+                                clauses: [
+                                  {
+                                    span_multi: {
+                                      match: {
+                                        wildcard: {
+                                          ttl: {
+                                            value: 'veg*',
+                                            case_insensitive: true
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  {
+                                    span_multi: {
+                                      match: {
+                                        wildcard: {
+                                          ttl: {
+                                            value: 'juice*',
+                                            case_insensitive: true
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                slop: '15',
+                                in_order: false
+                              }
+                            }
+                          ],
+                          slop: '50',
+                          in_order: false
+                        }
+                      }
+                    ],
+                    slop: '15',
+                    in_order: false
+                  }
+                }
+              ],
+              slop: '10',
+              in_order: true
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#13', () => {
+    const query = '(ttl:((A) PRE10 ((veg*) NEAR15 (juice*) NEARP (Veg*) NEARS (plant*))))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'A' } },
+                {
+                  span_near: {
+                    clauses: [
+                      {
+                        span_multi: {
+                          match: {
+                            wildcard: {
+                              ttl: { value: 'plant*', case_insensitive: true }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        span_near: {
+                          clauses: [
+                            {
+                              span_multi: {
+                                match: {
+                                  wildcard: {
+                                    ttl: {
+                                      value: 'Veg*',
+                                      case_insensitive: true
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              span_near: {
+                                clauses: [
+                                  {
+                                    span_multi: {
+                                      match: {
+                                        wildcard: {
+                                          ttl: {
+                                            value: 'veg*',
+                                            case_insensitive: true
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  {
+                                    span_multi: {
+                                      match: {
+                                        wildcard: {
+                                          ttl: {
+                                            value: 'juice*',
+                                            case_insensitive: true
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                slop: '15',
+                                in_order: false
+                              }
+                            }
+                          ],
+                          slop: '50',
+                          in_order: false
+                        }
+                      }
+                    ],
+                    slop: '15',
+                    in_order: false
+                  }
+                }
+              ],
+              slop: '10',
+              in_order: true
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#14', () => {
+    const query = '(ttl:("c" NEARP engine*))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'c' } },
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: { ttl: { value: 'engine*', case_insensitive: true } }
+                    }
+                  }
+                }
+              ],
+              slop: '50',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#15', () => {
+    const query = '(xlpat-prob.stat:(efficiency NEAR5 cost NEAR5 time))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                { span_term: { 'xlpat-prob.stat': 'time' } },
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { 'xlpat-prob.stat': 'efficiency' } },
+                      { span_term: { 'xlpat-prob.stat': 'cost' } }
+                    ],
+                    slop: '5',
+                    in_order: false
+                  }
+                }
+              ],
+              slop: '5',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#16', () => {
+    const query = '((inv:(Michael OR Jonas)) AND ttl:(wheel PRE1 loader*))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            bool: {
+              should: [
+                { terms: { inv: ['Michael', 'Jonas'] } }
+              ]
+            }
+          },
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'wheel' } },
+                {
+                  span_multi: {
+                    match: {
+                      wildcard: { ttl: { value: 'loader*', case_insensitive: true } }
+                    }
+                  }
+                }
+              ],
+              slop: '1',
+              in_order: true
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#17', () => {
+    const query = '((inv:(Michael OR Jonas)) AND pa:(caterpillar OR Komatsu OR CNH))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            bool: {
+              should: [
+                { terms: { inv: ['Michael', 'Jonas'] } }
+              ]
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { pa: ['CNH', 'caterpillar', 'Komatsu'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#18', () => {
+    const query = '((inv:(Michael AND Jonas)) AND pa:(caterpillar OR Komatsu OR CNH))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { term: { inv: 'Michael' } },
+          { term: { inv: 'Jonas' } },
+          {
+            bool: {
+              should: [
+                { terms: { pa: ['CNH', 'caterpillar', 'Komatsu'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#19', () => {
+    const query = '((inv:(Michael AND Jonas)) NOT pa:(caterpillar OR Komatsu OR CNH))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              should: [
+                { terms: { pa: ['CNH', 'caterpillar', 'Komatsu'] } }
+              ]
+            }
+          }
+        ],
+        must: [{ term: { inv: 'Michael' } }, { term: { inv: 'Jonas' } }]
+      }
+    })
+  })
+
+  it('#20', () => {
+    const query = '((inv:(Michael OR Jonas)) NOT pa:(caterpillar OR Komatsu OR CNH))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              should: [
+                { terms: { pa: ['CNH', 'caterpillar', 'Komatsu'] } }
+              ]
+            }
+          }
+        ],
+        should: [
+          { terms: { inv: ['Michael', 'Jonas'] } }
+        ]
+      }
+    })
+  })
+
+  it('#21', () => {
+    const query = '((inv:(Michael AND Jonas)) OR cited.pn:(KR-101275147-B1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { term: { 'cited.pn': 'KR-101275147-B1' } },
+          {
+            bool: {
+              must: [{ term: { inv: 'Michael' } }, { term: { inv: 'Jonas' } }]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#22', () => {
+    const query = '(xlpat-litig.defs.name:(caterpillar OR Komatsu OR CNH))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          {
+            terms: {
+              'xlpat-litig.defs.name': ['CNH', 'caterpillar', 'Komatsu']
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#23', () => {
+    const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND (cpc:(a61b5) OR ic:(a61b5)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                { span_term: { ttl: 'watch' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['pulse', 'rate'] } }
+              ]
+            }
+          },
+          {
+            bool: {
+              should: [{ term: { cpc: 'a61b5' } }, { term: { ic: 'a61b5' } }]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#24', () => {
+    const query = '(((cpc:(a61b5) OR ic:(a61b5))) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            bool: {
+              should: [{ term: { cpc: 'a61b5' } }, { term: { ic: 'a61b5' } }]
+            }
+          },
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                { span_term: { ttl: 'watch' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['pulse', 'rate'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#25', () => {
+    const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      { span_term: { ttl: 'watch' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                },
+                {
+                  bool: {
+                    should: [
+                      { terms: { ttl: ['pulse', 'rate'] } }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            bool: {
+              must: [
+                { term: { cpc: 'G04G21/02' } },
+                { term: { cpc: 'a61b5/02' } },
+                { term: { cpc: 'G04B47/06' } }
+              ]
+            }
+          },
+          {
+            bool: {
+              must: [
+                { term: { ic: 'G04G21/02' } },
+                { term: { ic: 'a61b5/02' } },
+                { term: { ic: 'G04B47/06' } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#26', () => {
+    const query = '(((cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          {
+            bool: {
+              must: [
+                { term: { cpc: 'G04G21/02' } },
+                { term: { cpc: 'a61b5/02' } },
+                { term: { cpc: 'G04B47/06' } }
+              ]
+            }
+          },
+          {
+            bool: {
+              must: [
+                { term: { ic: 'G04G21/02' } },
+                { term: { ic: 'a61b5/02' } },
+                { term: { ic: 'G04B47/06' } }
+              ]
+            }
+          },
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      { span_term: { ttl: 'watch' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                },
+                {
+                  bool: {
+                    should: [
+                      { terms: { ttl: ['pulse', 'rate'] } }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#27', () => {
+    const query = '(((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) AND ttl:(energ*))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            wildcard: { ttl: { value: 'energ*', case_insensitive: true } }
+          },
+          {
+            bool: {
+              should: [
+                {
+                  bool: {
+                    must: [
+                      {
+                        span_near: {
+                          clauses: [
+                            { span_term: { ttl: 'smart' } },
+                            { span_term: { ttl: 'watch' } }
+                          ],
+                          slop: '2',
+                          in_order: false
+                        }
+                      },
+                      {
+                        bool: {
+                          should: [
+                            { terms: { ttl: ['pulse', 'rate'] } }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  bool: {
+                    must: [
+                      { term: { cpc: 'G04G21/02' } },
+                      { term: { cpc: 'a61b5/02' } },
+                      { term: { cpc: 'G04B47/06' } }
+                    ]
+                  }
+                },
+                {
+                  bool: {
+                    must: [
+                      { term: { ic: 'G04G21/02' } },
+                      { term: { ic: 'a61b5/02' } },
+                      { term: { ic: 'G04B47/06' } }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#28', () => {
+    const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              should: [
+                {
+                  bool: {
+                    must: [
+                      { term: { cpc: 'G04G21/02' } },
+                      { term: { cpc: 'a61b5/02' } },
+                      { term: { cpc: 'G04B47/06' } }
+                    ]
+                  }
+                },
+                {
+                  bool: {
+                    must: [
+                      { term: { ic: 'G04G21/02' } },
+                      { term: { ic: 'a61b5/02' } },
+                      { term: { ic: 'G04B47/06' } }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        must: [
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                { span_term: { ttl: 'watch' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['pulse', 'rate'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#29', () => {
+    const query = '(((cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      { span_term: { ttl: 'watch' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                },
+                {
+                  bool: {
+                    should: [
+                      { terms: { ttl: ['pulse', 'rate'] } }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        should: [
+          {
+            bool: {
+              must: [
+                { term: { cpc: 'G04G21/02' } },
+                { term: { cpc: 'a61b5/02' } },
+                { term: { cpc: 'G04B47/06' } }
+              ]
+            }
+          },
+          {
+            bool: {
+              must: [
+                { term: { ic: 'G04G21/02' } },
+                { term: { ic: 'a61b5/02' } },
+                { term: { ic: 'G04B47/06' } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#30', () => {
+    const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND casgs:(boe))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { term: { casgs: 'boe' } },
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                { span_term: { ttl: 'watch' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['pulse', 'rate'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#31', () => {
+    const query = '((casgs:(boe)) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { term: { casgs: 'boe' } },
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                { span_term: { ttl: 'watch' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['pulse', 'rate'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#32', () => {
+    const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT casgs:(boe))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [{ term: { casgs: 'boe' } }],
+        must: [
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                { span_term: { ttl: 'watch' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['pulse', 'rate'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#33', () => {
+    const query = '((casgs:(FINNOVATE NEAR2 GROUP)) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      { span_term: { ttl: 'watch' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                },
+                {
+                  bool: {
+                    should: [
+                      { terms: { ttl: ['pulse', 'rate'] } }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        must: [
+          {
+            span_near: {
+              clauses: [
+                { span_term: { casgs: 'FINNOVATE' } },
+                { span_term: { casgs: 'GROUP' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#34', () => {
+    const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR casgs:(FINNOVATE NEAR2 GROUP))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      { span_term: { ttl: 'watch' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                },
+                {
+                  bool: {
+                    should: [
+                      { terms: { ttl: ['pulse', 'rate'] } }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { casgs: 'FINNOVATE' } },
+                      { span_term: { casgs: 'GROUP' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#35', () => {
+    const query = '((casgs:(FINNOVATE NEAR2 GROUP)) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { casgs: 'FINNOVATE' } },
+                      { span_term: { casgs: 'GROUP' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                }
+              ]
+            }
+          },
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      { span_term: { ttl: 'watch' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                },
+                {
+                  bool: {
+                    should: [
+                      { terms: { ttl: ['pulse', 'rate'] } }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#36', () => {
+    const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND pn:(US20200069200A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { term: { pn: 'US20200069200A1' } },
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                { span_term: { ttl: 'watch' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['pulse', 'rate'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#37', () => {
+    const query = '((pn:(US20200069200A1)) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { term: { pn: 'US20200069200A1' } },
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                { span_term: { ttl: 'watch' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['pulse', 'rate'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#38', () => {
+    const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR pn:(US20210403048A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { term: { pn: 'US20210403048A1' } },
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      { span_term: { ttl: 'watch' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                },
+                {
+                  bool: {
+                    should: [
+                      { terms: { ttl: ['pulse', 'rate'] } }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#39', () => {
+    const query = '((pn:(US20200069200A1)) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { term: { pn: 'US20200069200A1' } },
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      { span_term: { ttl: 'watch' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                },
+                {
+                  bool: {
+                    should: [
+                      { terms: { ttl: ['pulse', 'rate'] } }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#40', () => {
+    const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT pn:(US20210403048A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [{ term: { pn: 'US20210403048A1' } }],
+        must: [
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                { span_term: { ttl: 'watch' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['pulse', 'rate'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#41', () => {
+    const query = '((pn:(US20210403048A1)) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      { span_term: { ttl: 'watch' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                },
+                {
+                  bool: {
+                    should: [
+                      { terms: { ttl: ['pulse', 'rate'] } }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        must: [{ term: { pn: 'US20210403048A1' } }]
+      }
+    })
+  })
+
+  it('#42', () => {
+    const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND epridate: [20000101 TO 20220308])'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { range: { epridate: { gte: '20000101', lte: '20220308' } } },
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                { span_term: { ttl: 'watch' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['pulse', 'rate'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#43', () => {
+    const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND pd: [20000101 TO 20220308])'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { range: { pd: { gte: '20000101', lte: '20220308' } } },
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                { span_term: { ttl: 'watch' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['pulse', 'rate'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#44', () => {
+    const query = '((pd: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { range: { pd: { gte: '20000101', lte: '20220308' } } },
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                { span_term: { ttl: 'watch' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['pulse', 'rate'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#45', () => {
+    const query = '((ad: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { range: { ad: { gte: '20000101', lte: '20220308' } } },
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                { span_term: { ttl: 'watch' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['pulse', 'rate'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#46', () => {
+    const query = '((epridate: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { range: { epridate: { gte: '20000101', lte: '20220308' } } },
+          {
+            span_near: {
+              clauses: [
+                { span_term: { ttl: 'smart' } },
+                { span_term: { ttl: 'watch' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                { terms: { ttl: ['pulse', 'rate'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#47', () => {
+    const query = '((epridate: [20220201 TO 20220308]) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { range: { epridate: { gte: '20220201', lte: '20220308' } } },
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      { span_term: { ttl: 'watch' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                },
+                {
+                  bool: {
+                    should: [
+                      { terms: { ttl: ['pulse', 'rate'] } }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#48', () => {
+    const query = '((epridate: [20220201 TO 20220308]) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      { span_term: { ttl: 'watch' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                },
+                {
+                  bool: {
+                    should: [
+                      { terms: { ttl: ['pulse', 'rate'] } }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        must: [
+          { range: { epridate: { gte: '20220201', lte: '20220308' } } }
+        ]
+      }
+    })
+  })
+
+  it('#49', () => {
+    const query = '((epridate: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { range: { epridate: { gte: '20220201', lte: '20220308' } } },
+          {
+            bool: {
+              should: [
+                { terms: { pn: ['ES1286585U', 'ES1286629U'] } }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#50', () => {
+    const query = '((epridate: [20220201 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { range: { epridate: { gte: '20220201', lte: '20220308' } } },
+          {
+            terms: { pn: ['US20210403048A1', 'ES1286585U', 'ES1286629U'] }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#51', () => {
+    const query = '((epridate: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { range: { epridate: { gte: '20220201', lte: '20220308' } } },
+          {
+            bool: {
+              should: [
+                {
+                  terms: { pn: ['US20210403048A1', 'ES1286585U', 'ES1286629U'] }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#52', () => {
+    const query = '((ad: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { range: { ad: { gte: '20220201', lte: '20220308' } } },
+          {
+            bool: {
+              should: [
+                {
+                  terms: { pn: ['US20210403048A1', 'ES1286585U', 'ES1286629U'] }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#53', () => {
+    const query = '((ad: [20220201 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { range: { ad: { gte: '20220201', lte: '20220308' } } },
+          {
+            terms: { pn: ['US20210403048A1', 'ES1286585U', 'ES1286629U'] }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#54', () => {
+    const query = '((ad: [20220201 TO 20220308]) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              should: [
+                {
+                  terms: { pn: ['US20210403048A1', 'ES1286585U', 'ES1286629U'] }
+                }
+              ]
+            }
+          }
+        ],
+        must: [
+          { range: { ad: { gte: '20220201', lte: '20220308' } } }
+        ]
+      }
+    })
+  })
+
+  it('#55', () => {
+    const query = '((casgs:(FINNOVATE NEAR2 GROUP)) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              should: [
+                {
+                  terms: { pn: ['US20210403048A1', 'ES1286585U', 'ES1286629U'] }
+                }
+              ]
+            }
+          }
+        ],
+        must: [
+          {
+            span_near: {
+              clauses: [
+                { span_term: { casgs: 'FINNOVATE' } },
+                { span_term: { casgs: 'GROUP' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#56', () => {
+    const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) NOT casgs:(FINNOVATE NEAR2 GROUP))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { casgs: 'FINNOVATE' } },
+                      { span_term: { casgs: 'GROUP' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        should: [
+          {
+            terms: {
+              pn: [
+                'US20200328824A1',
+                'US20210403048A1',
+                'ES1286585U',
+                'ES1286629U'
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#57', () => {
+    const query = '((casgs:(FINNOVATE NEAR2 GROUP)) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            span_near: {
+              clauses: [
+                { span_term: { casgs: 'FINNOVATE' } },
+                { span_term: { casgs: 'GROUP' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          },
+          {
+            bool: {
+              should: [
+                {
+                  terms: {
+                    pn: [
+                      'US20200328824A1',
+                      'US20210403048A1',
+                      'ES1286585U',
+                      'ES1286629U'
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#58', () => {
+    const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND casgs:(FINNOVATE NEAR2 GROUP))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            bool: {
+              should: [
+                {
+                  terms: {
+                    pn: [
+                      'US20200328824A1',
+                      'US20210403048A1',
+                      'ES1286585U',
+                      'ES1286629U'
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            span_near: {
+              clauses: [
+                { span_term: { casgs: 'FINNOVATE' } },
+                { span_term: { casgs: 'GROUP' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#59', () => {
+    const query = '((casgs:(FINNOVATE NEAR2 GROUP)) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          {
+            bool: {
+              must: [
+                {
+                  span_near: {
+                    clauses: [
+                      { span_term: { casgs: 'FINNOVATE' } },
+                      { span_term: { casgs: 'GROUP' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                }
+              ]
+            }
+          },
+          {
+            terms: {
+              pn: [
+                'US20200328824A1',
+                'US20210403048A1',
+                'ES1286585U',
+                'ES1286629U'
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#60', () => {
+    const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND casgs:(FINNOVATE NEAR2 GROUP))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            bool: {
+              should: [
+                {
+                  terms: {
+                    pn: [
+                      'US20200328824A1',
+                      'US20210403048A1',
+                      'ES1286585U',
+                      'ES1286629U'
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            span_near: {
+              clauses: [
+                { span_term: { casgs: 'FINNOVATE' } },
+                { span_term: { casgs: 'GROUP' } }
+              ],
+              slop: '2',
+              in_order: false
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#61', () => {
+    const query = '((an:(16845016)) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { term: { an: '16845016' } },
+          {
+            bool: {
+              should: [
+                {
+                  terms: {
+                    pn: [
+                      'US20200328824A1',
+                      'US20210403048A1',
+                      'ES1286585U',
+                      'ES1286629U'
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#62', () => {
+    const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND an:(16845016))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { term: { an: '16845016' } },
+          {
+            bool: {
+              should: [
+                {
+                  terms: {
+                    pn: [
+                      'US20200328824A1',
+                      'US20210403048A1',
+                      'ES1286585U',
+                      'ES1286629U'
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#63', () => {
+    const query = '((an:(16845016)) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { term: { an: '16845016' } },
+          {
+            terms: {
+              pn: [
+                'US20200328824A1',
+                'US20210403048A1',
+                'ES1286585U',
+                'ES1286629U'
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#64', () => {
+    const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) OR an:(16845016))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { term: { an: '16845016' } },
+          {
+            terms: {
+              pn: [
+                'US20200328824A1',
+                'US20210403048A1',
+                'ES1286585U',
+                'ES1286629U'
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#65', () => {
+    const query = '((an:(16845016)) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              should: [
+                {
+                  terms: {
+                    pn: [
+                      'US20200328824A1',
+                      'US20210403048A1',
+                      'ES1286585U',
+                      'ES1286629U'
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        must: [{ term: { an: '16845016' } }]
+      }
+    })
+  })
+
+  it('#66', () => {
+    const query = '((pd: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { range: { pd: { gte: '20210101', lte: '20220308' } } },
+          {
+            bool: {
+              should: [
+                {
+                  terms: {
+                    pn: [
+                      'US20200328824A1',
+                      'US20210403048A1',
+                      'ES1286585U',
+                      'ES1286629U'
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#67', () => {
+    const query = '((ad: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { range: { ad: { gte: '20210101', lte: '20220308' } } },
+          {
+            bool: {
+              should: [
+                {
+                  terms: {
+                    pn: [
+                      'US20200328824A1',
+                      'US20210403048A1',
+                      'ES1286585U',
+                      'ES1286629U'
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#68', () => {
+    const query = '((epridate: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { range: { epridate: { gte: '20210101', lte: '20220308' } } },
+          {
+            bool: {
+              should: [
+                {
+                  terms: {
+                    pn: [
+                      'US20200328824A1',
+                      'US20210403048A1',
+                      'ES1286585U',
+                      'ES1286629U'
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#69', () => {
+    const query = '((epridate: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { range: { epridate: { gte: '20220304', lte: '20220308' } } },
+          {
+            terms: {
+              pn: [
+                'US20200328824A1',
+                'US20210403048A1',
+                'ES1286585U',
+                'ES1286629U'
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#70', () => {
+    const query = '((ad: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { range: { ad: { gte: '20220304', lte: '20220308' } } },
+          {
+            terms: {
+              pn: [
+                'US20200328824A1',
+                'US20210403048A1',
+                'ES1286585U',
+                'ES1286629U'
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#71', () => {
+    const query = '((ad: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { range: { ad: { gte: '20220304', lte: '20220308' } } },
+          {
+            terms: {
+              pn: [
+                'US20200328824A1',
+                'US20210403048A1',
+                'ES1286585U',
+                'ES1286629U'
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#71', () => {
+    const query = '((pd: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          { range: { pd: { gte: '20220304', lte: '20220308' } } },
+          {
+            terms: {
+              pn: [
+                'US20200328824A1',
+                'US20210403048A1',
+                'ES1286585U',
+                'ES1286629U'
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#72', () => {
+    const query = '((pd: [20220304 TO 20220308]) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              should: [
+                {
+                  terms: {
+                    pn: [
+                      'US20200328824A1',
+                      'US20210403048A1',
+                      'ES1286585U',
+                      'ES1286629U'
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        must: [
+          { range: { pd: { gte: '20220304', lte: '20220308' } } }
+        ]
+      }
+    })
+  })
+
+  it('#73', () => {
+    const query = '((pd: [20200101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          { range: { pd: { gte: '20200101', lte: '20220308' } } },
+          {
+            bool: {
+              should: [
+                {
+                  terms: {
+                    pn: [
+                      'US20200328824A1',
+                      'US20210403048A1',
+                      'ES1286585U',
+                      'ES1286629U'
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#74', () => {
+    const query = '(((cpc:(A47B53) OR ic:(A47B53))) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            bool: {
+              should: [{ term: { cpc: 'A47B53' } }, { term: { ic: 'A47B53' } }]
+            }
+          },
+          {
+            bool: {
+              should: [
+                {
+                  terms: {
+                    pn: [
+                      'US20200328824A1',
+                      'US20210403048A1',
+                      'ES1286585U',
+                      'ES1286629U'
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#75', () => {
+    const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND (cpc:(A47B53) OR ic:(A47B53)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must: [
+          {
+            bool: {
+              should: [
+                {
+                  terms: {
+                    pn: [
+                      'US20200328824A1',
+                      'US20210403048A1',
+                      'ES1286585U',
+                      'ES1286629U'
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            bool: {
+              should: [{ term: { cpc: 'A47B53' } }, { term: { ic: 'A47B53' } }]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#76', () => {
+    const query = '(((cpc:(A47B53 AND B60R25/01) OR ic:(A47B53 AND B60R25/01))) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          {
+            bool: {
+              must: [
+                { term: { cpc: 'A47B53' } },
+                { term: { cpc: 'B60R25/01' } }
+              ]
+            }
+          },
+          {
+            bool: {
+              must: [{ term: { ic: 'A47B53' } }, { term: { ic: 'B60R25/01' } }]
+            }
+          },
+          {
+            terms: {
+              pn: [
+                'US20200328824A1',
+                'US20210403048A1',
+                'ES1286585U',
+                'ES1286629U'
+              ]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#77', () => {
+    const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) OR (cpc:(A47B53 AND B60R25/01) OR ic:(A47B53 AND B60R25/01)))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        should: [
+          {
+            terms: {
+              pn: [
+                'US20200328824A1',
+                'US20210403048A1',
+                'ES1286585U',
+                'ES1286629U'
+              ]
+            }
+          },
+          {
+            bool: {
+              must: [
+                { term: { cpc: 'A47B53' } },
+                { term: { cpc: 'B60R25/01' } }
+              ]
+            }
+          },
+          {
+            bool: {
+              must: [{ term: { ic: 'A47B53' } }, { term: { ic: 'B60R25/01' } }]
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('#78', () => {
+    const query = '(((cpc:(A47B53 AND A47B63) OR ic:(A47B53 AND A47B63))) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1 OR GB2454544A))'
+    const pq = genEQL(query)
+
+    expect(pq).toEqual({
+      bool: {
+        must_not: [
+          {
+            bool: {
+              should: [
+                {
+                  terms: {
+                    pn: [
+                      'GB2454544A',
+                      'US20200328824A1',
+                      'US20210403048A1',
+                      'ES1286585U',
+                      'ES1286629U'
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        should: [
+          {
+            bool: {
+              must: [{ term: { cpc: 'A47B53' } }, { term: { cpc: 'A47B63' } }]
+            }
+          },
+          {
+            bool: {
+              must: [{ term: { ic: 'A47B53' } }, { term: { ic: 'A47B63' } }]
             }
           }
         ]
