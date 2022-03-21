@@ -1,4 +1,4 @@
-const genEQL = require('./gen-eql')
+const { genEqlIter, genEqlRec } = require('./gen-eql')
 
 // const pnq = '((ttl:(wireless)) OR (pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845)))'
 // const pnq1 = '(pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845))'
@@ -14,4 +14,8 @@ const genEQL = require('./gen-eql')
 //     }
 // }), null, 2))
 
-console.dir(genEQL('(ttl:(((Fruit* OR Vegetable*) NEAR3 ((Carrot OR juice) OR (banana NEAR3 shake)))))'), { depth: null })
+//
+// ttl: (Carrot OR juice AND apple)
+// ttl: (Carrot OR juice OR apple)
+
+console.dir(genEqlIter('(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)))))'), { depth: null })
