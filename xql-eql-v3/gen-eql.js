@@ -259,7 +259,6 @@ const genIter = (node, nodeTransformer) => {
         // console.log('CASE 0: BASE')
         // console.dir(curr, { depth: null })
 
-        snapshot.current = curr
         const top = stack[stack.length - 1]
         if (top) top.next = curr
 
@@ -272,6 +271,8 @@ const genIter = (node, nodeTransformer) => {
           stack.push({ node: { opt: snapshot.node.opt }, current: curr, next: {}, stage: 1 })
           stack.push({ node: snapshot.node.child[0], next: {}, stage: 0 })
         }
+
+        if (!stack.length) snapshot.current = curr
 
         break
       }
