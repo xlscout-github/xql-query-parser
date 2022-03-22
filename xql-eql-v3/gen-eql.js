@@ -4,9 +4,7 @@ const genIter = (node, nodeTransformer) => {
   let snapshot = {
     node,
     current: {},
-    next: {
-      ref: {}
-    },
+    next: {},
     stage: 0
   }
   const stack = [snapshot]
@@ -262,40 +260,41 @@ const genIter = (node, nodeTransformer) => {
         // console.dir(curr, { depth: null })
 
         snapshot.current = curr
-        snapshot.next.ref = curr
+        const top = stack[stack.length - 1]
+        if (top) top.next = curr
 
         if (snapshot.node.child[1] && snapshot.node.child[1].child) {
-          stack.push({ node: snapshot.node, current: curr, next: {}, stage: 2 })
-          stack.push({ node: snapshot.node.child[1], next: stack[stack.length - 1].next, stage: 0 })
+          stack.push({ node: { opt: snapshot.node.opt }, current: curr, next: {}, stage: 2 })
+          stack.push({ node: snapshot.node.child[1], next: {}, stage: 0 })
         }
 
         if (snapshot.node.child[0] && snapshot.node.child[0].child) {
-          stack.push({ node: snapshot.node, current: curr, next: {}, stage: 1 })
-          stack.push({ node: snapshot.node.child[0], next: stack[stack.length - 1].next, stage: 0 })
+          stack.push({ node: { opt: snapshot.node.opt }, current: curr, next: {}, stage: 1 })
+          stack.push({ node: snapshot.node.child[0], next: {}, stage: 0 })
         }
 
         break
       }
       case 1: {
-        const keys = Object.keys(snapshot.next.ref)
+        const keys = Object.keys(snapshot.next)
 
         if (snapshot.node.opt === 'AND' && ((keys.length > 1) || (keys.length === 1 && keys[0] !== 'must'))) {
-          snapshot.current.must.push({ bool: snapshot.next.ref })
+          snapshot.current.must.push({ bool: snapshot.next })
         } else if (snapshot.node.opt === 'AND' && keys.length === 1 && keys[0] === 'must') {
           const x = snapshot.current.must.map(i => JSON.stringify(i))
-          snapshot.next.ref.must.forEach(s => {
+          snapshot.next.must.forEach(s => {
             if (!x.includes(JSON.stringify(s))) {
               snapshot.current.must.push(s)
             }
           })
         } else if (snapshot.node.opt === 'OR' && ((keys.length > 1) || (keys.length === 1 && keys[0] !== 'should'))) {
-          snapshot.current.should.push({ bool: snapshot.next.ref })
+          snapshot.current.should.push({ bool: snapshot.next })
         } else if (snapshot.node.opt === 'OR' && keys.length === 1 && keys[0] === 'should') {
           const [prev = {}] = snapshot.current.should
           let key
           if (prev.term) key = Object.keys(prev.term)[0]
           const x = snapshot.current.should.map(i => JSON.stringify(i))
-          snapshot.next.ref.should.forEach(s => {
+          snapshot.next.should.forEach(s => {
             if (s.terms && s.terms[key]) {
               prev.terms = {
                 [key]: [prev.term[key]]
@@ -325,7 +324,7 @@ const genIter = (node, nodeTransformer) => {
           if (prev.term) key = Object.keys(prev.term)[0]
 
           keys.forEach(k => {
-            if (!snapshot.current[k]) snapshot.current[k] = snapshot.next.ref[k]
+            if (!snapshot.current[k]) snapshot.current[k] = snapshot.next[k]
             else {
               const x = snapshot.current[k].map(i => JSON.stringify(i))
               if (k === 'must_not' && key) {
@@ -333,7 +332,7 @@ const genIter = (node, nodeTransformer) => {
                   [key]: [prev.term[key]]
                 }
               }
-              snapshot.next.ref[k].forEach(s => {
+              snapshot.next[k].forEach(s => {
                 if (!x.includes(JSON.stringify(s))) {
                   if (k === 'must_not' && s.term && s.term[key]) {
                     prev.terms[key].push(s.term[key])
@@ -359,7 +358,7 @@ const genIter = (node, nodeTransformer) => {
         } else if ((snapshot.node.opt === 'NEAR' || snapshot.node.opt === 'PRE') && keys.length === 1 && keys[0] === 'should') {
           snapshot.current.must[0].span_near.clauses.push({
             span_or: {
-              clauses: snapshot.next.ref.should.reduce((previousValue, currentValue) => {
+              clauses: snapshot.next.should.reduce((previousValue, currentValue) => {
                 if (currentValue.term) {
                   previousValue.push({
                     span_term: currentValue.term
@@ -415,7 +414,7 @@ const genIter = (node, nodeTransformer) => {
             }
           })
         } else if ((snapshot.node.opt === 'NEAR' || snapshot.node.opt === 'PRE') && keys.length === 1 && keys[0] === 'must') {
-          snapshot.next.ref.must.forEach(x => {
+          snapshot.next.must.forEach(x => {
             if (x.term) {
               x.span_term = x.term
               delete x.term
@@ -452,32 +451,32 @@ const genIter = (node, nodeTransformer) => {
             }
           })
 
-          snapshot.current.must[0].span_near.clauses.push(...snapshot.next.ref.must)
+          snapshot.current.must[0].span_near.clauses.push(...snapshot.next.must)
         }
 
         break
       }
       case 2: {
-        const keys = Object.keys(snapshot.next.ref)
+        const keys = Object.keys(snapshot.next)
 
         if (snapshot.node.opt === 'AND' && ((keys.length > 1) || (keys.length === 1 && keys[0] !== 'must'))) {
-          snapshot.current.must.push({ bool: snapshot.next.ref })
+          snapshot.current.must.push({ bool: snapshot.next })
         } else if (snapshot.node.opt === 'AND' && keys.length === 1 && keys[0] === 'must') {
           const x = snapshot.current.must.map(i => JSON.stringify(i))
-          snapshot.next.ref.must.forEach(s => {
+          snapshot.next.must.forEach(s => {
             if (!x.includes(JSON.stringify(s))) {
               snapshot.current.must.push(s)
             }
           })
         } else if (snapshot.node.opt === 'OR' && ((keys.length > 1) || (keys.length === 1 && keys[0] !== 'should'))) {
-          snapshot.current.should.push({ bool: snapshot.next.ref })
+          snapshot.current.should.push({ bool: snapshot.next })
         } else if (snapshot.node.opt === 'OR' && keys.length === 1 && keys[0] === 'should') {
           const [prev] = snapshot.current.should
           let key
           if (prev.term) key = Object.keys(prev.term)[0]
           else if (prev.terms) key = Object.keys(prev.terms)[0]
           const x = snapshot.current.should.map(i => JSON.stringify(i))
-          snapshot.next.ref.should.forEach(s => {
+          snapshot.next.should.forEach(s => {
             if (prev.term && s.terms && s.terms[key]) {
               prev.terms = {
                 [key]: [prev.term[key]]
@@ -512,13 +511,13 @@ const genIter = (node, nodeTransformer) => {
             }
           })
         } else if (snapshot.node.opt === 'NOT') {
-          snapshot.current.must_not.push({ bool: snapshot.next.ref })
+          snapshot.current.must_not.push({ bool: snapshot.next })
         } else if ((snapshot.node.opt === 'NEAR' || snapshot.node.opt === 'PRE') && ((keys.length > 1) || (keys.length === 1 && keys[0] === 'must_not'))) {
           throw new Error('malformed query')
         } else if ((snapshot.node.opt === 'NEAR' || snapshot.node.opt === 'PRE') && keys.length === 1 && keys[0] === 'should') {
           snapshot.current.must[0].span_near.clauses.push({
             span_or: {
-              clauses: snapshot.next.ref.should.reduce((previousValue, currentValue) => {
+              clauses: snapshot.next.should.reduce((previousValue, currentValue) => {
                 if (currentValue.term) {
                   previousValue.push({
                     span_term: currentValue.term
@@ -574,7 +573,7 @@ const genIter = (node, nodeTransformer) => {
             }
           })
         } else if ((snapshot.node.opt === 'NEAR' || snapshot.node.opt === 'PRE') && keys.length === 1 && keys[0] === 'must') {
-          snapshot.next.ref.must.forEach(x => {
+          snapshot.next.must.forEach(x => {
             if (x.term) {
               x.span_term = x.term
               delete x.term
@@ -611,7 +610,7 @@ const genIter = (node, nodeTransformer) => {
             }
           })
 
-          snapshot.current.must[0].span_near.clauses.push(...snapshot.next.ref.must)
+          snapshot.current.must[0].span_near.clauses.push(...snapshot.next.must)
         }
 
         break

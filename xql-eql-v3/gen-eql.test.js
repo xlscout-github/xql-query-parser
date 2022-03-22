@@ -5584,7 +5584,7 @@ describe('Iterative Implementation', () => {
   })
 })
 
-describe('Recursive Implementation', () => {
+xdescribe('Recursive Implementation', () => {
   describe('Proximity Queries', () => {
     it('Check Sentence Slop', () => {
       const query = '(ttl:(apple NEARS banana))'
