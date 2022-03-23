@@ -5,8 +5,6 @@ const COMBINE_CRITERION = "OR";
 function main(q, substitute = {}) {
   const tree = parse(q);
 
-  // console.dir(tree, { depth: null });
-
   const { child: [left, right] = [] } = tree;
 
   if (left == null && right == null) {
@@ -303,7 +301,15 @@ function isCombinableTree(tree) {
     return false;
   }
 
-  return typeof value === "string" && !isPhrase(value);
+  // overflows
+  // return (
+  //   typeof value === "string" && !isPhrase(value) && !containsWildcard(value)
+  // );
+  return (
+    typeof value === "string" &&
+    !(value.startsWith('"') && value.endsWith('"')) &&
+    !(value.includes("*") || value.includes("?"))
+  );
 }
 
 function combine(tree) {

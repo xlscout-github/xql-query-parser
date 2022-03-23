@@ -2658,72 +2658,6 @@ describe('Iterative Implementation', () => {
     })
 
     it('#3', () => {
-      const query = '(ttl:(((Fruit* OR Vegetable*) NEAR3 ((Carrot OR juice) OR (banana NEAR3 shake)))))'
-      const pq = genEqlIter(query)
-
-      expect(pq).toEqual({
-        bool: {
-          must: [
-            {
-              span_near: {
-                clauses: [
-                  {
-                    span_or: {
-                      clauses: [
-                        {
-                          span_multi: {
-                            match: {
-                              wildcard: {
-                                ttl: { value: 'Fruit*', case_insensitive: true }
-                              }
-                            }
-                          }
-                        },
-                        {
-                          span_multi: {
-                            match: {
-                              wildcard: {
-                                ttl: {
-                                  value: 'Vegetable*',
-                                  case_insensitive: true
-                                }
-                              }
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    span_or: {
-                      clauses: [
-                        { span_term: { ttl: 'Carrot' } },
-                        { span_term: { ttl: 'juice' } },
-                        {
-                          span_near: {
-                            clauses: [
-                              { span_term: { ttl: 'banana' } },
-                              { span_term: { ttl: 'shake' } }
-                            ],
-                            slop: '3',
-                            in_order: false
-                          }
-                        }
-                      ]
-                    }
-                  }
-
-                ],
-                slop: '3',
-                in_order: false
-              }
-            }
-          ]
-        }
-      })
-    })
-
-    it('#4', () => {
       const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*))))'
       const pq = genEqlIter(query)
 
@@ -2770,7 +2704,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#5', () => {
+    it('#4', () => {
       const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*)) NOT (papaya OR melon OR lemon OR plant*)))'
       const pq = genEqlIter(query)
 
@@ -2829,7 +2763,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#6', () => {
+    it('#5', () => {
       const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*)) NOT ((papaya OR melon OR lemon) NEAR4 (plant*))))'
       const pq = genEqlIter(query)
 
@@ -2910,7 +2844,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#7', () => {
+    it('#6', () => {
       const query = '((ttl:(smart NEAR2 (watch OR watches))) AND ttl:(heart NEAR2 rate))'
       const pq = genEqlIter(query)
 
@@ -2949,7 +2883,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#8', () => {
+    it('#7', () => {
       const query = '(((ttl:(smart NEAR2 (watch OR watches))) NOT ttl:(heart AND (rate OR pulse* OR oxygen))) AND pd: [20220101 TO 20220307])'
       const pq = genEqlIter(query)
 
@@ -3006,7 +2940,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#9', () => {
+    it('#8', () => {
       const query = '(ttl:(((vegetable*) NEAR15 (juice*)) NEARP ((Fruit* OR Vegetable*) NEARS (plant*))))'
       const pq = genEqlIter(query)
 
@@ -3102,7 +3036,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#10', () => {
+    it('#9', () => {
       const query = '((ttl:(patent NEAR5 (artificial NEAR2 intelligen*))) OR ttl:(patent NEAR5 (machine NEAR2 learn*)))'
       const pq = genEqlIter(query)
 
@@ -3186,7 +3120,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#11', () => {
+    it('#10', () => {
       const query = '(((ttl:(patent NEARS (artificial PRE2 intelligen*))) OR ttl:(patent NEARP (machine PRE2 learn*))) AND pd: [20150101 TO 20220307])'
       const pq = genEqlIter(query)
 
@@ -3277,7 +3211,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#12', () => {
+    it('#11', () => {
       const query = '(ttl:((A*) PRE10 ((veg*) NEAR15 (juice*) NEARP (Veg*) NEARS (plant*))))'
       const pq = genEqlIter(query)
 
@@ -3373,7 +3307,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#13', () => {
+    it('#12', () => {
       const query = '(ttl:((A) PRE10 ((veg*) NEAR15 (juice*) NEARP (Veg*) NEARS (plant*))))'
       const pq = genEqlIter(query)
 
@@ -3463,7 +3397,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#14', () => {
+    it('#13', () => {
       const query = '(ttl:("c" NEARP engine*))'
       const pq = genEqlIter(query)
 
@@ -3491,7 +3425,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#15', () => {
+    it('#14', () => {
       const query = '(xlpat-prob.stat:(efficiency NEAR5 cost NEAR5 time))'
       const pq = genEqlIter(query)
 
@@ -3522,7 +3456,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#16', () => {
+    it('#15', () => {
       const query = '((inv:(Michael OR Jonas)) AND ttl:(wheel PRE1 loader*))'
       const pq = genEqlIter(query)
 
@@ -3557,7 +3491,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#17', () => {
+    it('#16', () => {
       const query = '((inv:(Michael OR Jonas)) AND pa:(caterpillar OR Komatsu OR CNH))'
       const pq = genEqlIter(query)
 
@@ -3583,7 +3517,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#18', () => {
+    it('#17', () => {
       const query = '((inv:(Michael AND Jonas)) AND pa:(caterpillar OR Komatsu OR CNH))'
       const pq = genEqlIter(query)
 
@@ -3604,7 +3538,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#19', () => {
+    it('#18', () => {
       const query = '((inv:(Michael AND Jonas)) NOT pa:(caterpillar OR Komatsu OR CNH))'
       const pq = genEqlIter(query)
 
@@ -3624,7 +3558,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#20', () => {
+    it('#19', () => {
       const query = '((inv:(Michael OR Jonas)) NOT pa:(caterpillar OR Komatsu OR CNH))'
       const pq = genEqlIter(query)
 
@@ -3646,7 +3580,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#21', () => {
+    it('#20', () => {
       const query = '((inv:(Michael AND Jonas)) OR cited.pn:(KR-101275147-B1))'
       const pq = genEqlIter(query)
 
@@ -3664,7 +3598,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#22', () => {
+    it('#21', () => {
       const query = '(xlpat-litig.defs.name:(caterpillar OR Komatsu OR CNH))'
       const pq = genEqlIter(query)
 
@@ -3681,7 +3615,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#23', () => {
+    it('#22', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND (cpc:(a61b5) OR ic:(a61b5)))'
       const pq = genEqlIter(query)
 
@@ -3715,7 +3649,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#24', () => {
+    it('#23', () => {
       const query = '(((cpc:(a61b5) OR ic:(a61b5))) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlIter(query)
 
@@ -3749,7 +3683,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#25', () => {
+    it('#24', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02)))'
       const pq = genEqlIter(query)
 
@@ -3802,7 +3736,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#26', () => {
+    it('#25', () => {
       const query = '(((cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlIter(query)
 
@@ -3855,7 +3789,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#27', () => {
+    it('#26', () => {
       const query = '(((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) AND ttl:(energ*))'
       const pq = genEqlIter(query)
 
@@ -3917,7 +3851,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#28', () => {
+    it('#27', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02)))'
       const pq = genEqlIter(query)
 
@@ -3972,7 +3906,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#29', () => {
+    it('#28', () => {
       const query = '(((cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlIter(query)
 
@@ -4027,7 +3961,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#30', () => {
+    it('#29', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND casgs:(boe))'
       const pq = genEqlIter(query)
 
@@ -4057,7 +3991,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#31', () => {
+    it('#30', () => {
       const query = '((casgs:(boe)) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlIter(query)
 
@@ -4087,7 +4021,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#32', () => {
+    it('#31', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT casgs:(boe))'
       const pq = genEqlIter(query)
 
@@ -4117,7 +4051,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#33', () => {
+    it('#32', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlIter(query)
 
@@ -4164,7 +4098,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#34', () => {
+    it('#33', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR casgs:(FINNOVATE NEAR2 GROUP))'
       const pq = genEqlIter(query)
 
@@ -4215,7 +4149,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#35', () => {
+    it('#34', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlIter(query)
 
@@ -4266,7 +4200,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#36', () => {
+    it('#35', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND pn:(US20200069200A1))'
       const pq = genEqlIter(query)
 
@@ -4296,7 +4230,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#37', () => {
+    it('#36', () => {
       const query = '((pn:(US20200069200A1)) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlIter(query)
 
@@ -4326,7 +4260,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#38', () => {
+    it('#37', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR pn:(US20210403048A1))'
       const pq = genEqlIter(query)
 
@@ -4362,7 +4296,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#39', () => {
+    it('#38', () => {
       const query = '((pn:(US20200069200A1)) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlIter(query)
 
@@ -4398,7 +4332,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#40', () => {
+    it('#39', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT pn:(US20210403048A1))'
       const pq = genEqlIter(query)
 
@@ -4428,7 +4362,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#41', () => {
+    it('#40', () => {
       const query = '((pn:(US20210403048A1)) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlIter(query)
 
@@ -4464,7 +4398,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#42', () => {
+    it('#41', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND epridate: [20000101 TO 20220308])'
       const pq = genEqlIter(query)
 
@@ -4494,7 +4428,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#43', () => {
+    it('#42', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND pd: [20000101 TO 20220308])'
       const pq = genEqlIter(query)
 
@@ -4524,7 +4458,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#44', () => {
+    it('#43', () => {
       const query = '((pd: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlIter(query)
 
@@ -4554,7 +4488,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#45', () => {
+    it('#44', () => {
       const query = '((ad: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlIter(query)
 
@@ -4584,7 +4518,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#46', () => {
+    it('#45', () => {
       const query = '((epridate: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlIter(query)
 
@@ -4614,7 +4548,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#47', () => {
+    it('#46', () => {
       const query = '((epridate: [20220201 TO 20220308]) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlIter(query)
 
@@ -4650,7 +4584,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#48', () => {
+    it('#47', () => {
       const query = '((epridate: [20220201 TO 20220308]) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlIter(query)
 
@@ -4688,7 +4622,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#49', () => {
+    it('#48', () => {
       const query = '((epridate: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U))'
       const pq = genEqlIter(query)
 
@@ -4708,7 +4642,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#50', () => {
+    it('#49', () => {
       const query = '((epridate: [20220201 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
       const pq = genEqlIter(query)
 
@@ -4724,7 +4658,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#51', () => {
+    it('#50', () => {
       const query = '((epridate: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
       const pq = genEqlIter(query)
 
@@ -4746,7 +4680,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#52', () => {
+    it('#51', () => {
       const query = '((ad: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
       const pq = genEqlIter(query)
 
@@ -4768,7 +4702,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#53', () => {
+    it('#52', () => {
       const query = '((ad: [20220201 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
       const pq = genEqlIter(query)
 
@@ -4784,7 +4718,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#54', () => {
+    it('#53', () => {
       const query = '((ad: [20220201 TO 20220308]) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
       const pq = genEqlIter(query)
 
@@ -4808,7 +4742,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#55', () => {
+    it('#54', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
       const pq = genEqlIter(query)
 
@@ -4841,7 +4775,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#56', () => {
+    it('#55', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) NOT casgs:(FINNOVATE NEAR2 GROUP))'
       const pq = genEqlIter(query)
 
@@ -4881,7 +4815,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#57', () => {
+    it('#56', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlIter(query)
 
@@ -4919,7 +4853,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#58', () => {
+    it('#57', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND casgs:(FINNOVATE NEAR2 GROUP))'
       const pq = genEqlIter(query)
 
@@ -4957,7 +4891,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#59', () => {
+    it('#58', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlIter(query)
 
@@ -4995,7 +4929,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#60', () => {
+    it('#59', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND casgs:(FINNOVATE NEAR2 GROUP))'
       const pq = genEqlIter(query)
 
@@ -5033,7 +4967,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#61', () => {
+    it('#60', () => {
       const query = '((an:(16845016)) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlIter(query)
 
@@ -5062,7 +4996,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#62', () => {
+    it('#61', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND an:(16845016))'
       const pq = genEqlIter(query)
 
@@ -5091,7 +5025,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#63', () => {
+    it('#62', () => {
       const query = '((an:(16845016)) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlIter(query)
 
@@ -5114,7 +5048,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#64', () => {
+    it('#63', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) OR an:(16845016))'
       const pq = genEqlIter(query)
 
@@ -5137,7 +5071,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#65', () => {
+    it('#64', () => {
       const query = '((an:(16845016)) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlIter(query)
 
@@ -5166,7 +5100,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#66', () => {
+    it('#65', () => {
       const query = '((pd: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlIter(query)
 
@@ -5195,7 +5129,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#67', () => {
+    it('#66', () => {
       const query = '((ad: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlIter(query)
 
@@ -5224,7 +5158,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#68', () => {
+    it('#67', () => {
       const query = '((epridate: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlIter(query)
 
@@ -5253,7 +5187,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#69', () => {
+    it('#68', () => {
       const query = '((epridate: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlIter(query)
 
@@ -5276,53 +5210,30 @@ describe('Iterative Implementation', () => {
       })
     })
 
+    it('#69', () => {
+      const query = '((ad: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          should: [
+            { range: { ad: { gte: '20220304', lte: '20220308' } } },
+            {
+              terms: {
+                pn: [
+                  'US20200328824A1',
+                  'US20210403048A1',
+                  'ES1286585U',
+                  'ES1286629U'
+                ]
+              }
+            }
+          ]
+        }
+      })
+    })
+
     it('#70', () => {
-      const query = '((ad: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
-
-      expect(pq).toEqual({
-        bool: {
-          should: [
-            { range: { ad: { gte: '20220304', lte: '20220308' } } },
-            {
-              terms: {
-                pn: [
-                  'US20200328824A1',
-                  'US20210403048A1',
-                  'ES1286585U',
-                  'ES1286629U'
-                ]
-              }
-            }
-          ]
-        }
-      })
-    })
-
-    it('#71', () => {
-      const query = '((ad: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
-
-      expect(pq).toEqual({
-        bool: {
-          should: [
-            { range: { ad: { gte: '20220304', lte: '20220308' } } },
-            {
-              terms: {
-                pn: [
-                  'US20200328824A1',
-                  'US20210403048A1',
-                  'ES1286585U',
-                  'ES1286629U'
-                ]
-              }
-            }
-          ]
-        }
-      })
-    })
-
-    it('#71', () => {
       const query = '((pd: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlIter(query)
 
@@ -5345,7 +5256,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#72', () => {
+    it('#71', () => {
       const query = '((pd: [20220304 TO 20220308]) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlIter(query)
 
@@ -5376,7 +5287,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#73', () => {
+    it('#72', () => {
       const query = '((pd: [20200101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlIter(query)
 
@@ -5405,7 +5316,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#74', () => {
+    it('#73', () => {
       const query = '(((cpc:(A47B53) OR ic:(A47B53))) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlIter(query)
 
@@ -5438,7 +5349,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#75', () => {
+    it('#74', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND (cpc:(A47B53) OR ic:(A47B53)))'
       const pq = genEqlIter(query)
 
@@ -5471,7 +5382,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#76', () => {
+    it('#75', () => {
       const query = '(((cpc:(A47B53 AND B60R25/01) OR ic:(A47B53 AND B60R25/01))) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlIter(query)
 
@@ -5506,7 +5417,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#77', () => {
+    it('#76', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) OR (cpc:(A47B53 AND B60R25/01) OR ic:(A47B53 AND B60R25/01)))'
       const pq = genEqlIter(query)
 
@@ -5541,7 +5452,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#78', () => {
+    it('#77', () => {
       const query = '(((cpc:(A47B53 AND A47B63) OR ic:(A47B53 AND A47B63))) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1 OR GB2454544A))'
       const pq = genEqlIter(query)
 
@@ -5584,7 +5495,7 @@ describe('Iterative Implementation', () => {
   })
 })
 
-xdescribe('Recursive Implementation', () => {
+describe('Recursive Implementation', () => {
   describe('Proximity Queries', () => {
     it('Check Sentence Slop', () => {
       const query = '(ttl:(apple NEARS banana))'
@@ -8242,72 +8153,6 @@ xdescribe('Recursive Implementation', () => {
     })
 
     it('#3', () => {
-      const query = '(ttl:(((Fruit* OR Vegetable*) NEAR3 ((Carrot OR juice) OR (banana NEAR3 shake)))))'
-      const pq = genEqlRec(query)
-
-      expect(pq).toEqual({
-        bool: {
-          must: [
-            {
-              span_near: {
-                clauses: [
-                  {
-                    span_or: {
-                      clauses: [
-                        {
-                          span_multi: {
-                            match: {
-                              wildcard: {
-                                ttl: { value: 'Fruit*', case_insensitive: true }
-                              }
-                            }
-                          }
-                        },
-                        {
-                          span_multi: {
-                            match: {
-                              wildcard: {
-                                ttl: {
-                                  value: 'Vegetable*',
-                                  case_insensitive: true
-                                }
-                              }
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    span_or: {
-                      clauses: [
-                        { span_term: { ttl: 'Carrot' } },
-                        { span_term: { ttl: 'juice' } },
-                        {
-                          span_near: {
-                            clauses: [
-                              { span_term: { ttl: 'banana' } },
-                              { span_term: { ttl: 'shake' } }
-                            ],
-                            slop: '3',
-                            in_order: false
-                          }
-                        }
-                      ]
-                    }
-                  }
-
-                ],
-                slop: '3',
-                in_order: false
-              }
-            }
-          ]
-        }
-      })
-    })
-
-    it('#4', () => {
       const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*))))'
       const pq = genEqlRec(query)
 
@@ -8354,7 +8199,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#5', () => {
+    it('#4', () => {
       const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*)) NOT (papaya OR melon OR lemon OR plant*)))'
       const pq = genEqlRec(query)
 
@@ -8413,7 +8258,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#6', () => {
+    it('#5', () => {
       const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*)) NOT ((papaya OR melon OR lemon) NEAR4 (plant*))))'
       const pq = genEqlRec(query)
 
@@ -8494,7 +8339,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#7', () => {
+    it('#6', () => {
       const query = '((ttl:(smart NEAR2 (watch OR watches))) AND ttl:(heart NEAR2 rate))'
       const pq = genEqlRec(query)
 
@@ -8533,7 +8378,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#8', () => {
+    it('#7', () => {
       const query = '(((ttl:(smart NEAR2 (watch OR watches))) NOT ttl:(heart AND (rate OR pulse* OR oxygen))) AND pd: [20220101 TO 20220307])'
       const pq = genEqlRec(query)
 
@@ -8590,7 +8435,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#9', () => {
+    it('#8', () => {
       const query = '(ttl:(((vegetable*) NEAR15 (juice*)) NEARP ((Fruit* OR Vegetable*) NEARS (plant*))))'
       const pq = genEqlRec(query)
 
@@ -8686,7 +8531,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#10', () => {
+    it('#9', () => {
       const query = '((ttl:(patent NEAR5 (artificial NEAR2 intelligen*))) OR ttl:(patent NEAR5 (machine NEAR2 learn*)))'
       const pq = genEqlRec(query)
 
@@ -8770,7 +8615,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#11', () => {
+    it('#10', () => {
       const query = '(((ttl:(patent NEARS (artificial PRE2 intelligen*))) OR ttl:(patent NEARP (machine PRE2 learn*))) AND pd: [20150101 TO 20220307])'
       const pq = genEqlRec(query)
 
@@ -8861,7 +8706,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#12', () => {
+    it('#11', () => {
       const query = '(ttl:((A*) PRE10 ((veg*) NEAR15 (juice*) NEARP (Veg*) NEARS (plant*))))'
       const pq = genEqlRec(query)
 
@@ -8957,7 +8802,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#13', () => {
+    it('#12', () => {
       const query = '(ttl:((A) PRE10 ((veg*) NEAR15 (juice*) NEARP (Veg*) NEARS (plant*))))'
       const pq = genEqlRec(query)
 
@@ -9047,7 +8892,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#14', () => {
+    it('#13', () => {
       const query = '(ttl:("c" NEARP engine*))'
       const pq = genEqlRec(query)
 
@@ -9075,7 +8920,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#15', () => {
+    it('#14', () => {
       const query = '(xlpat-prob.stat:(efficiency NEAR5 cost NEAR5 time))'
       const pq = genEqlRec(query)
 
@@ -9106,7 +8951,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#16', () => {
+    it('#15', () => {
       const query = '((inv:(Michael OR Jonas)) AND ttl:(wheel PRE1 loader*))'
       const pq = genEqlRec(query)
 
@@ -9141,7 +8986,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#17', () => {
+    it('#16', () => {
       const query = '((inv:(Michael OR Jonas)) AND pa:(caterpillar OR Komatsu OR CNH))'
       const pq = genEqlRec(query)
 
@@ -9167,7 +9012,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#18', () => {
+    it('#17', () => {
       const query = '((inv:(Michael AND Jonas)) AND pa:(caterpillar OR Komatsu OR CNH))'
       const pq = genEqlRec(query)
 
@@ -9188,7 +9033,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#19', () => {
+    it('#18', () => {
       const query = '((inv:(Michael AND Jonas)) NOT pa:(caterpillar OR Komatsu OR CNH))'
       const pq = genEqlRec(query)
 
@@ -9208,7 +9053,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#20', () => {
+    it('#19', () => {
       const query = '((inv:(Michael OR Jonas)) NOT pa:(caterpillar OR Komatsu OR CNH))'
       const pq = genEqlRec(query)
 
@@ -9230,7 +9075,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#21', () => {
+    it('#20', () => {
       const query = '((inv:(Michael AND Jonas)) OR cited.pn:(KR-101275147-B1))'
       const pq = genEqlRec(query)
 
@@ -9248,7 +9093,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#22', () => {
+    it('#21', () => {
       const query = '(xlpat-litig.defs.name:(caterpillar OR Komatsu OR CNH))'
       const pq = genEqlRec(query)
 
@@ -9265,7 +9110,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#23', () => {
+    it('#22', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND (cpc:(a61b5) OR ic:(a61b5)))'
       const pq = genEqlRec(query)
 
@@ -9299,7 +9144,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#24', () => {
+    it('#23', () => {
       const query = '(((cpc:(a61b5) OR ic:(a61b5))) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlRec(query)
 
@@ -9333,7 +9178,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#25', () => {
+    it('#24', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02)))'
       const pq = genEqlRec(query)
 
@@ -9386,7 +9231,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#26', () => {
+    it('#25', () => {
       const query = '(((cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlRec(query)
 
@@ -9439,7 +9284,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#27', () => {
+    it('#26', () => {
       const query = '(((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) AND ttl:(energ*))'
       const pq = genEqlRec(query)
 
@@ -9501,7 +9346,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#28', () => {
+    it('#27', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02)))'
       const pq = genEqlRec(query)
 
@@ -9556,7 +9401,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#29', () => {
+    it('#28', () => {
       const query = '(((cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlRec(query)
 
@@ -9611,7 +9456,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#30', () => {
+    it('#29', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND casgs:(boe))'
       const pq = genEqlRec(query)
 
@@ -9641,7 +9486,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#31', () => {
+    it('#30', () => {
       const query = '((casgs:(boe)) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlRec(query)
 
@@ -9671,7 +9516,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#32', () => {
+    it('#31', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT casgs:(boe))'
       const pq = genEqlRec(query)
 
@@ -9701,7 +9546,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#33', () => {
+    it('#32', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlRec(query)
 
@@ -9748,7 +9593,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#34', () => {
+    it('#33', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR casgs:(FINNOVATE NEAR2 GROUP))'
       const pq = genEqlRec(query)
 
@@ -9799,7 +9644,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#35', () => {
+    it('#34', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlRec(query)
 
@@ -9850,7 +9695,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#36', () => {
+    it('#35', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND pn:(US20200069200A1))'
       const pq = genEqlRec(query)
 
@@ -9880,7 +9725,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#37', () => {
+    it('#36', () => {
       const query = '((pn:(US20200069200A1)) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlRec(query)
 
@@ -9910,7 +9755,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#38', () => {
+    it('#37', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR pn:(US20210403048A1))'
       const pq = genEqlRec(query)
 
@@ -9946,7 +9791,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#39', () => {
+    it('#38', () => {
       const query = '((pn:(US20200069200A1)) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlRec(query)
 
@@ -9982,7 +9827,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#40', () => {
+    it('#39', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT pn:(US20210403048A1))'
       const pq = genEqlRec(query)
 
@@ -10012,7 +9857,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#41', () => {
+    it('#40', () => {
       const query = '((pn:(US20210403048A1)) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlRec(query)
 
@@ -10048,7 +9893,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#42', () => {
+    it('#41', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND epridate: [20000101 TO 20220308])'
       const pq = genEqlRec(query)
 
@@ -10078,7 +9923,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#43', () => {
+    it('#42', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND pd: [20000101 TO 20220308])'
       const pq = genEqlRec(query)
 
@@ -10108,7 +9953,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#44', () => {
+    it('#43', () => {
       const query = '((pd: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlRec(query)
 
@@ -10138,7 +9983,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#45', () => {
+    it('#44', () => {
       const query = '((ad: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlRec(query)
 
@@ -10168,7 +10013,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#46', () => {
+    it('#45', () => {
       const query = '((epridate: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlRec(query)
 
@@ -10198,7 +10043,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#47', () => {
+    it('#46', () => {
       const query = '((epridate: [20220201 TO 20220308]) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlRec(query)
 
@@ -10234,7 +10079,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#48', () => {
+    it('#47', () => {
       const query = '((epridate: [20220201 TO 20220308]) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
       const pq = genEqlRec(query)
 
@@ -10272,7 +10117,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#49', () => {
+    it('#48', () => {
       const query = '((epridate: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U))'
       const pq = genEqlRec(query)
 
@@ -10292,7 +10137,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#50', () => {
+    it('#49', () => {
       const query = '((epridate: [20220201 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
       const pq = genEqlRec(query)
 
@@ -10308,7 +10153,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#51', () => {
+    it('#50', () => {
       const query = '((epridate: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
       const pq = genEqlRec(query)
 
@@ -10330,7 +10175,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#52', () => {
+    it('#51', () => {
       const query = '((ad: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
       const pq = genEqlRec(query)
 
@@ -10352,7 +10197,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#53', () => {
+    it('#52', () => {
       const query = '((ad: [20220201 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
       const pq = genEqlRec(query)
 
@@ -10368,7 +10213,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#54', () => {
+    it('#53', () => {
       const query = '((ad: [20220201 TO 20220308]) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
       const pq = genEqlRec(query)
 
@@ -10392,7 +10237,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#55', () => {
+    it('#54', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
       const pq = genEqlRec(query)
 
@@ -10425,7 +10270,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#56', () => {
+    it('#55', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) NOT casgs:(FINNOVATE NEAR2 GROUP))'
       const pq = genEqlRec(query)
 
@@ -10465,7 +10310,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#57', () => {
+    it('#56', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlRec(query)
 
@@ -10503,7 +10348,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#58', () => {
+    it('#57', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND casgs:(FINNOVATE NEAR2 GROUP))'
       const pq = genEqlRec(query)
 
@@ -10541,7 +10386,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#59', () => {
+    it('#58', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlRec(query)
 
@@ -10579,7 +10424,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#60', () => {
+    it('#59', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND casgs:(FINNOVATE NEAR2 GROUP))'
       const pq = genEqlRec(query)
 
@@ -10617,7 +10462,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#61', () => {
+    it('#60', () => {
       const query = '((an:(16845016)) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlRec(query)
 
@@ -10646,7 +10491,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#62', () => {
+    it('#61', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND an:(16845016))'
       const pq = genEqlRec(query)
 
@@ -10675,7 +10520,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#63', () => {
+    it('#62', () => {
       const query = '((an:(16845016)) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlRec(query)
 
@@ -10698,7 +10543,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#64', () => {
+    it('#63', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) OR an:(16845016))'
       const pq = genEqlRec(query)
 
@@ -10721,7 +10566,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#65', () => {
+    it('#64', () => {
       const query = '((an:(16845016)) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlRec(query)
 
@@ -10750,7 +10595,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#66', () => {
+    it('#65', () => {
       const query = '((pd: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlRec(query)
 
@@ -10779,7 +10624,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#67', () => {
+    it('#66', () => {
       const query = '((ad: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlRec(query)
 
@@ -10808,7 +10653,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#68', () => {
+    it('#67', () => {
       const query = '((epridate: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlRec(query)
 
@@ -10837,7 +10682,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#69', () => {
+    it('#68', () => {
       const query = '((epridate: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlRec(query)
 
@@ -10860,53 +10705,30 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
+    it('#69', () => {
+      const query = '((ad: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
+      const pq = genEqlRec(query)
+
+      expect(pq).toEqual({
+        bool: {
+          should: [
+            { range: { ad: { gte: '20220304', lte: '20220308' } } },
+            {
+              terms: {
+                pn: [
+                  'US20200328824A1',
+                  'US20210403048A1',
+                  'ES1286585U',
+                  'ES1286629U'
+                ]
+              }
+            }
+          ]
+        }
+      })
+    })
+
     it('#70', () => {
-      const query = '((ad: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlRec(query)
-
-      expect(pq).toEqual({
-        bool: {
-          should: [
-            { range: { ad: { gte: '20220304', lte: '20220308' } } },
-            {
-              terms: {
-                pn: [
-                  'US20200328824A1',
-                  'US20210403048A1',
-                  'ES1286585U',
-                  'ES1286629U'
-                ]
-              }
-            }
-          ]
-        }
-      })
-    })
-
-    it('#71', () => {
-      const query = '((ad: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlRec(query)
-
-      expect(pq).toEqual({
-        bool: {
-          should: [
-            { range: { ad: { gte: '20220304', lte: '20220308' } } },
-            {
-              terms: {
-                pn: [
-                  'US20200328824A1',
-                  'US20210403048A1',
-                  'ES1286585U',
-                  'ES1286629U'
-                ]
-              }
-            }
-          ]
-        }
-      })
-    })
-
-    it('#71', () => {
       const query = '((pd: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlRec(query)
 
@@ -10929,7 +10751,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#72', () => {
+    it('#71', () => {
       const query = '((pd: [20220304 TO 20220308]) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlRec(query)
 
@@ -10960,7 +10782,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#73', () => {
+    it('#72', () => {
       const query = '((pd: [20200101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlRec(query)
 
@@ -10989,7 +10811,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#74', () => {
+    it('#73', () => {
       const query = '(((cpc:(A47B53) OR ic:(A47B53))) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlRec(query)
 
@@ -11022,7 +10844,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#75', () => {
+    it('#74', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND (cpc:(A47B53) OR ic:(A47B53)))'
       const pq = genEqlRec(query)
 
@@ -11055,7 +10877,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#76', () => {
+    it('#75', () => {
       const query = '(((cpc:(A47B53 AND B60R25/01) OR ic:(A47B53 AND B60R25/01))) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
       const pq = genEqlRec(query)
 
@@ -11090,7 +10912,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#77', () => {
+    it('#76', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) OR (cpc:(A47B53 AND B60R25/01) OR ic:(A47B53 AND B60R25/01)))'
       const pq = genEqlRec(query)
 
@@ -11125,7 +10947,7 @@ xdescribe('Recursive Implementation', () => {
       })
     })
 
-    it('#78', () => {
+    it('#77', () => {
       const query = '(((cpc:(A47B53 AND A47B63) OR ic:(A47B53 AND A47B63))) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1 OR GB2454544A))'
       const pq = genEqlRec(query)
 
