@@ -1,6 +1,7 @@
 const { parse } = require("../parser");
 
-const REWRITE = "top_terms_10000";
+const SPAN_MULTI_WILDCARD_REWRITE = "top_terms_1000";
+const WILDCARD_REWRITE = "top_terms_10000";
 const COMBINE_CRITERION = "OR";
 
 function main(q, substitute = {}) {
@@ -39,7 +40,7 @@ function _main(tree, substitute) {
           [substitute[field] || field]: {
             value,
             case_insensitive: true,
-            rewrite: REWRITE,
+            rewrite: WILDCARD_REWRITE,
           },
         };
         return { wildcard };
@@ -254,7 +255,7 @@ function makeSpanMulti(field, value) {
           [field]: {
             value,
             case_insensitive: true,
-            rewrite: REWRITE,
+            rewrite: SPAN_MULTI_WILDCARD_REWRITE,
           },
         },
       },

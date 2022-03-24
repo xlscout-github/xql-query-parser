@@ -1,5 +1,7 @@
 const { parse } = require('../parser')
 
+const SPAN_MULTI_WILDCARD_REWRITE = 'top_terms_1000'
+const WILDCARD_REWRITE = 'top_terms_10000'
 const REWRITE = 'top_terms_10000'
 
 const genIter = (node, nodeTransformer) => {
@@ -42,7 +44,7 @@ const genIter = (node, nodeTransformer) => {
                 fp.wildcard[element.key] = {
                   value: element.val,
                   case_insensitive: true,
-                  rewrite: REWRITE
+                  rewrite: WILDCARD_REWRITE
                 }
               } else {
                 fp.term = p
@@ -102,7 +104,7 @@ const genIter = (node, nodeTransformer) => {
                 fp.wildcard[element.key] = {
                   value: element.val,
                   case_insensitive: true,
-                  rewrite: REWRITE
+                  rewrite: WILDCARD_REWRITE
                 }
               } else {
                 fp.term = p
@@ -154,7 +156,7 @@ const genIter = (node, nodeTransformer) => {
                 fp.wildcard[element.key] = {
                   value: element.val,
                   case_insensitive: true,
-                  rewrite: REWRITE
+                  rewrite: WILDCARD_REWRITE
                 }
               } else {
                 fp.term = p
@@ -249,7 +251,7 @@ const genIter = (node, nodeTransformer) => {
                 fp.span_multi.match.wildcard[element.key] = {
                   value: element.val,
                   case_insensitive: true,
-                  rewrite: REWRITE
+                  rewrite: SPAN_MULTI_WILDCARD_REWRITE
                 }
               } else {
                 fp.span_term = p
@@ -655,7 +657,7 @@ const genRec = (node, nodeTransformer) => {
           fp.wildcard[element.key] = {
             value: element.val,
             case_insensitive: true,
-            rewrite: REWRITE
+            rewrite: WILDCARD_REWRITE
           }
         } else {
           fp.term = p
@@ -715,7 +717,7 @@ const genRec = (node, nodeTransformer) => {
           fp.wildcard[element.key] = {
             value: element.val,
             case_insensitive: true,
-            rewrite: REWRITE
+            rewrite: WILDCARD_REWRITE
           }
         } else {
           fp.term = p
@@ -767,7 +769,7 @@ const genRec = (node, nodeTransformer) => {
           fp.wildcard[element.key] = {
             value: element.val,
             case_insensitive: true,
-            rewrite: REWRITE
+            rewrite: WILDCARD_REWRITE
           }
         } else {
           fp.term = p
@@ -862,7 +864,7 @@ const genRec = (node, nodeTransformer) => {
           fp.span_multi.match.wildcard[element.key] = {
             value: element.val,
             case_insensitive: true,
-            rewrite: REWRITE
+            rewrite: SPAN_MULTI_WILDCARD_REWRITE
           }
         } else {
           fp.span_term = p
@@ -988,7 +990,7 @@ const genRec = (node, nodeTransformer) => {
             } else if (currentValue.wildcard) {
               previousValue.push({
                 span_multi: {
-                  match: currentValue
+                  match: { wildcard: { ...currentValue.wildcard, rewrite: SPAN_MULTI_WILDCARD_REWRITE } }
                 }
               })
             } else if (currentValue.match_phrase) {
@@ -1033,7 +1035,7 @@ const genRec = (node, nodeTransformer) => {
           x.span_term = x.term
           delete x.term
         } else if (x.wildcard) {
-          x.span_multi = { match: { wildcard: x.wildcard } }
+          x.span_multi = { match: { wildcard: { ...x.wildcard, rewrite: SPAN_MULTI_WILDCARD_REWRITE } } }
           delete x.wildcard
         } else if (x.match_phrase) {
           const key = Object.keys(x.match_phrase)[0]
@@ -1153,7 +1155,7 @@ const genRec = (node, nodeTransformer) => {
             } else if (currentValue.wildcard) {
               previousValue.push({
                 span_multi: {
-                  match: currentValue
+                  match: { wildcard: { ...currentValue.wildcard, rewrite: SPAN_MULTI_WILDCARD_REWRITE } }
                 }
               })
             } else if (currentValue.match_phrase) {
@@ -1198,7 +1200,7 @@ const genRec = (node, nodeTransformer) => {
           x.span_term = x.term
           delete x.term
         } else if (x.wildcard) {
-          x.span_multi = { match: { wildcard: x.wildcard } }
+          x.span_multi = { match: { wildcard: { ...x.wildcard, rewrite: SPAN_MULTI_WILDCARD_REWRITE } } }
           delete x.wildcard
         } else if (x.match_phrase) {
           const key = Object.keys(x.match_phrase)[0]
@@ -1257,7 +1259,7 @@ exports.genEqlIter = (q = '', nodeTransformer) => {
         fp.wildcard[tree.key] = {
           value: tree.val,
           case_insensitive: true,
-          rewrite: REWRITE
+          rewrite: WILDCARD_REWRITE
         }
       } else {
         fp.term = p
@@ -1313,7 +1315,7 @@ exports.genEqlRec = (q = '', nodeTransformer) => {
         fp.wildcard[tree.key] = {
           value: tree.val,
           case_insensitive: true,
-          rewrite: REWRITE
+          rewrite: WILDCARD_REWRITE
         }
       } else {
         fp.term = p

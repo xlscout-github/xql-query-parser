@@ -17,7 +17,15 @@ describe("Singleton Queries", () => {
     expect(esb("(ttl:(mobi*))")).toEqual({
       bool: {
         must: [
-          { wildcard: { ttl: { value: "mobi*", case_insensitive: true } } },
+          {
+            wildcard: {
+              ttl: {
+                value: "mobi*",
+                case_insensitive: true,
+                rewrite: "top_terms_10000",
+              },
+            },
+          },
         ],
       },
     });
@@ -213,7 +221,11 @@ describe('"NEAR" Queries', () => {
                   span_multi: {
                     match: {
                       wildcard: {
-                        ttl: { value: "mobi*", case_insensitive: true },
+                        ttl: {
+                          value: "mobi*",
+                          case_insensitive: true,
+                          rewrite: "top_terms_1000",
+                        },
                       },
                     },
                   },
@@ -471,7 +483,11 @@ describe('"PRE" Queries', () => {
                   span_multi: {
                     match: {
                       wildcard: {
-                        ttl: { value: "mobi*", case_insensitive: true },
+                        ttl: {
+                          value: "mobi*",
+                          case_insensitive: true,
+                          rewrite: "top_terms_1000",
+                        },
                       },
                     },
                   },
@@ -694,7 +710,11 @@ describe("Miscellaneous Queries", () => {
                         span_multi: {
                           match: {
                             wildcard: {
-                              ttl: { value: "Fruit*", case_insensitive: true },
+                              ttl: {
+                                value: "Fruit*",
+                                case_insensitive: true,
+                                rewrite: "top_terms_1000",
+                              },
                             },
                           },
                         },
@@ -706,6 +726,7 @@ describe("Miscellaneous Queries", () => {
                               ttl: {
                                 value: "Vegetable*",
                                 case_insensitive: true,
+                                rewrite: "top_terms_1000",
                               },
                             },
                           },
@@ -742,7 +763,11 @@ describe("Miscellaneous Queries", () => {
                         span_multi: {
                           match: {
                             wildcard: {
-                              ttl: { value: "Fruit*", case_insensitive: true },
+                              ttl: {
+                                value: "Fruit*",
+                                case_insensitive: true,
+                                rewrite: "top_terms_1000",
+                              },
                             },
                           },
                         },
@@ -754,6 +779,7 @@ describe("Miscellaneous Queries", () => {
                               ttl: {
                                 value: "Vegetable*",
                                 case_insensitive: true,
+                                rewrite: "top_terms_1000",
                               },
                             },
                           },
@@ -836,12 +862,20 @@ describe("Miscellaneous Queries", () => {
               should: [
                 {
                   wildcard: {
-                    ttl: { value: "Fruit*", case_insensitive: true },
+                    ttl: {
+                      value: "Fruit*",
+                      case_insensitive: true,
+                      rewrite: "top_terms_10000",
+                    },
                   },
                 },
                 {
                   wildcard: {
-                    ttl: { value: "Vegetable*", case_insensitive: true },
+                    ttl: {
+                      value: "Vegetable*",
+                      case_insensitive: true,
+                      rewrite: "top_terms_10000",
+                    },
                   },
                 },
               ],
@@ -895,12 +929,20 @@ describe("Miscellaneous Queries", () => {
                     should: [
                       {
                         wildcard: {
-                          ttl: { value: "Fruit*", case_insensitive: true },
+                          ttl: {
+                            value: "Fruit*",
+                            case_insensitive: true,
+                            rewrite: "top_terms_10000",
+                          },
                         },
                       },
                       {
                         wildcard: {
-                          ttl: { value: "Vegetable*", case_insensitive: true },
+                          ttl: {
+                            value: "Vegetable*",
+                            case_insensitive: true,
+                            rewrite: "top_terms_10000",
+                          },
                         },
                       },
                     ],
@@ -921,7 +963,11 @@ describe("Miscellaneous Queries", () => {
                 },
                 {
                   wildcard: {
-                    ttl: { value: "plant*", case_insensitive: true },
+                    ttl: {
+                      value: "plant*",
+                      case_insensitive: true,
+                      rewrite: "top_terms_10000",
+                    },
                   },
                 },
               ],
@@ -975,12 +1021,20 @@ describe("Miscellaneous Queries", () => {
                     should: [
                       {
                         wildcard: {
-                          ttl: { value: "Fruit*", case_insensitive: true },
+                          ttl: {
+                            value: "Fruit*",
+                            case_insensitive: true,
+                            rewrite: "top_terms_10000",
+                          },
                         },
                       },
                       {
                         wildcard: {
-                          ttl: { value: "Vegetable*", case_insensitive: true },
+                          ttl: {
+                            value: "Vegetable*",
+                            case_insensitive: true,
+                            rewrite: "top_terms_10000",
+                          },
                         },
                       },
                     ],
@@ -1016,7 +1070,11 @@ describe("Miscellaneous Queries", () => {
                         span_multi: {
                           match: {
                             wildcard: {
-                              ttl: { value: "plant*", case_insensitive: true },
+                              ttl: {
+                                value: "plant*",
+                                case_insensitive: true,
+                                rewrite: "top_terms_1000",
+                              },
                             },
                           },
                         },
@@ -1136,6 +1194,7 @@ describe("Miscellaneous Queries", () => {
                                       ttl: {
                                         value: "pulse*",
                                         case_insensitive: true,
+                                        rewrite: "top_terms_10000",
                                       },
                                     },
                                   },
@@ -1179,6 +1238,7 @@ describe("Miscellaneous Queries", () => {
                               ttl: {
                                 value: "vegetable*",
                                 case_insensitive: true,
+                                rewrite: "top_terms_1000",
                               },
                             },
                           },
@@ -1188,7 +1248,11 @@ describe("Miscellaneous Queries", () => {
                         span_multi: {
                           match: {
                             wildcard: {
-                              ttl: { value: "juice*", case_insensitive: true },
+                              ttl: {
+                                value: "juice*",
+                                case_insensitive: true,
+                                rewrite: "top_terms_1000",
+                              },
                             },
                           },
                         },
@@ -1211,6 +1275,7 @@ describe("Miscellaneous Queries", () => {
                                     ttl: {
                                       value: "Fruit*",
                                       case_insensitive: true,
+                                      rewrite: "top_terms_1000",
                                     },
                                   },
                                 },
@@ -1223,6 +1288,7 @@ describe("Miscellaneous Queries", () => {
                                     ttl: {
                                       value: "Vegetable*",
                                       case_insensitive: true,
+                                      rewrite: "top_terms_1000",
                                     },
                                   },
                                 },
@@ -1235,7 +1301,11 @@ describe("Miscellaneous Queries", () => {
                         span_multi: {
                           match: {
                             wildcard: {
-                              ttl: { value: "plant*", case_insensitive: true },
+                              ttl: {
+                                value: "plant*",
+                                case_insensitive: true,
+                                rewrite: "top_terms_1000",
+                              },
                             },
                           },
                         },
@@ -1281,6 +1351,7 @@ describe("Miscellaneous Queries", () => {
                                     ttl: {
                                       value: "intelligen*",
                                       case_insensitive: true,
+                                      rewrite: "top_terms_1000",
                                     },
                                   },
                                 },
@@ -1317,6 +1388,7 @@ describe("Miscellaneous Queries", () => {
                                     ttl: {
                                       value: "learn*",
                                       case_insensitive: true,
+                                      rewrite: "top_terms_1000",
                                     },
                                   },
                                 },
@@ -1369,6 +1441,7 @@ describe("Miscellaneous Queries", () => {
                                           ttl: {
                                             value: "intelligen*",
                                             case_insensitive: true,
+                                            rewrite: "top_terms_1000",
                                           },
                                         },
                                       },
@@ -1405,6 +1478,7 @@ describe("Miscellaneous Queries", () => {
                                           ttl: {
                                             value: "learn*",
                                             case_insensitive: true,
+                                            rewrite: "top_terms_1000",
                                           },
                                         },
                                       },
@@ -1447,7 +1521,11 @@ describe("Miscellaneous Queries", () => {
                   span_multi: {
                     match: {
                       wildcard: {
-                        ttl: { value: "A*", case_insensitive: true },
+                        ttl: {
+                          value: "A*",
+                          case_insensitive: true,
+                          rewrite: "top_terms_1000",
+                        },
                       },
                     },
                   },
@@ -1468,6 +1546,7 @@ describe("Miscellaneous Queries", () => {
                                           ttl: {
                                             value: "veg*",
                                             case_insensitive: true,
+                                            rewrite: "top_terms_1000",
                                           },
                                         },
                                       },
@@ -1480,6 +1559,7 @@ describe("Miscellaneous Queries", () => {
                                           ttl: {
                                             value: "juice*",
                                             case_insensitive: true,
+                                            rewrite: "top_terms_1000",
                                           },
                                         },
                                       },
@@ -1497,6 +1577,7 @@ describe("Miscellaneous Queries", () => {
                                     ttl: {
                                       value: "Veg*",
                                       case_insensitive: true,
+                                      rewrite: "top_terms_1000",
                                     },
                                   },
                                 },
@@ -1511,7 +1592,11 @@ describe("Miscellaneous Queries", () => {
                         span_multi: {
                           match: {
                             wildcard: {
-                              ttl: { value: "plant*", case_insensitive: true },
+                              ttl: {
+                                value: "plant*",
+                                case_insensitive: true,
+                                rewrite: "top_terms_1000",
+                              },
                             },
                           },
                         },
@@ -1559,6 +1644,7 @@ describe("Miscellaneous Queries", () => {
                                           ttl: {
                                             value: "veg*",
                                             case_insensitive: true,
+                                            rewrite: "top_terms_1000",
                                           },
                                         },
                                       },
@@ -1571,6 +1657,7 @@ describe("Miscellaneous Queries", () => {
                                           ttl: {
                                             value: "juice*",
                                             case_insensitive: true,
+                                            rewrite: "top_terms_1000",
                                           },
                                         },
                                       },
@@ -1588,6 +1675,7 @@ describe("Miscellaneous Queries", () => {
                                     ttl: {
                                       value: "Veg*",
                                       case_insensitive: true,
+                                      rewrite: "top_terms_1000",
                                     },
                                   },
                                 },
@@ -1602,7 +1690,11 @@ describe("Miscellaneous Queries", () => {
                         span_multi: {
                           match: {
                             wildcard: {
-                              ttl: { value: "plant*", case_insensitive: true },
+                              ttl: {
+                                value: "plant*",
+                                case_insensitive: true,
+                                rewrite: "top_terms_1000",
+                              },
                             },
                           },
                         },
@@ -1634,7 +1726,11 @@ describe("Miscellaneous Queries", () => {
                   span_multi: {
                     match: {
                       wildcard: {
-                        ttl: { value: "engine*", case_insensitive: true },
+                        ttl: {
+                          value: "engine*",
+                          case_insensitive: true,
+                          rewrite: "top_terms_1000",
+                        },
                       },
                     },
                   },
@@ -1701,7 +1797,11 @@ describe("Miscellaneous Queries", () => {
                         span_multi: {
                           match: {
                             wildcard: {
-                              ttl: { value: "loader*", case_insensitive: true },
+                              ttl: {
+                                value: "loader*",
+                                case_insensitive: true,
+                                rewrite: "top_terms_1000",
+                              },
                             },
                           },
                         },
@@ -2160,7 +2260,13 @@ describe("Miscellaneous Queries", () => {
             },
           },
           {
-            wildcard: { ttl: { value: "energ*", case_insensitive: true } },
+            wildcard: {
+              ttl: {
+                value: "energ*",
+                case_insensitive: true,
+                rewrite: "top_terms_10000",
+              },
+            },
           },
         ],
       },
