@@ -36,7 +36,7 @@ const genIter = (node, nodeTransformer) => {
 
             if (typeof element.val === 'string') {
               if (element.val.startsWith('"') && element.val.endsWith('"')) {
-                fp.match_phrase = p
+                fp.match_phrase = { [element.key]: element.val.slice(1, -1).trim() }
               } else if (element.val.includes('*') || element.val.includes('?')) {
                 fp.wildcard = {}
                 fp.wildcard[element.key] = {
@@ -96,7 +96,7 @@ const genIter = (node, nodeTransformer) => {
 
             if (typeof element.val === 'string') {
               if (element.val.startsWith('"') && element.val.endsWith('"')) {
-                fp.match_phrase = p
+                fp.match_phrase = { [element.key]: element.val.slice(1, -1).trim() }
               } else if (element.val.includes('*') || element.val.includes('?')) {
                 fp.wildcard = {}
                 fp.wildcard[element.key] = {
@@ -148,7 +148,7 @@ const genIter = (node, nodeTransformer) => {
 
             if (typeof element.val === 'string') {
               if (element.val.startsWith('"') && element.val.endsWith('"')) {
-                fp.match_phrase = p
+                fp.match_phrase = { [element.key]: element.val.slice(1, -1).trim() }
               } else if (element.val.includes('*') || element.val.includes('?')) {
                 fp.wildcard = {}
                 fp.wildcard[element.key] = {
@@ -386,7 +386,7 @@ const genIter = (node, nodeTransformer) => {
                   })
                 } else if (currentValue.match_phrase) {
                   const key = Object.keys(currentValue.match_phrase)[0]
-                  const phrase = currentValue.match_phrase[key].slice(1, -1).trim()
+                  const phrase = currentValue.match_phrase[key]
                   const terms = phrase.split(/ +/)
 
                   if (terms.length > 1) {
@@ -430,7 +430,7 @@ const genIter = (node, nodeTransformer) => {
               delete x.wildcard
             } else if (x.match_phrase) {
               const key = Object.keys(x.match_phrase)[0]
-              const phrase = x.match_phrase[key].slice(1, -1).trim()
+              const phrase = x.match_phrase[key]
               const terms = phrase.split(/ +/)
 
               if (terms.length > 1) {
@@ -545,7 +545,7 @@ const genIter = (node, nodeTransformer) => {
                   })
                 } else if (currentValue.match_phrase) {
                   const key = Object.keys(currentValue.match_phrase)[0]
-                  const phrase = currentValue.match_phrase[key].slice(1, -1).trim()
+                  const phrase = currentValue.match_phrase[key]
                   const terms = phrase.split(/ +/)
 
                   if (terms.length > 1) {
@@ -589,7 +589,7 @@ const genIter = (node, nodeTransformer) => {
               delete x.wildcard
             } else if (x.match_phrase) {
               const key = Object.keys(x.match_phrase)[0]
-              const phrase = x.match_phrase[key].slice(1, -1).trim()
+              const phrase = x.match_phrase[key]
               const terms = phrase.split(/ +/)
 
               if (terms.length > 1) {
@@ -649,7 +649,7 @@ const genRec = (node, nodeTransformer) => {
 
       if (typeof element.val === 'string') {
         if (element.val.startsWith('"') && element.val.endsWith('"')) {
-          fp.match_phrase = p
+          fp.match_phrase = { [element.key]: element.val.slice(1, -1).trim() }
         } else if (element.val.includes('*') || element.val.includes('?')) {
           fp.wildcard = {}
           fp.wildcard[element.key] = {
@@ -709,7 +709,7 @@ const genRec = (node, nodeTransformer) => {
 
       if (typeof element.val === 'string') {
         if (element.val.startsWith('"') && element.val.endsWith('"')) {
-          fp.match_phrase = p
+          fp.match_phrase = { [element.key]: element.val.slice(1, -1).trim() }
         } else if (element.val.includes('*') || element.val.includes('?')) {
           fp.wildcard = {}
           fp.wildcard[element.key] = {
@@ -761,7 +761,7 @@ const genRec = (node, nodeTransformer) => {
 
       if (typeof element.val === 'string') {
         if (element.val.startsWith('"') && element.val.endsWith('"')) {
-          fp.match_phrase = p
+          fp.match_phrase = { [element.key]: element.val.slice(1, -1).trim() }
         } else if (element.val.includes('*') || element.val.includes('?')) {
           fp.wildcard = {}
           fp.wildcard[element.key] = {
@@ -993,7 +993,7 @@ const genRec = (node, nodeTransformer) => {
               })
             } else if (currentValue.match_phrase) {
               const key = Object.keys(currentValue.match_phrase)[0]
-              const phrase = currentValue.match_phrase[key].slice(1, -1).trim()
+              const phrase = currentValue.match_phrase[key]
               const terms = phrase.split(/ +/)
 
               if (terms.length > 1) {
@@ -1037,7 +1037,7 @@ const genRec = (node, nodeTransformer) => {
           delete x.wildcard
         } else if (x.match_phrase) {
           const key = Object.keys(x.match_phrase)[0]
-          const phrase = x.match_phrase[key].slice(1, -1).trim()
+          const phrase = x.match_phrase[key]
           const terms = phrase.split(/ +/)
 
           if (terms.length > 1) {
@@ -1158,7 +1158,7 @@ const genRec = (node, nodeTransformer) => {
               })
             } else if (currentValue.match_phrase) {
               const key = Object.keys(currentValue.match_phrase)[0]
-              const phrase = currentValue.match_phrase[key].slice(1, -1).trim()
+              const phrase = currentValue.match_phrase[key]
               const terms = phrase.split(/ +/)
 
               if (terms.length > 1) {
@@ -1202,7 +1202,7 @@ const genRec = (node, nodeTransformer) => {
           delete x.wildcard
         } else if (x.match_phrase) {
           const key = Object.keys(x.match_phrase)[0]
-          const phrase = x.match_phrase[key].slice(1, -1).trim()
+          const phrase = x.match_phrase[key]
           const terms = phrase.split(/ +/)
 
           if (terms.length > 1) {
@@ -1251,7 +1251,7 @@ exports.genEqlIter = (q = '', nodeTransformer) => {
 
     if (typeof tree.val === 'string') {
       if (tree.val.startsWith('"') && tree.val.endsWith('"')) {
-        fp.match_phrase = p
+        fp.match_phrase = { [tree.key]: tree.val.slice(1, -1).trim() }
       } else if (tree.val.includes('*') || tree.val.includes('?')) {
         fp.wildcard = {}
         fp.wildcard[tree.key] = {
@@ -1307,7 +1307,7 @@ exports.genEqlRec = (q = '', nodeTransformer) => {
 
     if (typeof tree.val === 'string') {
       if (tree.val.startsWith('"') && tree.val.endsWith('"')) {
-        fp.match_phrase = p
+        fp.match_phrase = { [tree.key]: tree.val.slice(1, -1).trim() }
       } else if (tree.val.includes('*') || tree.val.includes('?')) {
         fp.wildcard = {}
         fp.wildcard[tree.key] = {
