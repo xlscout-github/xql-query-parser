@@ -1,5 +1,7 @@
 const { parse } = require('../parser')
 
+const REWRITE = 'top_terms_10000'
+
 const genIter = (node, nodeTransformer) => {
   let snapshot = {
     node,
@@ -39,7 +41,8 @@ const genIter = (node, nodeTransformer) => {
                 fp.wildcard = {}
                 fp.wildcard[element.key] = {
                   value: element.val,
-                  case_insensitive: true
+                  case_insensitive: true,
+                  rewrite: REWRITE
                 }
               } else {
                 fp.term = p
@@ -98,7 +101,8 @@ const genIter = (node, nodeTransformer) => {
                 fp.wildcard = {}
                 fp.wildcard[element.key] = {
                   value: element.val,
-                  case_insensitive: true
+                  case_insensitive: true,
+                  rewrite: REWRITE
                 }
               } else {
                 fp.term = p
@@ -149,7 +153,8 @@ const genIter = (node, nodeTransformer) => {
                 fp.wildcard = {}
                 fp.wildcard[element.key] = {
                   value: element.val,
-                  case_insensitive: true
+                  case_insensitive: true,
+                  rewrite: REWRITE
                 }
               } else {
                 fp.term = p
@@ -243,7 +248,8 @@ const genIter = (node, nodeTransformer) => {
                 fp.span_multi = { match: { wildcard: {} } }
                 fp.span_multi.match.wildcard[element.key] = {
                   value: element.val,
-                  case_insensitive: true
+                  case_insensitive: true,
+                  rewrite: REWRITE
                 }
               } else {
                 fp.span_term = p
@@ -648,7 +654,8 @@ const genRec = (node, nodeTransformer) => {
           fp.wildcard = {}
           fp.wildcard[element.key] = {
             value: element.val,
-            case_insensitive: true
+            case_insensitive: true,
+            rewrite: REWRITE
           }
         } else {
           fp.term = p
@@ -707,7 +714,8 @@ const genRec = (node, nodeTransformer) => {
           fp.wildcard = {}
           fp.wildcard[element.key] = {
             value: element.val,
-            case_insensitive: true
+            case_insensitive: true,
+            rewrite: REWRITE
           }
         } else {
           fp.term = p
@@ -758,7 +766,8 @@ const genRec = (node, nodeTransformer) => {
           fp.wildcard = {}
           fp.wildcard[element.key] = {
             value: element.val,
-            case_insensitive: true
+            case_insensitive: true,
+            rewrite: REWRITE
           }
         } else {
           fp.term = p
@@ -852,7 +861,8 @@ const genRec = (node, nodeTransformer) => {
           fp.span_multi = { match: { wildcard: {} } }
           fp.span_multi.match.wildcard[element.key] = {
             value: element.val,
-            case_insensitive: true
+            case_insensitive: true,
+            rewrite: REWRITE
           }
         } else {
           fp.span_term = p
@@ -1246,7 +1256,8 @@ exports.genEqlIter = (q = '', nodeTransformer) => {
         fp.wildcard = {}
         fp.wildcard[tree.key] = {
           value: tree.val,
-          case_insensitive: true
+          case_insensitive: true,
+          rewrite: REWRITE
         }
       } else {
         fp.term = p
@@ -1301,7 +1312,8 @@ exports.genEqlRec = (q = '', nodeTransformer) => {
         fp.wildcard = {}
         fp.wildcard[tree.key] = {
           value: tree.val,
-          case_insensitive: true
+          case_insensitive: true,
+          rewrite: REWRITE
         }
       } else {
         fp.term = p
