@@ -1,4 +1,5 @@
 const { genEqlIter, genEqlRec } = require('./gen-eql')
+const REWRITE = 'top_terms_10000'
 
 describe('Iterative Implementation', () => {
   describe('Proximity Queries', () => {
@@ -69,7 +70,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'de*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'de*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   }
@@ -460,7 +461,7 @@ describe('Iterative Implementation', () => {
       const pq = genEqlIter(query)
 
       expect(pq).toEqual({
-        bool: { must: [{ match_phrase: { ttl: '"apple grader"' } }] }
+        bool: { must: [{ match_phrase: { ttl: 'apple grader' } }] }
       })
     })
 
@@ -470,7 +471,7 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          must: [{ wildcard: { ttl: { value: 'mobi*', case_insensitive: true } } }]
+          must: [{ wildcard: { ttl: { value: 'mobi*', case_insensitive: true, rewrite: REWRITE } } }]
         }
       })
     })
@@ -496,7 +497,7 @@ describe('Iterative Implementation', () => {
         bool: {
           should: [
             { term: { ttl: 'apple' } },
-            { match_phrase: { ttl: '"coconut jam"' } }
+            { match_phrase: { ttl: 'coconut jam' } }
           ]
         }
       })
@@ -509,7 +510,7 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { match_phrase: { ttl: '"dragon ball"' } },
+            { match_phrase: { ttl: 'dragon ball' } },
             { range: { pd: { gte: '20200825', lte: '20201027' } } }
           ]
         }
@@ -523,7 +524,7 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { match_phrase: { ttl: '"dragon ball"' } },
+            { match_phrase: { ttl: 'dragon ball' } },
             { range: { pd: {} } }
           ]
         }
@@ -540,7 +541,7 @@ describe('Iterative Implementation', () => {
         bool: {
           must: [
             { term: { ttl: 'banana' } },
-            { match_phrase: { ttl: '"stuffed bunny"' } }
+            { match_phrase: { ttl: 'stuffed bunny' } }
           ]
         }
       })
@@ -553,7 +554,7 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { match_phrase: { ttl: '"dragon ball"' } },
+            { match_phrase: { ttl: 'dragon ball' } },
             { range: { pd: {} } }
           ]
         }
@@ -568,7 +569,7 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          must_not: [{ match_phrase: { ttl: '"apple tree"' } }],
+          must_not: [{ match_phrase: { ttl: 'apple tree' } }],
           must: [{ term: { ttl: 'apple' } }]
         }
       })
@@ -583,7 +584,7 @@ describe('Iterative Implementation', () => {
           must_not: [
             { range: { pd: { gte: '20200825', lte: '20201027' } } }
           ],
-          must: [{ match_phrase: { ttl: '"dragon ball"' } }]
+          must: [{ match_phrase: { ttl: 'dragon ball' } }]
         }
       })
     })
@@ -597,7 +598,7 @@ describe('Iterative Implementation', () => {
           must_not: [
             { range: { pd: {} } }
           ],
-          must: [{ match_phrase: { ttl: '"dragon ball"' } }]
+          must: [{ match_phrase: { ttl: 'dragon ball' } }]
         }
       })
     })
@@ -609,9 +610,9 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must_not: [
-            { wildcard: { ttl: { value: 'game*', case_insensitive: true } } }
+            { wildcard: { ttl: { value: 'game*', case_insensitive: true, rewrite: REWRITE } } }
           ],
-          must: [{ match_phrase: { ttl: '"dragon ball"' } }]
+          must: [{ match_phrase: { ttl: 'dragon ball' } }]
         }
       })
     })
@@ -804,7 +805,7 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          should: [{ match_phrase: { pa: '"coco"' } }, { term: { pa: 'powder' } }]
+          should: [{ match_phrase: { pa: 'coco' } }, { term: { pa: 'powder' } }]
         }
       })
     })
@@ -876,7 +877,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'bal*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'bal*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -888,7 +889,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'oran*', case_insensitive: true }
+                                ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -973,7 +974,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'oran*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   }
@@ -1073,7 +1074,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'bal*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'bal*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -1085,7 +1086,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'oran*', case_insensitive: true }
+                                ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -1170,7 +1171,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'oran*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   }
@@ -1243,7 +1244,7 @@ describe('Iterative Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -1255,7 +1256,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'electr*', case_insensitive: true }
+                                ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -1288,7 +1289,7 @@ describe('Iterative Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -1300,7 +1301,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'electr*', case_insensitive: true }
+                                ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -1342,7 +1343,7 @@ describe('Iterative Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -1350,7 +1351,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'electr*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -1379,7 +1380,7 @@ describe('Iterative Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -1387,7 +1388,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'electr*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -1484,7 +1485,7 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          should: [{ match_phrase: { pa: '"coco"' } }, { term: { pa: 'powder' } }]
+          should: [{ match_phrase: { pa: 'coco' } }, { term: { pa: 'powder' } }]
         }
       })
     })
@@ -1614,7 +1615,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'bal*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'bal*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -1626,7 +1627,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'oran*', case_insensitive: true }
+                                ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -1711,7 +1712,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'oran*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   }
@@ -1811,7 +1812,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'bal*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'bal*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -1823,7 +1824,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'oran*', case_insensitive: true }
+                                ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -1908,7 +1909,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'oran*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   }
@@ -1981,7 +1982,7 @@ describe('Iterative Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -1993,7 +1994,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'electr*', case_insensitive: true }
+                                ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -2026,7 +2027,7 @@ describe('Iterative Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -2038,7 +2039,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'electr*', case_insensitive: true }
+                                ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -2080,7 +2081,7 @@ describe('Iterative Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -2088,7 +2089,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'electr*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -2117,7 +2118,7 @@ describe('Iterative Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -2125,7 +2126,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'electr*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -2204,7 +2205,7 @@ describe('Iterative Implementation', () => {
               wildcard: {
                 ttl: {
                   value: 'wireles?',
-                  case_insensitive: true
+                  case_insensitive: true, rewrite: REWRITE
                 }
               }
             },
@@ -2212,7 +2213,7 @@ describe('Iterative Implementation', () => {
               wildcard: {
                 ttl: {
                   value: 'communicatio*',
-                  case_insensitive: true
+                  case_insensitive: true, rewrite: REWRITE
                 }
               }
             }
@@ -2235,7 +2236,7 @@ describe('Iterative Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'wireles?',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   },
@@ -2243,7 +2244,7 @@ describe('Iterative Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'communicatio?',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   }
@@ -2257,7 +2258,7 @@ describe('Iterative Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'netwo*',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   },
@@ -2265,7 +2266,7 @@ describe('Iterative Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'sign*',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   }
@@ -2291,7 +2292,7 @@ describe('Iterative Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'netwo*',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   },
@@ -2299,7 +2300,7 @@ describe('Iterative Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'sign*',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   }
@@ -2312,7 +2313,7 @@ describe('Iterative Implementation', () => {
               wildcard: {
                 ttl: {
                   value: 'wireles?',
-                  case_insensitive: true
+                  case_insensitive: true, rewrite: REWRITE
                 }
               }
             },
@@ -2320,7 +2321,7 @@ describe('Iterative Implementation', () => {
               wildcard: {
                 ttl: {
                   value: 'communicatio?',
-                  case_insensitive: true
+                  case_insensitive: true, rewrite: REWRITE
                 }
               }
             }
@@ -2346,7 +2347,7 @@ describe('Iterative Implementation', () => {
                           wildcard: {
                             ttl: {
                               value: 'netwo*',
-                              case_insensitive: true
+                              case_insensitive: true, rewrite: REWRITE
                             }
                           }
                         },
@@ -2354,7 +2355,7 @@ describe('Iterative Implementation', () => {
                           wildcard: {
                             ttl: {
                               value: 'sign*',
-                              case_insensitive: true
+                              case_insensitive: true, rewrite: REWRITE
                             }
                           }
                         }
@@ -2367,7 +2368,7 @@ describe('Iterative Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'wireles?',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   },
@@ -2375,7 +2376,7 @@ describe('Iterative Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'communicatio?',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   }
@@ -2433,7 +2434,7 @@ describe('Iterative Implementation', () => {
                                 wildcard: {
                                   ttl: {
                                     value: 'netwo*',
-                                    case_insensitive: true
+                                    case_insensitive: true, rewrite: REWRITE
                                   }
                                 }
                               },
@@ -2441,7 +2442,7 @@ describe('Iterative Implementation', () => {
                                 wildcard: {
                                   ttl: {
                                     value: 'sign*',
-                                    case_insensitive: true
+                                    case_insensitive: true, rewrite: REWRITE
                                   }
                                 }
                               }
@@ -2454,7 +2455,7 @@ describe('Iterative Implementation', () => {
                           wildcard: {
                             ttl: {
                               value: 'wireles?',
-                              case_insensitive: true
+                              case_insensitive: true, rewrite: REWRITE
                             }
                           }
                         },
@@ -2462,7 +2463,7 @@ describe('Iterative Implementation', () => {
                           wildcard: {
                             ttl: {
                               value: 'communicatio?',
-                              case_insensitive: true
+                              case_insensitive: true, rewrite: REWRITE
                             }
                           }
                         }
@@ -2561,7 +2562,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'Fruit*', case_insensitive: true }
+                                ttl: { value: 'Fruit*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -2572,7 +2573,7 @@ describe('Iterative Implementation', () => {
                               wildcard: {
                                 ttl: {
                                   value: 'Vegetable*',
-                                  case_insensitive: true
+                                  case_insensitive: true, rewrite: REWRITE
                                 }
                               }
                             }
@@ -2608,7 +2609,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'Fruit*', case_insensitive: true }
+                                ttl: { value: 'Fruit*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -2619,7 +2620,7 @@ describe('Iterative Implementation', () => {
                               wildcard: {
                                 ttl: {
                                   value: 'Vegetable*',
-                                  case_insensitive: true
+                                  case_insensitive: true, rewrite: REWRITE
                                 }
                               }
                             }
@@ -2691,10 +2692,10 @@ describe('Iterative Implementation', () => {
               bool: {
                 should: [
                   {
-                    wildcard: { ttl: { value: 'Fruit*', case_insensitive: true } }
+                    wildcard: { ttl: { value: 'Fruit*', case_insensitive: true, rewrite: REWRITE } }
                   },
                   {
-                    wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true } }
+                    wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true, rewrite: REWRITE } }
                   }
                 ]
               }
@@ -2715,7 +2716,7 @@ describe('Iterative Implementation', () => {
               bool: {
                 should: [
                   {
-                    wildcard: { ttl: { value: 'plant*', case_insensitive: true } }
+                    wildcard: { ttl: { value: 'plant*', case_insensitive: true, rewrite: REWRITE } }
                   },
                   { terms: { ttl: ['lemon', 'papaya', 'melon'] } }
                 ]
@@ -2750,10 +2751,10 @@ describe('Iterative Implementation', () => {
               bool: {
                 should: [
                   {
-                    wildcard: { ttl: { value: 'Fruit*', case_insensitive: true } }
+                    wildcard: { ttl: { value: 'Fruit*', case_insensitive: true, rewrite: REWRITE } }
                   },
                   {
-                    wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true } }
+                    wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true, rewrite: REWRITE } }
                   }
                 ]
               }
@@ -2780,7 +2781,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'plant*', case_insensitive: true }
+                                ttl: { value: 'plant*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -2831,10 +2832,10 @@ describe('Iterative Implementation', () => {
               bool: {
                 should: [
                   {
-                    wildcard: { ttl: { value: 'Fruit*', case_insensitive: true } }
+                    wildcard: { ttl: { value: 'Fruit*', case_insensitive: true, rewrite: REWRITE } }
                   },
                   {
-                    wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true } }
+                    wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true, rewrite: REWRITE } }
                   }
                 ]
               }
@@ -2904,7 +2905,7 @@ describe('Iterative Implementation', () => {
                               { terms: { ttl: ['oxygen', 'rate'] } },
                               {
                                 wildcard: {
-                                  ttl: { value: 'pulse*', case_insensitive: true }
+                                  ttl: { value: 'pulse*', case_insensitive: true, rewrite: REWRITE }
                                 }
                               }
                             ]
@@ -2959,7 +2960,7 @@ describe('Iterative Implementation', () => {
                               wildcard: {
                                 ttl: {
                                   value: 'vegetable*',
-                                  case_insensitive: true
+                                  case_insensitive: true, rewrite: REWRITE
                                 }
                               }
                             }
@@ -2969,7 +2970,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'juice*', case_insensitive: true }
+                                ttl: { value: 'juice*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -2986,7 +2987,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'plant*', case_insensitive: true }
+                                ttl: { value: 'plant*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -3000,7 +3001,7 @@ describe('Iterative Implementation', () => {
                                     wildcard: {
                                       ttl: {
                                         value: 'Fruit*',
-                                        case_insensitive: true
+                                        case_insensitive: true, rewrite: REWRITE
                                       }
                                     }
                                   }
@@ -3012,7 +3013,7 @@ describe('Iterative Implementation', () => {
                                     wildcard: {
                                       ttl: {
                                         value: 'Vegetable*',
-                                        case_insensitive: true
+                                        case_insensitive: true, rewrite: REWRITE
                                       }
                                     }
                                   }
@@ -3060,7 +3061,7 @@ describe('Iterative Implementation', () => {
                                     wildcard: {
                                       ttl: {
                                         value: 'intelligen*',
-                                        case_insensitive: true
+                                        case_insensitive: true, rewrite: REWRITE
                                       }
                                     }
                                   }
@@ -3096,7 +3097,7 @@ describe('Iterative Implementation', () => {
                                     wildcard: {
                                       ttl: {
                                         value: 'learn*',
-                                        case_insensitive: true
+                                        case_insensitive: true, rewrite: REWRITE
                                       }
                                     }
                                   }
@@ -3148,7 +3149,7 @@ describe('Iterative Implementation', () => {
                                           wildcard: {
                                             ttl: {
                                               value: 'intelligen*',
-                                              case_insensitive: true
+                                              case_insensitive: true, rewrite: REWRITE
                                             }
                                           }
                                         }
@@ -3184,7 +3185,7 @@ describe('Iterative Implementation', () => {
                                           wildcard: {
                                             ttl: {
                                               value: 'learn*',
-                                              case_insensitive: true
+                                              case_insensitive: true, rewrite: REWRITE
                                             }
                                           }
                                         }
@@ -3224,7 +3225,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'A*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'A*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -3235,7 +3236,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'plant*', case_insensitive: true }
+                                ttl: { value: 'plant*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -3249,7 +3250,7 @@ describe('Iterative Implementation', () => {
                                     wildcard: {
                                       ttl: {
                                         value: 'Veg*',
-                                        case_insensitive: true
+                                        case_insensitive: true, rewrite: REWRITE
                                       }
                                     }
                                   }
@@ -3264,7 +3265,7 @@ describe('Iterative Implementation', () => {
                                           wildcard: {
                                             ttl: {
                                               value: 'veg*',
-                                              case_insensitive: true
+                                              case_insensitive: true, rewrite: REWRITE
                                             }
                                           }
                                         }
@@ -3276,7 +3277,7 @@ describe('Iterative Implementation', () => {
                                           wildcard: {
                                             ttl: {
                                               value: 'juice*',
-                                              case_insensitive: true
+                                              case_insensitive: true, rewrite: REWRITE
                                             }
                                           }
                                         }
@@ -3325,7 +3326,7 @@ describe('Iterative Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'plant*', case_insensitive: true }
+                                ttl: { value: 'plant*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -3339,7 +3340,7 @@ describe('Iterative Implementation', () => {
                                     wildcard: {
                                       ttl: {
                                         value: 'Veg*',
-                                        case_insensitive: true
+                                        case_insensitive: true, rewrite: REWRITE
                                       }
                                     }
                                   }
@@ -3354,7 +3355,7 @@ describe('Iterative Implementation', () => {
                                           wildcard: {
                                             ttl: {
                                               value: 'veg*',
-                                              case_insensitive: true
+                                              case_insensitive: true, rewrite: REWRITE
                                             }
                                           }
                                         }
@@ -3366,7 +3367,7 @@ describe('Iterative Implementation', () => {
                                           wildcard: {
                                             ttl: {
                                               value: 'juice*',
-                                              case_insensitive: true
+                                              case_insensitive: true, rewrite: REWRITE
                                             }
                                           }
                                         }
@@ -3411,7 +3412,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'engine*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'engine*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   }
@@ -3477,7 +3478,7 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'loader*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'loader*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   }
@@ -3797,7 +3798,7 @@ describe('Iterative Implementation', () => {
         bool: {
           must: [
             {
-              wildcard: { ttl: { value: 'energ*', case_insensitive: true } }
+              wildcard: { ttl: { value: 'energ*', case_insensitive: true, rewrite: REWRITE } }
             },
             {
               bool: {
@@ -5564,7 +5565,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'de*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'de*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   }
@@ -5955,7 +5956,7 @@ describe('Recursive Implementation', () => {
       const pq = genEqlRec(query)
 
       expect(pq).toEqual({
-        bool: { must: [{ match_phrase: { ttl: '"apple grader"' } }] }
+        bool: { must: [{ match_phrase: { ttl: 'apple grader' } }] }
       })
     })
 
@@ -5965,7 +5966,7 @@ describe('Recursive Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          must: [{ wildcard: { ttl: { value: 'mobi*', case_insensitive: true } } }]
+          must: [{ wildcard: { ttl: { value: 'mobi*', case_insensitive: true, rewrite: REWRITE } } }]
         }
       })
     })
@@ -5991,7 +5992,7 @@ describe('Recursive Implementation', () => {
         bool: {
           should: [
             { term: { ttl: 'apple' } },
-            { match_phrase: { ttl: '"coconut jam"' } }
+            { match_phrase: { ttl: 'coconut jam' } }
           ]
         }
       })
@@ -6004,7 +6005,7 @@ describe('Recursive Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { match_phrase: { ttl: '"dragon ball"' } },
+            { match_phrase: { ttl: 'dragon ball' } },
             { range: { pd: { gte: '20200825', lte: '20201027' } } }
           ]
         }
@@ -6018,7 +6019,7 @@ describe('Recursive Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { match_phrase: { ttl: '"dragon ball"' } },
+            { match_phrase: { ttl: 'dragon ball' } },
             { range: { pd: {} } }
           ]
         }
@@ -6035,7 +6036,7 @@ describe('Recursive Implementation', () => {
         bool: {
           must: [
             { term: { ttl: 'banana' } },
-            { match_phrase: { ttl: '"stuffed bunny"' } }
+            { match_phrase: { ttl: 'stuffed bunny' } }
           ]
         }
       })
@@ -6048,7 +6049,7 @@ describe('Recursive Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { match_phrase: { ttl: '"dragon ball"' } },
+            { match_phrase: { ttl: 'dragon ball' } },
             { range: { pd: {} } }
           ]
         }
@@ -6063,7 +6064,7 @@ describe('Recursive Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          must_not: [{ match_phrase: { ttl: '"apple tree"' } }],
+          must_not: [{ match_phrase: { ttl: 'apple tree' } }],
           must: [{ term: { ttl: 'apple' } }]
         }
       })
@@ -6078,7 +6079,7 @@ describe('Recursive Implementation', () => {
           must_not: [
             { range: { pd: { gte: '20200825', lte: '20201027' } } }
           ],
-          must: [{ match_phrase: { ttl: '"dragon ball"' } }]
+          must: [{ match_phrase: { ttl: 'dragon ball' } }]
         }
       })
     })
@@ -6092,7 +6093,7 @@ describe('Recursive Implementation', () => {
           must_not: [
             { range: { pd: {} } }
           ],
-          must: [{ match_phrase: { ttl: '"dragon ball"' } }]
+          must: [{ match_phrase: { ttl: 'dragon ball' } }]
         }
       })
     })
@@ -6104,9 +6105,9 @@ describe('Recursive Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must_not: [
-            { wildcard: { ttl: { value: 'game*', case_insensitive: true } } }
+            { wildcard: { ttl: { value: 'game*', case_insensitive: true, rewrite: REWRITE } } }
           ],
-          must: [{ match_phrase: { ttl: '"dragon ball"' } }]
+          must: [{ match_phrase: { ttl: 'dragon ball' } }]
         }
       })
     })
@@ -6299,7 +6300,7 @@ describe('Recursive Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          should: [{ match_phrase: { pa: '"coco"' } }, { term: { pa: 'powder' } }]
+          should: [{ match_phrase: { pa: 'coco' } }, { term: { pa: 'powder' } }]
         }
       })
     })
@@ -6371,7 +6372,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'bal*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'bal*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -6383,7 +6384,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'oran*', case_insensitive: true }
+                                ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -6468,7 +6469,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'oran*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   }
@@ -6568,7 +6569,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'bal*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'bal*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -6580,7 +6581,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'oran*', case_insensitive: true }
+                                ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -6665,7 +6666,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'oran*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   }
@@ -6738,7 +6739,7 @@ describe('Recursive Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -6750,7 +6751,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'electr*', case_insensitive: true }
+                                ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -6783,7 +6784,7 @@ describe('Recursive Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -6795,7 +6796,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'electr*', case_insensitive: true }
+                                ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -6837,7 +6838,7 @@ describe('Recursive Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -6845,7 +6846,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'electr*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -6874,7 +6875,7 @@ describe('Recursive Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -6882,7 +6883,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'electr*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -6979,7 +6980,7 @@ describe('Recursive Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          should: [{ match_phrase: { pa: '"coco"' } }, { term: { pa: 'powder' } }]
+          should: [{ match_phrase: { pa: 'coco' } }, { term: { pa: 'powder' } }]
         }
       })
     })
@@ -7109,7 +7110,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'bal*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'bal*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -7121,7 +7122,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'oran*', case_insensitive: true }
+                                ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -7206,7 +7207,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'oran*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   }
@@ -7306,7 +7307,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'bal*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'bal*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -7318,7 +7319,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'oran*', case_insensitive: true }
+                                ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -7403,7 +7404,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'oran*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'oran*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   }
@@ -7476,7 +7477,7 @@ describe('Recursive Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -7488,7 +7489,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'electr*', case_insensitive: true }
+                                ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -7521,7 +7522,7 @@ describe('Recursive Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -7533,7 +7534,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'electr*', case_insensitive: true }
+                                ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -7575,7 +7576,7 @@ describe('Recursive Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -7583,7 +7584,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'electr*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -7612,7 +7613,7 @@ describe('Recursive Implementation', () => {
                     span_multi: {
                       match: {
                         wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true }
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: REWRITE }
                         }
                       }
                     }
@@ -7620,7 +7621,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'electr*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'electr*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -7699,7 +7700,7 @@ describe('Recursive Implementation', () => {
               wildcard: {
                 ttl: {
                   value: 'wireles?',
-                  case_insensitive: true
+                  case_insensitive: true, rewrite: REWRITE
                 }
               }
             },
@@ -7707,7 +7708,7 @@ describe('Recursive Implementation', () => {
               wildcard: {
                 ttl: {
                   value: 'communicatio*',
-                  case_insensitive: true
+                  case_insensitive: true, rewrite: REWRITE
                 }
               }
             }
@@ -7730,7 +7731,7 @@ describe('Recursive Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'wireles?',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   },
@@ -7738,7 +7739,7 @@ describe('Recursive Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'communicatio?',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   }
@@ -7752,7 +7753,7 @@ describe('Recursive Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'netwo*',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   },
@@ -7760,7 +7761,7 @@ describe('Recursive Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'sign*',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   }
@@ -7786,7 +7787,7 @@ describe('Recursive Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'netwo*',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   },
@@ -7794,7 +7795,7 @@ describe('Recursive Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'sign*',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   }
@@ -7807,7 +7808,7 @@ describe('Recursive Implementation', () => {
               wildcard: {
                 ttl: {
                   value: 'wireles?',
-                  case_insensitive: true
+                  case_insensitive: true, rewrite: REWRITE
                 }
               }
             },
@@ -7815,7 +7816,7 @@ describe('Recursive Implementation', () => {
               wildcard: {
                 ttl: {
                   value: 'communicatio?',
-                  case_insensitive: true
+                  case_insensitive: true, rewrite: REWRITE
                 }
               }
             }
@@ -7841,7 +7842,7 @@ describe('Recursive Implementation', () => {
                           wildcard: {
                             ttl: {
                               value: 'netwo*',
-                              case_insensitive: true
+                              case_insensitive: true, rewrite: REWRITE
                             }
                           }
                         },
@@ -7849,7 +7850,7 @@ describe('Recursive Implementation', () => {
                           wildcard: {
                             ttl: {
                               value: 'sign*',
-                              case_insensitive: true
+                              case_insensitive: true, rewrite: REWRITE
                             }
                           }
                         }
@@ -7862,7 +7863,7 @@ describe('Recursive Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'wireles?',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   },
@@ -7870,7 +7871,7 @@ describe('Recursive Implementation', () => {
                     wildcard: {
                       ttl: {
                         value: 'communicatio?',
-                        case_insensitive: true
+                        case_insensitive: true, rewrite: REWRITE
                       }
                     }
                   }
@@ -7928,7 +7929,7 @@ describe('Recursive Implementation', () => {
                                 wildcard: {
                                   ttl: {
                                     value: 'netwo*',
-                                    case_insensitive: true
+                                    case_insensitive: true, rewrite: REWRITE
                                   }
                                 }
                               },
@@ -7936,7 +7937,7 @@ describe('Recursive Implementation', () => {
                                 wildcard: {
                                   ttl: {
                                     value: 'sign*',
-                                    case_insensitive: true
+                                    case_insensitive: true, rewrite: REWRITE
                                   }
                                 }
                               }
@@ -7949,7 +7950,7 @@ describe('Recursive Implementation', () => {
                           wildcard: {
                             ttl: {
                               value: 'wireles?',
-                              case_insensitive: true
+                              case_insensitive: true, rewrite: REWRITE
                             }
                           }
                         },
@@ -7957,7 +7958,7 @@ describe('Recursive Implementation', () => {
                           wildcard: {
                             ttl: {
                               value: 'communicatio?',
-                              case_insensitive: true
+                              case_insensitive: true, rewrite: REWRITE
                             }
                           }
                         }
@@ -8056,7 +8057,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'Fruit*', case_insensitive: true }
+                                ttl: { value: 'Fruit*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -8067,7 +8068,7 @@ describe('Recursive Implementation', () => {
                               wildcard: {
                                 ttl: {
                                   value: 'Vegetable*',
-                                  case_insensitive: true
+                                  case_insensitive: true, rewrite: REWRITE
                                 }
                               }
                             }
@@ -8103,7 +8104,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'Fruit*', case_insensitive: true }
+                                ttl: { value: 'Fruit*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -8114,7 +8115,7 @@ describe('Recursive Implementation', () => {
                               wildcard: {
                                 ttl: {
                                   value: 'Vegetable*',
-                                  case_insensitive: true
+                                  case_insensitive: true, rewrite: REWRITE
                                 }
                               }
                             }
@@ -8186,10 +8187,10 @@ describe('Recursive Implementation', () => {
               bool: {
                 should: [
                   {
-                    wildcard: { ttl: { value: 'Fruit*', case_insensitive: true } }
+                    wildcard: { ttl: { value: 'Fruit*', case_insensitive: true, rewrite: REWRITE } }
                   },
                   {
-                    wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true } }
+                    wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true, rewrite: REWRITE } }
                   }
                 ]
               }
@@ -8210,7 +8211,7 @@ describe('Recursive Implementation', () => {
               bool: {
                 should: [
                   {
-                    wildcard: { ttl: { value: 'plant*', case_insensitive: true } }
+                    wildcard: { ttl: { value: 'plant*', case_insensitive: true, rewrite: REWRITE } }
                   },
                   { terms: { ttl: ['lemon', 'papaya', 'melon'] } }
                 ]
@@ -8245,10 +8246,10 @@ describe('Recursive Implementation', () => {
               bool: {
                 should: [
                   {
-                    wildcard: { ttl: { value: 'Fruit*', case_insensitive: true } }
+                    wildcard: { ttl: { value: 'Fruit*', case_insensitive: true, rewrite: REWRITE } }
                   },
                   {
-                    wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true } }
+                    wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true, rewrite: REWRITE } }
                   }
                 ]
               }
@@ -8275,7 +8276,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'plant*', case_insensitive: true }
+                                ttl: { value: 'plant*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -8326,10 +8327,10 @@ describe('Recursive Implementation', () => {
               bool: {
                 should: [
                   {
-                    wildcard: { ttl: { value: 'Fruit*', case_insensitive: true } }
+                    wildcard: { ttl: { value: 'Fruit*', case_insensitive: true, rewrite: REWRITE } }
                   },
                   {
-                    wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true } }
+                    wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true, rewrite: REWRITE } }
                   }
                 ]
               }
@@ -8399,7 +8400,7 @@ describe('Recursive Implementation', () => {
                               { terms: { ttl: ['oxygen', 'rate'] } },
                               {
                                 wildcard: {
-                                  ttl: { value: 'pulse*', case_insensitive: true }
+                                  ttl: { value: 'pulse*', case_insensitive: true, rewrite: REWRITE }
                                 }
                               }
                             ]
@@ -8454,7 +8455,7 @@ describe('Recursive Implementation', () => {
                               wildcard: {
                                 ttl: {
                                   value: 'vegetable*',
-                                  case_insensitive: true
+                                  case_insensitive: true, rewrite: REWRITE
                                 }
                               }
                             }
@@ -8464,7 +8465,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'juice*', case_insensitive: true }
+                                ttl: { value: 'juice*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -8481,7 +8482,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'plant*', case_insensitive: true }
+                                ttl: { value: 'plant*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -8495,7 +8496,7 @@ describe('Recursive Implementation', () => {
                                     wildcard: {
                                       ttl: {
                                         value: 'Fruit*',
-                                        case_insensitive: true
+                                        case_insensitive: true, rewrite: REWRITE
                                       }
                                     }
                                   }
@@ -8507,7 +8508,7 @@ describe('Recursive Implementation', () => {
                                     wildcard: {
                                       ttl: {
                                         value: 'Vegetable*',
-                                        case_insensitive: true
+                                        case_insensitive: true, rewrite: REWRITE
                                       }
                                     }
                                   }
@@ -8555,7 +8556,7 @@ describe('Recursive Implementation', () => {
                                     wildcard: {
                                       ttl: {
                                         value: 'intelligen*',
-                                        case_insensitive: true
+                                        case_insensitive: true, rewrite: REWRITE
                                       }
                                     }
                                   }
@@ -8591,7 +8592,7 @@ describe('Recursive Implementation', () => {
                                     wildcard: {
                                       ttl: {
                                         value: 'learn*',
-                                        case_insensitive: true
+                                        case_insensitive: true, rewrite: REWRITE
                                       }
                                     }
                                   }
@@ -8643,7 +8644,7 @@ describe('Recursive Implementation', () => {
                                           wildcard: {
                                             ttl: {
                                               value: 'intelligen*',
-                                              case_insensitive: true
+                                              case_insensitive: true, rewrite: REWRITE
                                             }
                                           }
                                         }
@@ -8679,7 +8680,7 @@ describe('Recursive Implementation', () => {
                                           wildcard: {
                                             ttl: {
                                               value: 'learn*',
-                                              case_insensitive: true
+                                              case_insensitive: true, rewrite: REWRITE
                                             }
                                           }
                                         }
@@ -8719,7 +8720,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'A*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'A*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   },
@@ -8730,7 +8731,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'plant*', case_insensitive: true }
+                                ttl: { value: 'plant*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -8744,7 +8745,7 @@ describe('Recursive Implementation', () => {
                                     wildcard: {
                                       ttl: {
                                         value: 'Veg*',
-                                        case_insensitive: true
+                                        case_insensitive: true, rewrite: REWRITE
                                       }
                                     }
                                   }
@@ -8759,7 +8760,7 @@ describe('Recursive Implementation', () => {
                                           wildcard: {
                                             ttl: {
                                               value: 'veg*',
-                                              case_insensitive: true
+                                              case_insensitive: true, rewrite: REWRITE
                                             }
                                           }
                                         }
@@ -8771,7 +8772,7 @@ describe('Recursive Implementation', () => {
                                           wildcard: {
                                             ttl: {
                                               value: 'juice*',
-                                              case_insensitive: true
+                                              case_insensitive: true, rewrite: REWRITE
                                             }
                                           }
                                         }
@@ -8820,7 +8821,7 @@ describe('Recursive Implementation', () => {
                           span_multi: {
                             match: {
                               wildcard: {
-                                ttl: { value: 'plant*', case_insensitive: true }
+                                ttl: { value: 'plant*', case_insensitive: true, rewrite: REWRITE }
                               }
                             }
                           }
@@ -8834,7 +8835,7 @@ describe('Recursive Implementation', () => {
                                     wildcard: {
                                       ttl: {
                                         value: 'Veg*',
-                                        case_insensitive: true
+                                        case_insensitive: true, rewrite: REWRITE
                                       }
                                     }
                                   }
@@ -8849,7 +8850,7 @@ describe('Recursive Implementation', () => {
                                           wildcard: {
                                             ttl: {
                                               value: 'veg*',
-                                              case_insensitive: true
+                                              case_insensitive: true, rewrite: REWRITE
                                             }
                                           }
                                         }
@@ -8861,7 +8862,7 @@ describe('Recursive Implementation', () => {
                                           wildcard: {
                                             ttl: {
                                               value: 'juice*',
-                                              case_insensitive: true
+                                              case_insensitive: true, rewrite: REWRITE
                                             }
                                           }
                                         }
@@ -8906,7 +8907,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'engine*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'engine*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   }
@@ -8972,7 +8973,7 @@ describe('Recursive Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: { ttl: { value: 'loader*', case_insensitive: true } }
+                        wildcard: { ttl: { value: 'loader*', case_insensitive: true, rewrite: REWRITE } }
                       }
                     }
                   }
@@ -9292,7 +9293,7 @@ describe('Recursive Implementation', () => {
         bool: {
           must: [
             {
-              wildcard: { ttl: { value: 'energ*', case_insensitive: true } }
+              wildcard: { ttl: { value: 'energ*', case_insensitive: true, rewrite: REWRITE } }
             },
             {
               bool: {
