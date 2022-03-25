@@ -2,7 +2,6 @@ const { parse } = require('../parser')
 
 const SPAN_MULTI_WILDCARD_REWRITE = 'top_terms_1000'
 const WILDCARD_REWRITE = 'top_terms_10000'
-const REWRITE = 'top_terms_10000'
 
 const genIter = (node, nodeTransformer) => {
   let snapshot = {
@@ -381,9 +380,11 @@ const genIter = (node, nodeTransformer) => {
                     })
                   })
                 } else if (currentValue.wildcard) {
+                  const key = Object.keys(currentValue.wildcard)[0]
+
                   previousValue.push({
                     span_multi: {
-                      match: currentValue
+                      match: { wildcard: { [key]: { ...currentValue.wildcard[key], rewrite: SPAN_MULTI_WILDCARD_REWRITE } } }
                     }
                   })
                 } else if (currentValue.match_phrase) {
@@ -428,7 +429,8 @@ const genIter = (node, nodeTransformer) => {
               x.span_term = x.term
               delete x.term
             } else if (x.wildcard) {
-              x.span_multi = { match: { wildcard: x.wildcard } }
+              const key = Object.keys(x.wildcard)[0]
+              x.span_multi = { match: { wildcard: { [key]: { ...x.wildcard[key], rewrite: SPAN_MULTI_WILDCARD_REWRITE } } } }
               delete x.wildcard
             } else if (x.match_phrase) {
               const key = Object.keys(x.match_phrase)[0]
@@ -540,9 +542,11 @@ const genIter = (node, nodeTransformer) => {
                     })
                   })
                 } else if (currentValue.wildcard) {
+                  const key = Object.keys(currentValue.wildcard)[0]
+
                   previousValue.push({
                     span_multi: {
-                      match: currentValue
+                      match: { wildcard: { [key]: { ...currentValue.wildcard[key], rewrite: SPAN_MULTI_WILDCARD_REWRITE } } }
                     }
                   })
                 } else if (currentValue.match_phrase) {
@@ -587,7 +591,8 @@ const genIter = (node, nodeTransformer) => {
               x.span_term = x.term
               delete x.term
             } else if (x.wildcard) {
-              x.span_multi = { match: { wildcard: x.wildcard } }
+              const key = Object.keys(x.wildcard)[0]
+              x.span_multi = { match: { wildcard: { [key]: { ...x.wildcard[key], rewrite: SPAN_MULTI_WILDCARD_REWRITE } } } }
               delete x.wildcard
             } else if (x.match_phrase) {
               const key = Object.keys(x.match_phrase)[0]
@@ -988,9 +993,11 @@ const genRec = (node, nodeTransformer) => {
                 })
               })
             } else if (currentValue.wildcard) {
+              const key = Object.keys(currentValue.wildcard)[0]
+
               previousValue.push({
                 span_multi: {
-                  match: { wildcard: { ...currentValue.wildcard, rewrite: SPAN_MULTI_WILDCARD_REWRITE } }
+                  match: { wildcard: { [key]: { ...currentValue.wildcard[key], rewrite: SPAN_MULTI_WILDCARD_REWRITE } } }
                 }
               })
             } else if (currentValue.match_phrase) {
@@ -1035,7 +1042,8 @@ const genRec = (node, nodeTransformer) => {
           x.span_term = x.term
           delete x.term
         } else if (x.wildcard) {
-          x.span_multi = { match: { wildcard: { ...x.wildcard, rewrite: SPAN_MULTI_WILDCARD_REWRITE } } }
+          const key = Object.keys(x.wildcard)[0]
+          x.span_multi = { match: { wildcard: { [key]: { ...x.wildcard[key], rewrite: SPAN_MULTI_WILDCARD_REWRITE } } } }
           delete x.wildcard
         } else if (x.match_phrase) {
           const key = Object.keys(x.match_phrase)[0]
@@ -1153,9 +1161,11 @@ const genRec = (node, nodeTransformer) => {
                 })
               })
             } else if (currentValue.wildcard) {
+              const key = Object.keys(currentValue.wildcard)[0]
+
               previousValue.push({
                 span_multi: {
-                  match: { wildcard: { ...currentValue.wildcard, rewrite: SPAN_MULTI_WILDCARD_REWRITE } }
+                  match: { wildcard: { [key]: { ...currentValue.wildcard[key], rewrite: SPAN_MULTI_WILDCARD_REWRITE } } }
                 }
               })
             } else if (currentValue.match_phrase) {
@@ -1200,7 +1210,8 @@ const genRec = (node, nodeTransformer) => {
           x.span_term = x.term
           delete x.term
         } else if (x.wildcard) {
-          x.span_multi = { match: { wildcard: { ...x.wildcard, rewrite: SPAN_MULTI_WILDCARD_REWRITE } } }
+          const key = Object.keys(x.wildcard)[0]
+          x.span_multi = { match: { wildcard: { [key]: { ...x.wildcard[key], rewrite: SPAN_MULTI_WILDCARD_REWRITE } } } }
           delete x.wildcard
         } else if (x.match_phrase) {
           const key = Object.keys(x.match_phrase)[0]
