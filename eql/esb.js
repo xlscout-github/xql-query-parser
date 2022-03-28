@@ -1,43 +1,39 @@
 const { parse } = require("../parser");
 
-const SPAN_MULTI_WILDCARD_REWRITE = "top_terms_1000";
-const WILDCARD_REWRITE = "top_terms_10000";
 const COMBINE_CRITERION = "OR";
+const WILDCARD_REWRITE = "top_terms_10000";
+const SPAN_MULTI_WILDCARD_REWRITE = "top_terms_1000";
 
-function main(q, substitute = {}) {
+function main(q, cb) {
   const tree = parse(q);
 
   const { child: [left, right] = [] } = tree;
 
   if (left == null && right == null) {
-    return { bool: { must: [_main(tree, substitute)] } };
+    return { bool: { must: [_main(tree, cb)] } };
   }
 
-  return _main(tree, substitute);
+  return _main(tree, cb);
 }
 
-function _main(tree, substitute) {
-  const {
-    key: field,
-    val: value,
-    opt: operator,
-    span,
-    child: [left, right] = [],
-  } = tree;
-
-  const slop = adjustSlop(span);
+function _main(tree, cb) {
+  const { child: [left, right] = [] } = tree;
 
   if (left == null && right == null) {
+    cb && cb(tree);
+
+    const { key: field, val: value } = tree;
+
     if (typeof value === "string") {
       if (isPhrase(value)) {
         const match_phrase = {
-          [substitute[field] || field]: trimPhrase(value),
+          [field]: trimPhrase(value),
         };
         return { match_phrase };
       }
       if (containsWildcard(value)) {
         const wildcard = {
-          [substitute[field] || field]: {
+          [field]: {
             value,
             case_insensitive: true,
             rewrite: WILDCARD_REWRITE,
@@ -45,17 +41,17 @@ function _main(tree, substitute) {
         };
         return { wildcard };
       }
-      const term = { [substitute[field] || field]: value };
+      const term = { [field]: value };
       return { term };
     } else {
       const { from, to } = value;
-      let range = { [substitute[field] || field]: {} };
+      let range = { [field]: {} };
       if (from !== "*") {
-        range[substitute[field] || field] = { gte: from };
+        range[field] = { gte: from };
       }
       if (to !== "*") {
-        range[substitute[field] || field] = {
-          ...range[substitute[field] || field],
+        range[field] = {
+          ...range[field],
           lte: to,
         };
       }
@@ -65,31 +61,35 @@ function _main(tree, substitute) {
     }
   }
 
+  const { opt: operator, span } = tree;
+
+  const slop = adjustSlop(span);
+
   switch (operator) {
     case "AND":
       return {
         bool: {
-          must: [_main(left, substitute), _main(right, substitute)],
+          must: [_main(left, cb), _main(right, cb)],
         },
       };
     case "OR":
       return {
-        bool: shouldCombine(tree, substitute, () => ({
-          should: [_main(left, substitute), _main(right, substitute)],
+        bool: shouldCombine(tree, cb, () => ({
+          should: [_main(left, cb), _main(right, cb)],
         })),
       };
     case "NOT":
       if (left != null) {
         return {
           bool: {
-            must: [_main(left, substitute)],
-            must_not: [_main(right, substitute)],
+            must: [_main(left, cb)],
+            must_not: [_main(right, cb)],
           },
         };
       } else {
         return {
           bool: {
-            must_not: [_main(right, substitute)],
+            must_not: [_main(right, cb)],
           },
         };
       }
@@ -102,10 +102,7 @@ function _main(tree, substitute) {
         bool: {
           must: [
             buildNear(
-              [
-                ...makeClause(left, substitute),
-                ...makeClause(right, substitute),
-              ],
+              [...makeClause(left, cb), ...makeClause(right, cb)],
               slop
             ),
           ],
@@ -119,13 +116,7 @@ function _main(tree, substitute) {
       return {
         bool: {
           must: [
-            buildPre(
-              [
-                ...makeClause(left, substitute),
-                ...makeClause(right, substitute),
-              ],
-              slop
-            ),
+            buildPre([...makeClause(left, cb), ...makeClause(right, cb)], slop),
           ],
         },
       };
@@ -161,60 +152,48 @@ function adjustSlop(span) {
   }
 }
 
-function makeClause(tree, substitute) {
-  const {
-    key: field,
-    val: value,
-    opt: operator,
-    span,
-    child: [left, right] = [],
-  } = tree;
-
-  const slop = adjustSlop(span);
+function makeClause(tree, cb) {
+  const { child: [left, right] = [] } = tree;
 
   if (left == null && right == null) {
+    cb && cb(tree);
+
+    const { key: field, val: value } = tree;
+
     if (isPhrase(value)) {
-      return [makePhrase(substitute[field] || field, trimPhrase(value))];
+      return [makePhrase(field, trimPhrase(value))];
     }
 
     if (containsWildcard(value)) {
-      return [makeSpanMulti(substitute[field] || field, value)];
+      return [makeSpanMulti(field, value)];
     }
 
-    return [makeSpanTerm(substitute[field] || field, value)];
+    return [makeSpanTerm(field, value)];
   }
+
+  const { opt: operator, span } = tree;
+
+  const slop = adjustSlop(span);
 
   switch (operator) {
     case "NEAR":
       return [
-        buildNear(
-          [...makeClause(left, substitute), ...makeClause(right, substitute)],
-          slop
-        ),
+        buildNear([...makeClause(left, cb), ...makeClause(right, cb)], slop),
       ];
     case "PRE":
       return [
-        buildPre(
-          [...makeClause(left, substitute), ...makeClause(right, substitute)],
-          slop
-        ),
+        buildPre([...makeClause(left, cb), ...makeClause(right, cb)], slop),
       ];
     case "OR":
       return [
         {
           span_or: {
-            clauses: [
-              ...makeClause(left, substitute),
-              ...makeClause(right, substitute),
-            ],
+            clauses: [...makeClause(left, cb), ...makeClause(right, cb)],
           },
         },
       ];
     case "AND":
-      return [
-        ...makeClause(left, substitute),
-        ...makeClause(right, substitute),
-      ];
+      return [...makeClause(left, cb), ...makeClause(right, cb)];
     default:
       throw Error(`Operator ${operator} Not Allowed!`);
   }
@@ -269,15 +248,17 @@ function makeSpanTerm(field, value) {
   return { span_term: { [field]: term } };
 }
 
-function shouldCombine(tree, substitute, fallback) {
-  const { key: field } = tree;
-
+function shouldCombine(tree, cb, fallback) {
   if (!isMulti(tree) && isCombinableTree(tree)) {
+    cb && cb(tree);
+
+    const { key: field } = tree;
+
     return {
       must: [
         {
           terms: {
-            [substitute[field] || field]: combine(tree),
+            [field]: combine(tree, cb),
           },
         },
       ],
@@ -294,7 +275,7 @@ function isMulti(tree) {
 }
 
 function isCombinableTree(tree) {
-  const { opt: operator, val: value, child: [left, right] = [] } = tree;
+  const { opt: operator, child: [left, right] = [] } = tree;
 
   if (left != null && right != null) {
     if (operator === COMBINE_CRITERION) {
@@ -308,6 +289,8 @@ function isCombinableTree(tree) {
     return false;
   }
 
+  const { val: value } = tree;
+
   // overflows
   // return (
   //   typeof value === "string" && !isPhrase(value) && !containsWildcard(value)
@@ -319,12 +302,16 @@ function isCombinableTree(tree) {
   );
 }
 
-function combine(tree) {
-  const { val: value, child: [left, right] = [] } = tree;
+function combine(tree, cb) {
+  const { child: [left, right] = [] } = tree;
 
   if (left != null && right != null) {
-    return [...combine(left), ...combine(right)];
+    return [...combine(left, cb), ...combine(right, cb)];
   }
+
+  cb && cb(tree);
+
+  const { val: value } = tree;
 
   return [value];
 }
