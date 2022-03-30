@@ -2246,22 +2246,22 @@ function create (left, right, operator, slop) {
 
 // const right = { key: "pa", val: "apple*" };
 
-const left = {
-  bool: {
-    must: [{ term: { ttl: 'kiwi' } }],
-    must_not: [{ term: { ttl: 'mango' } }]
-  }
-}
+// const left = {
+//   bool: {
+//     must: [{ term: { ttl: 'kiwi' } }],
+//     must_not: [{ term: { ttl: 'mango' } }]
+//   }
+// }
 
-const right = {
-  bool: {
-    should: [{ terms: { ttl: ['banana', 'apple'] } }]
-  }
-}
+// const right = {
+//   bool: {
+//     should: [{ terms: { ttl: ['banana', 'apple'] } }]
+//   }
+// }
 
-console.dir(create(left, right, 'NEAR', '2'), {
-  depth: null
-})
+// console.dir(create(left, right, 'NEAR', '2'), {
+//   depth: null
+// })
 
 // { key: 'ttl', val: 'a' }
 // or
