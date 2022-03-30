@@ -2111,7 +2111,7 @@ function create (left, right, operator, slop) {
                   [left.key]: {
                     value: left.val,
                     case_insensitive: true,
-                    rewrite: '1000'
+                    rewrite: SPAN_MULTI_WILDCARD_REWRITE
                   }
                 }
               }
