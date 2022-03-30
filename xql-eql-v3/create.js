@@ -1299,7 +1299,7 @@ function create (left, right, operator, slop) {
                         slop: 0
                       }
                     } else {
-                      iterator.span_term = { [k]: phrase }
+                      iterator.span_term = { [k]: value }
                     }
 
                     delete iterator.match_phrase
@@ -1447,7 +1447,7 @@ function create (left, right, operator, slop) {
                         slop: 0
                       }
                     } else {
-                      iterator.span_term = { [k]: phrase }
+                      iterator.span_term = { [k]: value }
                     }
 
                     delete iterator.match_phrase
@@ -1929,7 +1929,7 @@ function create (left, right, operator, slop) {
                         slop: 0
                       }
                     } else {
-                      iterator.span_term = { [k]: phrase }
+                      iterator.span_term = { [k]: value }
                     }
 
                     delete iterator.match_phrase

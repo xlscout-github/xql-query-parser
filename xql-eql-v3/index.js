@@ -1,4 +1,5 @@
-const { genEqlIter, genEqlRec } = require('./gen-eql')
+// const { genEqlIter, genEqlRec } = require('./gen-eql')
+const genEqlIter = require('./dfs')
 
 // const pnq = '((ttl:(wireless)) OR (pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845)))'
 // const pnq1 = '(pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845))'
@@ -6,7 +7,9 @@ const { genEqlIter, genEqlRec } = require('./gen-eql')
 // const fieldq1 = '(tac:((((autonomous vehicles) OR (automated vehicle) OR (self driving vehicle) OR (self driving car)))))'
 // const fieldq2 = '(ttl:(wireles? AND communicatio?) NOT (ttl:(netwo* AND sign*)))'
 
-console.log('final ->', require('fs').writeFileSync('output.json', JSON.stringify(genEqlIter('(phone OR phone?) NEAR3 signal', (node) => {
+const q = '(ttl:(mobile))'
+
+console.log('final ->', require('fs').writeFileSync('output.json', JSON.stringify(genEqlIter(q, (node) => {
     // console.log(node.key, node.val);
     if (node.key === 'pn') {
         // node.key = 'pn-nok.keyword'

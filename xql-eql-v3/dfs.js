@@ -5,10 +5,8 @@ const createEQL = require("../xql-eql-v3/create")
 
 /* Helper function that allocates a new node with the
 given data and null left and right pointers. */
-function postorder(head) {
+function postorder(head, transformer) {
     var temp = head;
-
-    let left = null;
 
     while ((temp != null && !temp.visited)) {
         // Visited left subtree
@@ -21,18 +19,41 @@ function postorder(head) {
         }
         // Print node
         else {
-            if (temp.left && temp.right && (temp.data.val === 'multi' || temp.data.key === 'multi')) {
-                if (left) {
-                    if (temp.left.data.val !== 'multi') {
-                        left = createEQL(left, temp.left.data, temp.data.opt, temp.data.span || null)
-                    }
+            if (transformer) {
+                transformer(temp.data)
+            }
 
-                    if (temp.right.data.val !== 'multi') {
-                        left = createEQL(left, temp.right.data, temp.data.opt, temp.data.span || null)
-                    }
-                } else {
-                    left = createEQL(left || temp.left.data, temp.right.data, temp.data.opt, temp.data.span || null)
-                }
+            if (temp.left && temp.right && temp.left.parsed && temp.right.parsed && (temp.data.val === 'multi' || temp.data.key === 'multi')) {
+                temp.parsed = createEQL(temp.left.parsed, temp.right.parsed, temp.data.opt, temp.data.span || null)
+            }
+
+            if (temp.left && temp.right && !temp.left.parsed && temp.right.parsed && (temp.data.val === 'multi' || temp.data.key === 'multi')) {
+                temp.parsed = createEQL(temp.left.data, temp.right.parsed, temp.data.opt, temp.data.span || null)
+            }
+
+            if (temp.left && temp.right && temp.left.parsed && !temp.right.parsed && (temp.data.val === 'multi' || temp.data.key === 'multi')) {
+                temp.parsed = createEQL(temp.left.parsed, temp.right.data, temp.data.opt, temp.data.span || null)
+            }
+
+            if (!temp.parsed && temp.left && temp.right && (temp.data.val === 'multi' || temp.data.key === 'multi')) {
+                temp.parsed = createEQL(temp.left.data, temp.right.data, temp.data.opt, temp.data.span || null)
+            }
+
+            if (!temp.parsed && !temp.left && temp.right && temp.data.key !== 'multi' && temp.data.opt !== 'multi') {
+                temp.parsed = createEQL({}, temp.right.data, temp.data.opt, temp.data.span || null)
+            }
+
+            if (head.data.val === temp.data.val && !temp.parsed && !temp.left && !temp.right && temp.data.val !== 'multi' && temp.data.key !== 'multi') {
+                temp.parsed = createEQL(temp.data, {}, 'AND', null)
+            }
+
+            // clear redundant data
+            if (temp.left && temp.left.parsed) {
+                temp.left.parsed = null
+            }
+
+            if (temp.right && temp.right.parsed) {
+                temp.right.parsed = null
             }
 
             temp.visited = true;
@@ -40,16 +61,20 @@ function postorder(head) {
         }
     }
 
-    return left
+    return head.parsed
 }
 
-const q = '(text:(((emf*) OR (nod*)) AND ((track*) OR (body*))))' // incorrect query
+// const q = '(text:(((emf*) OR (nod*)) AND ((track*) OR (body*))))' // incorrect query
 
-console.time('time')
-require('fs').writeFileSync('output.json', JSON.stringify(postorder(parse(q, false, { children: false })), null, 2))
-console.timeEnd('time')
+// console.time('time')
+// require('fs').writeFileSync('output.json', JSON.stringify(postorder(parse(q, false, { children: false })), null, 2))
+// console.timeEnd('time')
 
 
 // heapdump.writeSnapshot(function (err, filename) {
 //     console.log('dump written to', filename);
 // });
+
+module.exports = function (q, transformer) {
+    return postorder(parse(q, false, { children: false }), transformer)
+}
