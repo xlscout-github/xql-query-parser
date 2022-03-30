@@ -33,7 +33,7 @@ function getSingularField(tree) {
   return field;
 }
 
-function transform(tree) {
+function transform(tree, opt = { children: true }) {
   if (tree.leftOperand && tree.rightOperand) {
     const res = {};
 
@@ -51,9 +51,18 @@ function transform(tree) {
     }
 
     res.opt = tree.operator;
-    res.child = [transform(tree.leftOperand), transform(tree.rightOperand)];
 
-    return res;
+    if (opt.children) {
+      res.child = [transform(tree.leftOperand, opt), transform(tree.rightOperand, opt)];
+
+      return res;
+    }
+
+    res.left = transform(tree.leftOperand, opt);
+    res.right = transform(tree.rightOperand, opt);
+
+    const { left, right, ...data } = res
+    return { left, right, data };
   }
 
   if (tree.rightOperand) {
@@ -69,16 +78,33 @@ function transform(tree) {
     }
 
     res.opt = tree.operator;
-    res.child = [null, transform(tree.rightOperand)];
 
-    return res;
+    if (opt.children) {
+      res.child = [null, transform(tree.rightOperand, opt)];
+
+      return res;
+    }
+
+    res.left = null;
+    res.right = transform(tree.rightOperand, opt)
+
+    const { left, right, ...data } = res
+    return { left, right, data };
   }
 
   if (tree.type === "DATE") {
-    return { key: tree.field, val: { from: tree.from, to: tree.to } };
+    if (opt.children) {
+      return { key: tree.field, val: { from: tree.from, to: tree.to } };
+    }
+
+    return { data: { key: tree.field, val: { from: tree.from, to: tree.to } }, left: null, right: null };
   }
 
-  return { key: tree.field, val: tree.value };
+  if (opt.children) {
+    return { key: tree.field, val: tree.value };
+  }
+
+  return { data: { key: tree.field, val: tree.value }, left: null, right: null };
 }
 
 function transform_condense(tree) {
@@ -95,13 +121,11 @@ function transform_condense(tree) {
     if (key) {
       res.field = key;
       if (tree.explicit) {
-        res.keyword = `(${transform_condense(tree.leftOperand).keyword} ${
-          tree.operator
-        }${tree.span || ""} ${transform_condense(tree.rightOperand).keyword})`;
+        res.keyword = `(${transform_condense(tree.leftOperand).keyword} ${tree.operator
+          }${tree.span || ""} ${transform_condense(tree.rightOperand).keyword})`;
       } else {
-        res.keyword = `${transform_condense(tree.leftOperand).keyword} ${
-          tree.operator
-        }${tree.span || ""} ${transform_condense(tree.rightOperand).keyword}`;
+        res.keyword = `${transform_condense(tree.leftOperand).keyword} ${tree.operator
+          }${tree.span || ""} ${transform_condense(tree.rightOperand).keyword}`;
       }
     } else {
       res.operator = tree.operator;
@@ -127,13 +151,11 @@ function transform_condense(tree) {
     if (key) {
       res.field = key;
       if (tree.explicit) {
-        res.keyword = `(${tree.operator} ${
-          transform_condense(tree.rightOperand).keyword
-        })`;
+        res.keyword = `(${tree.operator} ${transform_condense(tree.rightOperand).keyword
+          })`;
       } else {
-        res.keyword = `${tree.operator} ${
-          transform_condense(tree.rightOperand).keyword
-        }`;
+        res.keyword = `${tree.operator} ${transform_condense(tree.rightOperand).keyword
+          }`;
       }
     } else {
       res.operator = tree.operator;

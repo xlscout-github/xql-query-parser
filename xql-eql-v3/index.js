@@ -6,16 +6,30 @@ const { genEqlIter, genEqlRec } = require('./gen-eql')
 // const fieldq1 = '(tac:((((autonomous vehicles) OR (automated vehicle) OR (self driving vehicle) OR (self driving car)))))'
 // const fieldq2 = '(ttl:(wireles? AND communicatio?) NOT (ttl:(netwo* AND sign*)))'
 
-// console.log('final ->', JSON.stringify(genEQL('US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845', (node) => {
-//     // console.log(node.key, node.val);
-//     if (node.key === 'pn') {
-//         // node.key = 'pn-nok.keyword'
-//         node.key = 'ucid-alt.keyword'
-//     }
-// }), null, 2))
+console.log('final ->', require('fs').writeFileSync('output.json', JSON.stringify(genEqlIter('(phone OR phone?) NEAR3 signal', (node) => {
+    // console.log(node.key, node.val);
+    if (node.key === 'pn') {
+        // node.key = 'pn-nok.keyword'
+        node.key = 'ucid-alt.keyword'
+    }
+
+    if(node.key === 'cpc') {
+        node.key = 'cpc.sub-grp'
+        node.val = node.val.replace('/', '_')
+    }
+
+    if (node.key === 'ipc' || node.key === 'ic') {
+        node.key = 'ipc.sub-grp'
+        node.val = node.val.replace('/', '_')
+    }
+
+    if (node.key.includes('.name') && (node.val.startsWith('"') && node.val.endsWith('"'))) {
+        node.val = node.val.replace(/['"]+/g, '')
+    }
+}), null, 2)))
 
 //
 // ttl: (Carrot OR juice AND apple)
 // ttl: (Carrot OR juice OR apple)
 
-console.dir(genEqlIter('(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)))))'), { depth: null })
+// console.dir(genEqlIter('(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)))))'), { depth: null })
