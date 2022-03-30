@@ -1241,6 +1241,10 @@ function create (left, right, operator, slop) {
         let copy = cloneDeep(left)
         const inOrder = operator === 'PRE'
 
+        if (Object.keys(left.bool).length > 1 || Object.keys(right.bool).length > 1) {
+          throw new Error('malformed query')
+        }
+
         switch (slop) {
           case 'S':
             slop = '15'
@@ -1583,7 +1587,7 @@ function create (left, right, operator, slop) {
             slop = '50'
         }
 
-        if (Object.keys(left).length > 1) throw new Error('malformed query')
+        if (Object.keys(left.bool).length > 1) throw new Error('malformed query')
 
         let clause
 
@@ -1824,7 +1828,7 @@ function create (left, right, operator, slop) {
             slop = '50'
         }
 
-        if (Object.keys(right).length > 1) throw new Error('malformed query')
+        if (Object.keys(right.bool).length > 1) throw new Error('malformed query')
 
         let clause
 
@@ -2242,21 +2246,22 @@ function create (left, right, operator, slop) {
 
 // const right = { key: "pa", val: "apple*" };
 
-// const left = {
-//   bool: {
-//     must: [{ term: { ttl: "kiwi" } }, { term: { ttl: "mango" } }],
-//   },
-// };
+const left = {
+  bool: {
+    must: [{ term: { ttl: 'kiwi' } }],
+    must_not: [{ term: { ttl: 'mango' } }]
+  }
+}
 
-// const right = {
-//   bool: {
-//     should: [{ terms: { ttl: ["banana", "apple"] } }],
-//   },
-// };
+const right = {
+  bool: {
+    should: [{ terms: { ttl: ['banana', 'apple'] } }]
+  }
+}
 
-// console.dir(create(left, right, "NEAR", "2"), {
-//   depth: null,
-// });
+console.dir(create(left, right, 'NEAR', '2'), {
+  depth: null
+})
 
 // { key: 'ttl', val: 'a' }
 // or
