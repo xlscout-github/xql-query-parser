@@ -17,7 +17,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "lodash.clonedeep": "^4.5.0",
     "nearley": "^2.20.1"
   },
   "devDependencies": {

@@ -1,5 +1,3 @@
-const cloneDeep = require('lodash.clonedeep')
-
 const REWRITE = 'top_terms_10000'
 const SPAN_MULTI_WILDCARD_REWRITE = 'top_terms_1000'
 
@@ -8,7 +6,6 @@ function create (left, right, operator, slop) {
     case 'AND': {
       if (left.bool && right.bool) {
         if (left.bool.must && right.bool.must) {
-          const copy = cloneDeep(left)
           const items = new Set()
           const negateItems = new Set()
 
@@ -26,7 +23,7 @@ function create (left, right, operator, slop) {
             const jsonClause = JSON.stringify(item)
 
             if (!items.has(jsonClause)) {
-              copy.bool.must.push(item)
+              left.bool.must.push(item)
             }
           }
 
@@ -35,23 +32,22 @@ function create (left, right, operator, slop) {
               const jsonClause = JSON.stringify(item)
 
               if (!negateItems.has(jsonClause)) {
-                copy.bool.must_not.push(item)
+                left.bool.must_not.push(item)
               }
             }
           } else if (right.bool.must_not) {
-            copy.bool.must_not = right.bool.must_not
+            left.bool.must_not = right.bool.must_not
           }
 
-          return copy
+          return left
         } else if (left.bool.must) {
-          const copy = cloneDeep(left)
           const jsonClause = JSON.stringify(right)
           const items = new Set()
 
           for (const item of left.bool.must) {
             const json = JSON.stringify(item)
 
-            if (json === jsonClause) return copy
+            if (json === jsonClause) return left
 
             items.add(json)
           }
@@ -67,25 +63,24 @@ function create (left, right, operator, slop) {
               const json = JSON.stringify(item)
 
               if (!negateItems.has(json)) {
-                copy.bool.must_not.push(item)
+                left.bool.must_not.push(item)
               }
             }
           } else if (right.bool.must_not) {
-            copy.bool.must_not = right.bool.must_not
+            left.bool.must_not = right.bool.must_not
           } else {
-            copy.bool.must.push(right)
+            left.bool.must.push(right)
           }
 
-          return copy
+          return left
         } else if (right.bool.must) {
-          const copy = cloneDeep(right)
           const jsonClause = JSON.stringify(left)
           const items = new Set()
 
           for (const item of right.bool.must) {
             const json = JSON.stringify(item)
 
-            if (json === jsonClause) return copy
+            if (json === jsonClause) return right
 
             items.add(json)
           }
@@ -101,19 +96,18 @@ function create (left, right, operator, slop) {
               const json = JSON.stringify(item)
 
               if (!negateItems.has(json)) {
-                copy.bool.must_not.push(item)
+                right.bool.must_not.push(item)
               }
             }
           } else if (left.bool.must_not) {
-            copy.bool.must_not = left.bool.must_not
+            right.bool.must_not = left.bool.must_not
           } else {
-            copy.bool.must.push(left)
+            right.bool.must.push(left)
           }
 
-          return copy
+          return right
         } else {
           if (left.bool.must_not && right.bool.must_not) {
-            const copy = cloneDeep(left)
             const negateItems = new Set()
 
             for (const item of left.bool.must_not) {
@@ -124,11 +118,11 @@ function create (left, right, operator, slop) {
               const jsonClause = JSON.stringify(item)
 
               if (!negateItems.has(jsonClause)) {
-                copy.bool.must_not.push(item)
+                left.bool.must_not.push(item)
               }
             }
 
-            return copy
+            return left
           }
 
           return {
@@ -182,24 +176,21 @@ function create (left, right, operator, slop) {
         }
 
         if (left.bool.must) {
-          const copy = cloneDeep(left)
           const jsonClause = JSON.stringify(clause)
 
-          for (const item of copy.bool.must) {
+          for (const item of left.bool.must) {
             if (JSON.stringify(item) === jsonClause) {
-              return copy
+              return left
             }
           }
 
-          copy.bool.must.push(clause)
+          left.bool.must.push(clause)
 
-          return copy
+          return left
         } else if (left.bool.must_not) {
-          const copy = cloneDeep(left)
+          left.bool.must = [clause]
 
-          copy.bool.must = [clause]
-
-          return copy
+          return left
         } else {
           return {
             bool: {
@@ -252,24 +243,21 @@ function create (left, right, operator, slop) {
         }
 
         if (right.bool.must) {
-          const copy = cloneDeep(right)
           const jsonClause = JSON.stringify(clause)
 
-          for (const item of copy.bool.must) {
+          for (const item of right.bool.must) {
             if (JSON.stringify(item) === jsonClause) {
-              return copy
+              return right
             }
           }
 
-          copy.bool.must.push(clause)
+          right.bool.must.push(clause)
 
-          return copy
+          return right
         } else if (right.bool.must_not) {
-          const copy = cloneDeep(right)
+          right.bool.must = [clause]
 
-          copy.bool.must = [clause]
-
-          return copy
+          return right
         } else {
           return {
             bool: {
@@ -431,7 +419,6 @@ function create (left, right, operator, slop) {
     case 'OR': {
       if (left.bool && right.bool) {
         if (left.bool.should && right.bool.should) {
-          const copy = cloneDeep(left)
           const items = new Set()
           const records = new Map()
           const clauses = {
@@ -460,27 +447,27 @@ function create (left, right, operator, slop) {
                   const record = records.get(k)
                   if (record) {
                     if (record.kind === clauses.TERM) {
-                      copy.bool.should.splice(record.i, 1, {
+                      left.bool.should.splice(record.i, 1, {
                         terms: {
                           [k]: [
-                            copy.bool.should[record.i].term[k],
+                            left.bool.should[record.i].term[k],
                             right.bool.should[i].term[k]
                           ]
                         }
                       })
                     } else if (record.kind === clauses.TERMS) {
                       if (
-                        !copy.bool.should[record.i].terms[k].includes(
+                        !left.bool.should[record.i].terms[k].includes(
                           right.bool.should[i].term[k]
                         )
                       ) {
-                        copy.bool.should[record.i].terms[k].push(
+                        left.bool.should[record.i].terms[k].push(
                           right.bool.should[i].term[k]
                         )
                       }
                     }
                   } else {
-                    copy.bool.should.push(right.bool.should[i])
+                    left.bool.should.push(right.bool.should[i])
                   }
                 }
               } else if (right.bool.should[i].terms) {
@@ -488,61 +475,58 @@ function create (left, right, operator, slop) {
                   const record = records.get(k)
                   if (record) {
                     if (record.kind === clauses.TERM) {
-                      const terms = cloneDeep(right.bool.should[i].terms)
                       if (
-                        !terms[k].includes(copy.bool.should[record.i].term[k])
+                        !right.bool.should[i].terms[k].includes(left.bool.should[record.i].term[k])
                       ) {
-                        terms[k].push(copy.bool.should[record.i].term[k])
+                        right.bool.should[i].terms[k].push(left.bool.should[record.i].term[k])
                       }
-                      copy.bool.should.splice(record.i, 1, {
-                        terms
+                      left.bool.should.splice(record.i, 1, {
+                        terms: right.bool.should[i].terms
                       })
                     } else if (record.kind === clauses.TERMS) {
                       for (const item of right.bool.should[i].terms[k]) {
                         if (
-                          !copy.bool.should[record.i].terms[k].includes(item)
+                          !left.bool.should[record.i].terms[k].includes(item)
                         ) {
-                          copy.bool.should[record.i].terms[k].push(item)
+                          left.bool.should[record.i].terms[k].push(item)
                         }
                       }
                     }
                   } else {
-                    copy.bool.should.push(right.bool.should[i])
+                    left.bool.should.push(right.bool.should[i])
                   }
                 }
               } else {
-                copy.bool.should.push(right.bool.should[i])
+                left.bool.should.push(right.bool.should[i])
               }
             }
           }
 
-          return copy
+          return left
         } else if (left.bool.should) {
-          const copy = cloneDeep(left)
           const jsonClause = JSON.stringify(right)
 
           for (const item of left.bool.should) {
             if (JSON.stringify(item) === jsonClause) {
-              return copy
+              return left
             }
           }
 
-          copy.bool.should.push(right)
+          left.bool.should.push(right)
 
-          return copy
+          return left
         } else if (right.bool.should) {
-          const copy = cloneDeep(right)
           const jsonClause = JSON.stringify(left)
 
           for (const item of right.bool.should) {
             if (JSON.stringify(item) === jsonClause) {
-              return copy
+              return right
             }
           }
 
-          copy.bool.should.push(left)
+          right.bool.should.push(left)
 
-          return copy
+          return right
         } else {
           return {
             bool: {
@@ -595,42 +579,41 @@ function create (left, right, operator, slop) {
         }
 
         if (left.bool.should) {
-          const copy = cloneDeep(left)
           const jsonClause = JSON.stringify(clause)
 
-          for (let i = 0; i < copy.bool.should.length; i++) {
-            if (JSON.stringify(copy.bool.should[i]) === jsonClause) {
-              return copy
+          for (let i = 0; i < left.bool.should.length; i++) {
+            if (JSON.stringify(left.bool.should[i]) === jsonClause) {
+              return left
             }
 
             if (
               clause.term &&
-              copy.bool.should[i].term &&
-              copy.bool.should[i].term[right.key]
+              left.bool.should[i].term &&
+              left.bool.should[i].term[right.key]
             ) {
-              copy.bool.should.splice(i, 1, {
+              left.bool.should.splice(i, 1, {
                 terms: {
-                  [right.key]: [copy.bool.should[i].term[right.key], right.val]
+                  [right.key]: [left.bool.should[i].term[right.key], right.val]
                 }
               })
-              return copy
+              return left
             }
 
             if (
               clause.term &&
-              copy.bool.should[i].terms &&
-              copy.bool.should[i].terms[right.key]
+              left.bool.should[i].terms &&
+              left.bool.should[i].terms[right.key]
             ) {
-              if (!copy.bool.should[i].terms[right.key].includes(right.val)) {
-                copy.bool.should[i].terms[right.key].push(right.val)
+              if (!left.bool.should[i].terms[right.key].includes(right.val)) {
+                left.bool.should[i].terms[right.key].push(right.val)
               }
-              return copy
+              return left
             }
           }
 
-          copy.bool.should.push(clause)
+          left.bool.should.push(clause)
 
-          return copy
+          return left
         } else {
           return {
             bool: {
@@ -683,42 +666,41 @@ function create (left, right, operator, slop) {
         }
 
         if (right.bool.should) {
-          const copy = cloneDeep(right)
           const jsonClause = JSON.stringify(clause)
 
-          for (let i = 0; i < copy.bool.should.length; i++) {
-            if (JSON.stringify(copy.bool.should[i]) === jsonClause) {
-              return copy
+          for (let i = 0; i < right.bool.should.length; i++) {
+            if (JSON.stringify(right.bool.should[i]) === jsonClause) {
+              return right
             }
 
             if (
               clause.term &&
-              copy.bool.should[i].term &&
-              copy.bool.should[i].term[left.key]
+              right.bool.should[i].term &&
+              right.bool.should[i].term[left.key]
             ) {
-              copy.bool.should.splice(i, 1, {
+              right.bool.should.splice(i, 1, {
                 terms: {
-                  [left.key]: [copy.bool.should[i].term[left.key], left.val]
+                  [left.key]: [right.bool.should[i].term[left.key], left.val]
                 }
               })
-              return copy
+              return right
             }
 
             if (
               clause.term &&
-              copy.bool.should[i].terms &&
-              copy.bool.should[i].terms[left.key]
+              right.bool.should[i].terms &&
+              right.bool.should[i].terms[left.key]
             ) {
-              if (!copy.bool.should[i].terms[left.key].includes(left.val)) {
-                copy.bool.should[i].terms[left.key].push(left.val)
+              if (!right.bool.should[i].terms[left.key].includes(left.val)) {
+                right.bool.should[i].terms[left.key].push(left.val)
               }
-              return copy
+              return right
             }
           }
 
-          copy.bool.should.push(clause)
+          right.bool.should.push(clause)
 
-          return copy
+          return right
         } else {
           return {
             bool: {
@@ -1238,7 +1220,6 @@ function create (left, right, operator, slop) {
     case 'PRE': {
       if (left.bool && right.bool) {
         let clause
-        let copy = cloneDeep(left)
         const inOrder = operator === 'PRE'
 
         if (Object.keys(left.bool).length > 1 || Object.keys(right.bool).length > 1) {
@@ -1256,7 +1237,7 @@ function create (left, right, operator, slop) {
         for (const k in left.bool) {
           switch (k) {
             case 'must': {
-              for (const iterator of copy.bool[k]) {
+              for (const iterator of left.bool[k]) {
                 if (iterator.term) {
                   iterator.span_term = iterator.term
                   delete iterator.term
@@ -1309,14 +1290,14 @@ function create (left, right, operator, slop) {
                 }
               }
 
-              clause = copy.bool.must
+              clause = left.bool.must
               break
             }
             case 'should': {
               clause = [
                 {
                   span_or: {
-                    clauses: copy.bool[k].reduce(
+                    clauses: left.bool[k].reduce(
                       (previousValue, currentValue) => {
                         if (currentValue.term) {
                           previousValue.push({
@@ -1399,12 +1380,10 @@ function create (left, right, operator, slop) {
           }
         }
 
-        copy = cloneDeep(right)
-
         for (const k in right.bool) {
           switch (k) {
             case 'must': {
-              for (const iterator of copy.bool[k]) {
+              for (const iterator of right.bool[k]) {
                 if (iterator.term) {
                   iterator.span_term = iterator.term
                   delete iterator.term
@@ -1462,7 +1441,7 @@ function create (left, right, operator, slop) {
                   must: [
                     {
                       span_near: {
-                        clauses: [...clause, ...copy.bool.must],
+                        clauses: [...clause, ...right.bool.must],
                         slop,
                         in_order: inOrder
                       }
@@ -1481,7 +1460,7 @@ function create (left, right, operator, slop) {
                           ...clause,
                           {
                             span_or: {
-                              clauses: copy.bool[k].reduce(
+                              clauses: right.bool[k].reduce(
                                 (previousValue, currentValue) => {
                                   if (currentValue.term) {
                                     previousValue.push({
@@ -1576,7 +1555,6 @@ function create (left, right, operator, slop) {
           }
         }
       } else if (left.bool) {
-        const copy = cloneDeep(left)
         const inOrder = operator === 'PRE'
 
         switch (slop) {
@@ -1645,7 +1623,7 @@ function create (left, right, operator, slop) {
         for (const k in left.bool) {
           switch (k) {
             case 'must': {
-              for (const iterator of copy.bool[k]) {
+              for (const iterator of left.bool[k]) {
                 if (iterator.term) {
                   iterator.span_term = iterator.term
                   delete iterator.term
@@ -1703,7 +1681,7 @@ function create (left, right, operator, slop) {
                   must: [
                     {
                       span_near: {
-                        clauses: [...copy.bool.must, clause],
+                        clauses: [...left.bool.must, clause],
                         slop,
                         in_order: inOrder
                       }
@@ -1721,7 +1699,7 @@ function create (left, right, operator, slop) {
                         clauses: [
                           {
                             span_or: {
-                              clauses: copy.bool[k].reduce(
+                              clauses: left.bool[k].reduce(
                                 (previousValue, currentValue) => {
                                   if (currentValue.term) {
                                     previousValue.push({
@@ -1817,7 +1795,6 @@ function create (left, right, operator, slop) {
           }
         }
       } else if (right.bool) {
-        const copy = cloneDeep(right)
         const inOrder = operator === 'PRE'
 
         switch (slop) {
@@ -1886,7 +1863,7 @@ function create (left, right, operator, slop) {
         for (const k in right.bool) {
           switch (k) {
             case 'must': {
-              for (const iterator of copy.bool[k]) {
+              for (const iterator of right.bool[k]) {
                 if (iterator.term) {
                   iterator.span_term = iterator.term
                   delete iterator.term
@@ -1944,7 +1921,7 @@ function create (left, right, operator, slop) {
                   must: [
                     {
                       span_near: {
-                        clauses: [clause, ...copy.bool.must],
+                        clauses: [clause, ...right.bool.must],
                         slop,
                         in_order: inOrder
                       }
@@ -1963,7 +1940,7 @@ function create (left, right, operator, slop) {
                           clause,
                           {
                             span_or: {
-                              clauses: copy.bool[k].reduce(
+                              clauses: right.bool[k].reduce(
                                 (previousValue, currentValue) => {
                                   if (currentValue.term) {
                                     previousValue.push({
