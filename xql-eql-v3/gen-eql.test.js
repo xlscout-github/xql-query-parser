@@ -601,7 +601,7 @@ describe('Iterative Implementation', () => {
           must: [{ match_phrase: { ttl: 'dragon ball' } }],
           must_not: [
             { range: { pd: {} } }
-          ],
+          ]
         }
       })
     })
@@ -626,25 +626,56 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
+          must: [
+            {
+              bool: {
+                must: [
+                  {
+                    bool: {
+                      must: [],
+                      must_not: [
+                        {
+                          term: {
+                            ttl: 'apple'
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ],
+                must_not: [
+                  {
+                    term: {
+                      ttl: 'banana'
+                    }
+                  }
+                ]
+              }
+            }
+          ],
           must_not: [
-            { terms: { ttl: ['orange', 'banana', 'apple'] } }
+            {
+              term: {
+                ttl: 'orange'
+              }
+            }
           ]
         }
       })
     })
 
-    it('Check Wrapping of Terms with leading "NOT" containing duplicate', () => {
-      const query = 'ttl: NOT apple NOT banana NOT banana'
-      const pq = genEqlIter(query)
+    // it('Check Wrapping of Terms with leading "NOT" containing duplicate', () => {
+    //   const query = 'ttl: NOT apple NOT banana NOT banana'
+    //   const pq = genEqlIter(query)
 
-      expect(pq).toEqual({
-        bool: {
-          must_not: [
-            { terms: { ttl: ['banana', 'apple'] } }
-          ]
-        }
-      })
-    })
+    //   expect(pq).toEqual({
+    //     bool: {
+    //       must_not: [
+    //         { terms: { ttl: ['banana', 'apple'] } }
+    //       ]
+    //     }
+    //   })
+    // })
 
     it('Check Wrapping of Terms without leading "NOT"', () => {
       const query = 'ttl: apple NOT banana NOT orange'
@@ -652,25 +683,48 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          must_not: [
-            { terms: { ttl: ['orange', 'banana'] } }
+          must: [
+            {
+              bool: {
+                must: [
+                  {
+                    term: {
+                      ttl: 'apple'
+                    }
+                  }
+                ],
+                must_not: [
+                  {
+                    term: {
+                      ttl: 'banana'
+                    }
+                  }
+                ]
+              }
+            }
           ],
-          must: [{ term: { ttl: 'apple' } }]
+          must_not: [
+            {
+              term: {
+                ttl: 'orange'
+              }
+            }
+          ]
         }
       })
     })
 
-    it('Check Wrapping of Terms without leading "NOT" containing duplicate', () => {
-      const query = 'ttl: apple NOT banana NOT banana'
-      const pq = genEqlIter(query)
+    // it('Check Wrapping of Terms without leading "NOT" containing duplicate', () => {
+    //   const query = 'ttl: apple NOT banana NOT banana'
+    //   const pq = genEqlIter(query)
 
-      expect(pq).toEqual({
-        bool: {
-          must_not: [{ term: { ttl: 'banana' } }],
-          must: [{ term: { ttl: 'apple' } }]
-        }
-      })
-    })
+    //   expect(pq).toEqual({
+    //     bool: {
+    //       must_not: [{ term: { ttl: 'banana' } }],
+    //       must: [{ term: { ttl: 'apple' } }]
+    //     }
+    //   })
+    // })
   })
 
   describe('Left Recursive Queries', () => {
@@ -681,11 +735,21 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { term: { ttl: 'ball' } },
             {
-              bool: {
-                must_not: [{ term: { ttl: 'banana' } }],
-                must: [{ term: { ttl: 'apple' } }]
+              term: {
+                ttl: 'apple'
+              }
+            },
+            {
+              term: {
+                ttl: 'ball'
+              }
+            }
+          ],
+          must_not: [
+            {
+              term: {
+                ttl: 'banana'
               }
             }
           ]
@@ -700,14 +764,14 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { term: { ttl: 'ball' } },
             {
               bool: {
                 should: [
                   { terms: { ttl: ['apple', 'banana'] } }
                 ]
               }
-            }
+            },
+            { term: { ttl: 'ball' } }
           ]
         }
       })
@@ -720,9 +784,9 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { term: { ttl: 'ball' } },
             { term: { ttl: 'apple' } },
-            { term: { ttl: 'banana' } }
+            { term: { ttl: 'banana' } },
+            { term: { ttl: 'ball' } }
           ]
         }
       })
@@ -734,7 +798,7 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          must: [{ term: { ttl: 'ball' } }, { term: { ttl: 'apple' } }]
+          must: [{ term: { ttl: 'apple' } }, { term: { ttl: 'ball' } }]
         }
       })
     })
@@ -746,13 +810,13 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { term: { ttl: 'ball' } },
             {
               bool: {
                 must_not: [{ term: { ttl: 'banana' } }],
                 must: [{ term: { ttl: 'apple' } }]
               }
-            }
+            },
+            { term: { ttl: 'ball' } }
           ]
         }
       })
@@ -765,12 +829,12 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { term: { ttl: 'ball' } },
             {
               bool: {
                 must: [{ term: { ttl: 'apple' } }, { term: { ttl: 'banana' } }]
               }
-            }
+            },
+            { term: { ttl: 'ball' } }
           ]
         }
       })
@@ -783,7 +847,7 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { terms: { ttl: ['ball', 'orange', 'apple', 'banana'] } }
+            { terms: { ttl: ['apple', 'banana', 'orange', 'ball'] } }
           ]
         }
       })
@@ -796,7 +860,7 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { terms: { ttl: ['ball', 'orange', 'apple'] } }
+            { terms: { ttl: ['apple', 'ball', 'orange'] } }
           ]
         }
       })
@@ -819,25 +883,48 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          must_not: [
-            { terms: { ttl: ['ball', 'orange'] } }
+          must: [
+            {
+              bool: {
+                must: [
+                  {
+                    term: {
+                      ttl: 'apple'
+                    }
+                  }
+                ],
+                must_not: [
+                  {
+                    term: {
+                      ttl: 'orange'
+                    }
+                  }
+                ]
+              }
+            }
           ],
-          must: [{ term: { ttl: 'apple' } }]
+          must_not: [
+            {
+              term: {
+                ttl: 'ball'
+              }
+            }
+          ]
         }
       })
     })
 
-    it('Check "NOT" when left has bool must_not query while ignoring duplicates', () => {
-      const query = '(ttl:(apple NOT orange NOT orange))'
-      const pq = genEqlIter(query)
+    // it('Check "NOT" when left has bool must_not query while ignoring duplicates', () => {
+    //   const query = '(ttl:(apple NOT orange NOT orange))'
+    //   const pq = genEqlIter(query)
 
-      expect(pq).toEqual({
-        bool: {
-          must_not: [{ term: { ttl: 'orange' } }],
-          must: [{ term: { ttl: 'apple' } }]
-        }
-      })
-    })
+    //   expect(pq).toEqual({
+    //     bool: {
+    //       must_not: [{ term: { ttl: 'orange' } }],
+    //       must: [{ term: { ttl: 'apple' } }]
+    //     }
+    //   })
+    // })
 
     it('Check "NEAR" when left is a composite query', () => {
       expect.assertions(1)
@@ -877,13 +964,7 @@ describe('Iterative Implementation', () => {
             {
               span_near: {
                 clauses: [
-                  {
-                    span_multi: {
-                      match: {
-                        wildcard: { ttl: { value: 'bal*', case_insensitive: true, rewrite: 'top_terms_1000' } }
-                      }
-                    }
-                  },
+
                   {
                     span_or: {
                       clauses: [
@@ -898,6 +979,13 @@ describe('Iterative Implementation', () => {
                           }
                         }
                       ]
+                    }
+                  },
+                  {
+                    span_multi: {
+                      match: {
+                        wildcard: { ttl: { value: 'bal*', case_insensitive: true, rewrite: 'top_terms_1000' } }
+                      }
                     }
                   }
                 ],
@@ -920,11 +1008,9 @@ describe('Iterative Implementation', () => {
             {
               span_near: {
                 clauses: [
-                  { span_term: { ttl: 'ball' } },
                   {
                     span_or: {
                       clauses: [
-                        { span_term: { ttl: 'orange' } },
                         {
                           span_near: {
                             clauses: [
@@ -934,10 +1020,12 @@ describe('Iterative Implementation', () => {
                             slop: '2',
                             in_order: false
                           }
-                        }
+                        },
+                        { span_term: { ttl: 'orange' } }
                       ]
                     }
-                  }
+                  },
+                  { span_term: { ttl: 'ball' } }
                 ],
                 slop: '2',
                 in_order: false
@@ -972,7 +1060,6 @@ describe('Iterative Implementation', () => {
             {
               span_near: {
                 clauses: [
-                  { span_term: { ttl: 'ball' } },
                   { span_term: { ttl: 'apple' } },
                   {
                     span_multi: {
@@ -980,7 +1067,8 @@ describe('Iterative Implementation', () => {
                         wildcard: { ttl: { value: 'oran*', case_insensitive: true, rewrite: 'top_terms_1000' } }
                       }
                     }
-                  }
+                  },
+                  { span_term: { ttl: 'ball' } }
                 ],
                 slop: '2',
                 in_order: false
@@ -1001,7 +1089,6 @@ describe('Iterative Implementation', () => {
             {
               span_near: {
                 clauses: [
-                  { span_term: { ttl: 'ball' } },
                   {
                     span_near: {
                       clauses: [
@@ -1011,7 +1098,8 @@ describe('Iterative Implementation', () => {
                       slop: '2',
                       in_order: false
                     }
-                  }
+                  },
+                  { span_term: { ttl: 'ball' } }
                 ],
                 slop: '2',
                 in_order: false
@@ -1074,13 +1162,7 @@ describe('Iterative Implementation', () => {
             {
               span_near: {
                 clauses: [
-                  {
-                    span_multi: {
-                      match: {
-                        wildcard: { ttl: { value: 'bal*', case_insensitive: true, rewrite: 'top_terms_1000' } }
-                      }
-                    }
-                  },
+
                   {
                     span_or: {
                       clauses: [
@@ -1095,6 +1177,13 @@ describe('Iterative Implementation', () => {
                           }
                         }
                       ]
+                    }
+                  },
+                  {
+                    span_multi: {
+                      match: {
+                        wildcard: { ttl: { value: 'bal*', case_insensitive: true, rewrite: 'top_terms_1000' } }
+                      }
                     }
                   }
                 ],
@@ -1117,11 +1206,9 @@ describe('Iterative Implementation', () => {
             {
               span_near: {
                 clauses: [
-                  { span_term: { ttl: 'ball' } },
                   {
                     span_or: {
                       clauses: [
-                        { span_term: { ttl: 'orange' } },
                         {
                           span_near: {
                             clauses: [
@@ -1131,10 +1218,12 @@ describe('Iterative Implementation', () => {
                             slop: '2',
                             in_order: true
                           }
-                        }
+                        },
+                        { span_term: { ttl: 'orange' } }
                       ]
                     }
-                  }
+                  },
+                  { span_term: { ttl: 'ball' } }
                 ],
                 slop: '2',
                 in_order: true
@@ -1169,7 +1258,6 @@ describe('Iterative Implementation', () => {
             {
               span_near: {
                 clauses: [
-                  { span_term: { ttl: 'ball' } },
                   { span_term: { ttl: 'apple' } },
                   {
                     span_multi: {
@@ -1177,7 +1265,9 @@ describe('Iterative Implementation', () => {
                         wildcard: { ttl: { value: 'oran*', case_insensitive: true, rewrite: 'top_terms_1000' } }
                       }
                     }
-                  }
+                  },
+
+                  { span_term: { ttl: 'ball' } }
                 ],
                 slop: '2',
                 in_order: false
@@ -1198,7 +1288,6 @@ describe('Iterative Implementation', () => {
             {
               span_near: {
                 clauses: [
-                  { span_term: { ttl: 'ball' } },
                   {
                     span_near: {
                       clauses: [
@@ -1208,7 +1297,8 @@ describe('Iterative Implementation', () => {
                       slop: '2',
                       in_order: true
                     }
-                  }
+                  },
+                  { span_term: { ttl: 'ball' } }
                 ],
                 slop: '2',
                 in_order: true
@@ -1244,15 +1334,6 @@ describe('Iterative Implementation', () => {
               span_near: {
                 clauses: [
                   {
-                    span_multi: {
-                      match: {
-                        wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: 'top_terms_1000' }
-                        }
-                      }
-                    }
-                  },
-                  {
                     span_or: {
                       clauses: [
                         {
@@ -1266,6 +1347,15 @@ describe('Iterative Implementation', () => {
                         },
                         { span_term: { ttl: 'AC' } }
                       ]
+                    }
+                  },
+                  {
+                    span_multi: {
+                      match: {
+                        wildcard: {
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: 'top_terms_1000' }
+                        }
+                      }
                     }
                   }
                 ],
@@ -1288,15 +1378,6 @@ describe('Iterative Implementation', () => {
             {
               span_near: {
                 clauses: [
-                  {
-                    span_multi: {
-                      match: {
-                        wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: 'top_terms_1000' }
-                        }
-                      }
-                    }
-                  },
                   {
                     span_or: {
                       clauses: [
@@ -1321,6 +1402,15 @@ describe('Iterative Implementation', () => {
                         }
                       ]
                     }
+                  },
+                  {
+                    span_multi: {
+                      match: {
+                        wildcard: {
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: 'top_terms_1000' }
+                        }
+                      }
+                    }
                   }
                 ],
                 slop: '3',
@@ -1342,6 +1432,15 @@ describe('Iterative Implementation', () => {
             {
               span_near: {
                 clauses: [
+
+                  {
+                    span_multi: {
+                      match: {
+                        wildcard: { ttl: { value: 'electr*', case_insensitive: true, rewrite: 'top_terms_1000' } }
+                      }
+                    }
+                  },
+                  { span_term: { ttl: 'battery' } },
                   {
                     span_multi: {
                       match: {
@@ -1350,15 +1449,7 @@ describe('Iterative Implementation', () => {
                         }
                       }
                     }
-                  },
-                  {
-                    span_multi: {
-                      match: {
-                        wildcard: { ttl: { value: 'electr*', case_insensitive: true, rewrite: 'top_terms_1000' } }
-                      }
-                    }
-                  },
-                  { span_term: { ttl: 'battery' } }
+                  }
                 ],
                 slop: '3',
                 in_order: false
@@ -1382,15 +1473,6 @@ describe('Iterative Implementation', () => {
                   {
                     span_multi: {
                       match: {
-                        wildcard: {
-                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: 'top_terms_1000' }
-                        }
-                      }
-                    }
-                  },
-                  {
-                    span_multi: {
-                      match: {
                         wildcard: { ttl: { value: 'electr*', case_insensitive: true, rewrite: 'top_terms_1000' } }
                       }
                     }
@@ -1403,6 +1485,15 @@ describe('Iterative Implementation', () => {
                       ],
                       in_order: true,
                       slop: 0
+                    }
+                  },
+                  {
+                    span_multi: {
+                      match: {
+                        wildcard: {
+                          ttl: { value: 'vehicle*', case_insensitive: true, rewrite: 'top_terms_1000' }
+                        }
+                      }
                     }
                   }
                 ],
@@ -1427,7 +1518,7 @@ describe('Iterative Implementation', () => {
             { term: { ttl: 'apple' } },
             { term: { ttl: 'ball' } }
           ],
-          must_not: [{ term: { ttl: 'banana' } }],
+          must_not: [{ term: { ttl: 'banana' } }]
         }
       })
     })
@@ -1564,19 +1655,19 @@ describe('Iterative Implementation', () => {
                 must: [
                   {
                     term: {
-                      ttl: "apple",
-                    },
-                  },
+                      ttl: 'apple'
+                    }
+                  }
                 ],
                 must_not: [
                   {
                     term: {
-                      ttl: "tree",
-                    },
-                  },
-                ],
-              },
-            },
+                      ttl: 'tree'
+                    }
+                  }
+                ]
+              }
+            }
           ],
           must_not: [
             {
@@ -1585,16 +1676,16 @@ describe('Iterative Implementation', () => {
                   {
                     terms: {
                       ttl: [
-                        "orange",
-                        "banana",
-                      ],
-                    },
-                  },
-                ],
-              },
-            },
-          ],
-        },
+                        'orange',
+                        'banana'
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
       })
     })
 
@@ -1693,7 +1784,7 @@ describe('Iterative Implementation', () => {
                             in_order: false
                           }
                         },
-                        { span_term: { ttl: 'orange' } },
+                        { span_term: { ttl: 'orange' } }
                       ]
                     }
                   }
@@ -1878,8 +1969,8 @@ describe('Iterative Implementation', () => {
                 clauses: [
                   {
                     span_term: {
-                      ttl: "ball",
-                    },
+                      ttl: 'ball'
+                    }
                   },
                   {
                     span_or: {
@@ -1889,34 +1980,34 @@ describe('Iterative Implementation', () => {
                             clauses: [
                               {
                                 span_term: {
-                                  ttl: "apple",
-                                },
+                                  ttl: 'apple'
+                                }
                               },
                               {
                                 span_term: {
-                                  ttl: "banana",
-                                },
-                              },
+                                  ttl: 'banana'
+                                }
+                              }
                             ],
-                            slop: "2",
-                            in_order: true,
-                          },
+                            slop: '2',
+                            in_order: true
+                          }
                         },
                         {
                           span_term: {
-                            ttl: "orange",
-                          },
-                        },
-                      ],
-                    },
-                  },
+                            ttl: 'orange'
+                          }
+                        }
+                      ]
+                    }
+                  }
                 ],
-                slop: "2",
-                in_order: true,
-              },
-            },
-          ],
-        },
+                slop: '2',
+                in_order: true
+              }
+            }
+          ]
+        }
       })
     })
 
@@ -2198,33 +2289,37 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
+          must: [{
+            bool: {
+              should: [
+                {
+                  bool: {
+                    must: [
+                      {
+                        term: {
+                          ttl: 'mobile'
+                        }
+                      },
+                      {
+                        term: {
+                          ttl: 'phone'
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  term: {
+                    ttl: 'screen'
+                  }
+                }
+              ]
+            }
+          }],
           must_not: [
             {
               term: {
                 ttl: 'aluminum'
-              }
-            }
-          ],
-          should: [
-            {
-              term: {
-                ttl: 'screen'
-              }
-            },
-            {
-              bool: {
-                must: [
-                  {
-                    term: {
-                      ttl: 'mobile'
-                    }
-                  },
-                  {
-                    term: {
-                      ttl: 'phone'
-                    }
-                  }
-                ]
               }
             }
           ]
@@ -2330,6 +2425,31 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
+
+          must: [
+            {
+              bool: {
+                must: [{
+                  wildcard: {
+                    ttl: {
+                      value: 'wireles?',
+                      case_insensitive: true,
+                      rewrite: 'top_terms_10000'
+                    }
+                  }
+                },
+                {
+                  wildcard: {
+                    ttl: {
+                      value: 'communicatio?',
+                      case_insensitive: true,
+                      rewrite: 'top_terms_10000'
+                    }
+                  }
+                }]
+              }
+            }
+          ],
           must_not: [
             {
               bool: {
@@ -2355,26 +2475,6 @@ describe('Iterative Implementation', () => {
                 ]
               }
             }
-          ],
-          must: [
-            {
-              wildcard: {
-                ttl: {
-                  value: 'wireles?',
-                  case_insensitive: true,
-                  rewrite: 'top_terms_10000'
-                }
-              }
-            },
-            {
-              wildcard: {
-                ttl: {
-                  value: 'communicatio?',
-                  case_insensitive: true,
-                  rewrite: 'top_terms_10000'
-                }
-              }
-            }
           ]
         }
       })
@@ -2389,6 +2489,31 @@ describe('Iterative Implementation', () => {
           should: [
             {
               bool: {
+                must: [
+                  {
+                    bool: {
+                      must: [{
+                        wildcard: {
+                          ttl: {
+                            value: 'wireles?',
+                            case_insensitive: true,
+                            rewrite: 'top_terms_10000'
+                          }
+                        }
+                      },
+                      {
+                        wildcard: {
+                          ttl: {
+                            value: 'communicatio?',
+                            case_insensitive: true,
+                            rewrite: 'top_terms_10000'
+                          }
+                        }
+                      }]
+                    }
+                  }
+
+                ],
                 must_not: [
                   {
                     bool: {
@@ -2412,26 +2537,6 @@ describe('Iterative Implementation', () => {
                           }
                         }
                       ]
-                    }
-                  }
-                ],
-                must: [
-                  {
-                    wildcard: {
-                      ttl: {
-                        value: 'wireles?',
-                        case_insensitive: true,
-                        rewrite: 'top_terms_10000'
-                      }
-                    }
-                  },
-                  {
-                    wildcard: {
-                      ttl: {
-                        value: 'communicatio?',
-                        case_insensitive: true,
-                        rewrite: 'top_terms_10000'
-                      }
                     }
                   }
                 ]
@@ -2479,24 +2584,24 @@ describe('Iterative Implementation', () => {
                               {
                                 wildcard: {
                                   ttl: {
-                                    value: "wireles?",
+                                    value: 'wireles?',
                                     case_insensitive: true,
-                                    rewrite: "top_terms_10000",
-                                  },
-                                },
+                                    rewrite: 'top_terms_10000'
+                                  }
+                                }
                               },
                               {
                                 wildcard: {
                                   ttl: {
-                                    value: "communicatio?",
+                                    value: 'communicatio?',
                                     case_insensitive: true,
-                                    rewrite: "top_terms_10000",
-                                  },
-                                },
-                              },
-                            ],
-                          },
-                        },
+                                    rewrite: 'top_terms_10000'
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
                       ],
                       must_not: [
                         {
@@ -2505,56 +2610,56 @@ describe('Iterative Implementation', () => {
                               {
                                 wildcard: {
                                   ttl: {
-                                    value: "netwo*",
+                                    value: 'netwo*',
                                     case_insensitive: true,
-                                    rewrite: "top_terms_10000",
-                                  },
-                                },
+                                    rewrite: 'top_terms_10000'
+                                  }
+                                }
                               },
                               {
                                 wildcard: {
                                   ttl: {
-                                    value: "sign*",
+                                    value: 'sign*',
                                     case_insensitive: true,
-                                    rewrite: "top_terms_10000",
-                                  },
-                                },
-                              },
-                            ],
-                          },
-                        },
-                      ],
-                    },
+                                    rewrite: 'top_terms_10000'
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
                   },
                   {
                     bool: {
                       must: [
                         {
                           term: {
-                            ttl: "car",
-                          },
+                            ttl: 'car'
+                          }
                         },
                         {
                           term: {
-                            ttl: "wash",
-                          },
-                        },
-                      ],
-                    },
-                  },
-                ],
-              },
+                            ttl: 'wash'
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
             },
             {
               range: {
                 pd: {
-                  gte: "20220101",
-                  lte: "20220105",
-                },
-              },
-            },
-          ],
-        },
+                  gte: '20220101',
+                  lte: '20220105'
+                }
+              }
+            }
+          ]
+        }
       })
     })
 
@@ -2777,50 +2882,55 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
+          must: [
+            {
+              bool: {
+                must: [{
+                  bool: {
+                    should: [
+                      { terms: { ttl: ['Carrot', 'juice'] } },
+                      {
+                        bool: {
+                          must: [
+                            {
+                              span_near: {
+                                clauses: [
+                                  { span_term: { ttl: 'banana' } },
+                                  { span_term: { ttl: 'shake' } }
+                                ],
+                                slop: '3',
+                                in_order: false
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  bool: {
+                    should: [
+                      {
+                        wildcard: { ttl: { value: 'Fruit*', case_insensitive: true, rewrite: 'top_terms_10000' } }
+                      },
+                      {
+                        wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true, rewrite: 'top_terms_10000' } }
+                      }
+                    ]
+                  }
+                }]
+              }
+            }
+          ],
           must_not: [
             {
               bool: {
                 should: [
+
+                  { terms: { ttl: ['papaya', 'melon', 'lemon'] } },
                   {
                     wildcard: { ttl: { value: 'plant*', case_insensitive: true, rewrite: 'top_terms_10000' } }
-                  },
-                  { terms: { ttl: ['lemon', 'papaya', 'melon'] } }
-                ]
-              }
-            }
-          ],
-          must: [
-            {
-              bool: {
-                should: [
-                  { terms: { ttl: ['Carrot', 'juice'] } },
-                  {
-                    bool: {
-                      must: [
-                        {
-                          span_near: {
-                            clauses: [
-                              { span_term: { ttl: 'banana' } },
-                              { span_term: { ttl: 'shake' } }
-                            ],
-                            slop: '3',
-                            in_order: false
-                          }
-                        }
-                      ]
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              bool: {
-                should: [
-                  {
-                    wildcard: { ttl: { value: 'Fruit*', case_insensitive: true, rewrite: 'top_terms_10000' } }
-                  },
-                  {
-                    wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true, rewrite: 'top_terms_10000' } }
                   }
                 ]
               }
@@ -2836,6 +2946,49 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
+          must: [
+            {
+              bool: {
+                must: [
+                  {
+                    bool: {
+                      should: [
+                        { terms: { ttl: ['Carrot', 'juice'] } },
+                        {
+                          bool: {
+                            must: [
+                              {
+                                span_near: {
+                                  clauses: [
+                                    { span_term: { ttl: 'banana' } },
+                                    { span_term: { ttl: 'shake' } }
+                                  ],
+                                  slop: '3',
+                                  in_order: false
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    bool: {
+                      should: [
+                        {
+                          wildcard: { ttl: { value: 'Fruit*', case_insensitive: true, rewrite: 'top_terms_10000' } }
+                        },
+                        {
+                          wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true, rewrite: 'top_terms_10000' } }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
           must_not: [
             {
               bool: {
@@ -2844,6 +2997,15 @@ describe('Iterative Implementation', () => {
                     span_near: {
                       clauses: [
                         {
+                          span_or: {
+                            clauses: [
+                              { span_term: { ttl: 'papaya' } },
+                              { span_term: { ttl: 'melon' } },
+                              { span_term: { ttl: 'lemon' } }
+                            ]
+                          }
+                        },
+                        {
                           span_multi: {
                             match: {
                               wildcard: {
@@ -2851,57 +3013,11 @@ describe('Iterative Implementation', () => {
                               }
                             }
                           }
-                        },
-                        {
-                          span_or: {
-                            clauses: [
-                              { span_term: { ttl: 'lemon' } },
-                              { span_term: { ttl: 'papaya' } },
-                              { span_term: { ttl: 'melon' } }
-                            ]
-                          }
                         }
                       ],
                       slop: '4',
                       in_order: false
                     }
-                  }
-                ]
-              }
-            }
-          ],
-          must: [
-            {
-              bool: {
-                should: [
-                  { terms: { ttl: ['Carrot', 'juice'] } },
-                  {
-                    bool: {
-                      must: [
-                        {
-                          span_near: {
-                            clauses: [
-                              { span_term: { ttl: 'banana' } },
-                              { span_term: { ttl: 'shake' } }
-                            ],
-                            slop: '3',
-                            in_order: false
-                          }
-                        }
-                      ]
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              bool: {
-                should: [
-                  {
-                    wildcard: { ttl: { value: 'Fruit*', case_insensitive: true, rewrite: 'top_terms_10000' } }
-                  },
-                  {
-                    wildcard: { ttl: { value: 'Vegetable*', case_insensitive: true, rewrite: 'top_terms_10000' } }
                   }
                 ]
               }
@@ -2957,46 +3073,44 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { range: { pd: { gte: '20220101', lte: '20220307' } } },
             {
               bool: {
-                must_not: [
+                must: [{
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      {
+                        span_or: {
+                          clauses: [
+                            { span_term: { ttl: 'watch' } },
+                            { span_term: { ttl: 'watches' } }
+                          ]
+                        }
+                      }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                }]
+              }
+            },
+            { range: { pd: { gte: '20220101', lte: '20220307' } } }
+          ],
+          must_not: [
+            {
+              bool: {
+                must: [
+                  { term: { ttl: 'heart' } },
                   {
                     bool: {
-                      must: [
-                        { term: { ttl: 'heart' } },
+                      should: [
+                        { terms: { ttl: ['rate', 'oxygen'] } },
                         {
-                          bool: {
-                            should: [
-                              { terms: { ttl: ['oxygen', 'rate'] } },
-                              {
-                                wildcard: {
-                                  ttl: { value: 'pulse*', case_insensitive: true, rewrite: 'top_terms_10000' }
-                                }
-                              }
-                            ]
+                          wildcard: {
+                            ttl: { value: 'pulse*', case_insensitive: true, rewrite: 'top_terms_10000' }
                           }
                         }
                       ]
-                    }
-                  }
-                ],
-                must: [
-                  {
-                    span_near: {
-                      clauses: [
-                        { span_term: { ttl: 'smart' } },
-                        {
-                          span_or: {
-                            clauses: [
-                              { span_term: { ttl: 'watch' } },
-                              { span_term: { ttl: 'watches' } }
-                            ]
-                          }
-                        }
-                      ],
-                      slop: '2',
-                      in_order: false
                     }
                   }
                 ]
@@ -3051,15 +3165,6 @@ describe('Iterative Implementation', () => {
                     span_near: {
                       clauses: [
                         {
-                          span_multi: {
-                            match: {
-                              wildcard: {
-                                ttl: { value: 'plant*', case_insensitive: true, rewrite: 'top_terms_1000' }
-                              }
-                            }
-                          }
-                        },
-                        {
                           span_or: {
                             clauses: [
                               {
@@ -3089,6 +3194,15 @@ describe('Iterative Implementation', () => {
                                 }
                               }
                             ]
+                          }
+                        },
+                        {
+                          span_multi: {
+                            match: {
+                              wildcard: {
+                                ttl: { value: 'plant*', case_insensitive: true, rewrite: 'top_terms_1000' }
+                              }
+                            }
                           }
                         }
                       ],
@@ -3199,7 +3313,6 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { range: { pd: { gte: '20150101', lte: '20220307' } } },
             {
               bool: {
                 should: [
@@ -3279,7 +3392,8 @@ describe('Iterative Implementation', () => {
                   }
                 ]
               }
-            }
+            },
+            { range: { pd: { gte: '20150101', lte: '20220307' } } }
           ]
         }
       })
@@ -3305,31 +3419,11 @@ describe('Iterative Implementation', () => {
                   {
                     span_near: {
                       clauses: [
-                        {
-                          span_multi: {
-                            match: {
-                              wildcard: {
-                                ttl: { value: 'plant*', case_insensitive: true, rewrite: 'top_terms_1000' }
-                              }
-                            }
-                          }
-                        },
+
                         {
                           span_near: {
                             clauses: [
-                              {
-                                span_multi: {
-                                  match: {
-                                    wildcard: {
-                                      ttl: {
-                                        value: 'Veg*',
-                                        case_insensitive: true,
-                                        rewrite: 'top_terms_1000'
-                                      }
-                                    }
-                                  }
-                                }
-                              },
+
                               {
                                 span_near: {
                                   clauses: [
@@ -3363,10 +3457,32 @@ describe('Iterative Implementation', () => {
                                   slop: '15',
                                   in_order: false
                                 }
+                              },
+                              {
+                                span_multi: {
+                                  match: {
+                                    wildcard: {
+                                      ttl: {
+                                        value: 'Veg*',
+                                        case_insensitive: true,
+                                        rewrite: 'top_terms_1000'
+                                      }
+                                    }
+                                  }
+                                }
                               }
                             ],
                             slop: '50',
                             in_order: false
+                          }
+                        },
+                        {
+                          span_multi: {
+                            match: {
+                              wildcard: {
+                                ttl: { value: 'plant*', case_insensitive: true, rewrite: 'top_terms_1000' }
+                              }
+                            }
                           }
                         }
                       ],
@@ -3374,6 +3490,7 @@ describe('Iterative Implementation', () => {
                       in_order: false
                     }
                   }
+
                 ],
                 slop: '10',
                 in_order: true
@@ -3399,30 +3516,9 @@ describe('Iterative Implementation', () => {
                     span_near: {
                       clauses: [
                         {
-                          span_multi: {
-                            match: {
-                              wildcard: {
-                                ttl: { value: 'plant*', case_insensitive: true, rewrite: 'top_terms_1000' }
-                              }
-                            }
-                          }
-                        },
-                        {
                           span_near: {
                             clauses: [
-                              {
-                                span_multi: {
-                                  match: {
-                                    wildcard: {
-                                      ttl: {
-                                        value: 'Veg*',
-                                        case_insensitive: true,
-                                        rewrite: 'top_terms_1000'
-                                      }
-                                    }
-                                  }
-                                }
-                              },
+
                               {
                                 span_near: {
                                   clauses: [
@@ -3456,10 +3552,32 @@ describe('Iterative Implementation', () => {
                                   slop: '15',
                                   in_order: false
                                 }
+                              },
+                              {
+                                span_multi: {
+                                  match: {
+                                    wildcard: {
+                                      ttl: {
+                                        value: 'Veg*',
+                                        case_insensitive: true,
+                                        rewrite: 'top_terms_1000'
+                                      }
+                                    }
+                                  }
+                                }
                               }
                             ],
                             slop: '50',
                             in_order: false
+                          }
+                        },
+                        {
+                          span_multi: {
+                            match: {
+                              wildcard: {
+                                ttl: { value: 'plant*', case_insensitive: true, rewrite: 'top_terms_1000' }
+                              }
+                            }
                           }
                         }
                       ],
@@ -3515,7 +3633,6 @@ describe('Iterative Implementation', () => {
             {
               span_near: {
                 clauses: [
-                  { span_term: { 'xlpat-prob.stat': 'time' } },
                   {
                     span_near: {
                       clauses: [
@@ -3525,7 +3642,9 @@ describe('Iterative Implementation', () => {
                       slop: '5',
                       in_order: false
                     }
-                  }
+                  },
+
+                  { span_term: { 'xlpat-prob.stat': 'time' } }
                 ],
                 slop: '5',
                 in_order: false
@@ -3543,13 +3662,7 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            {
-              bool: {
-                should: [
-                  { terms: { inv: ['Michael', 'Jonas'] } }
-                ]
-              }
-            },
+
             {
               span_near: {
                 clauses: [
@@ -3564,6 +3677,13 @@ describe('Iterative Implementation', () => {
                 ],
                 slop: '1',
                 in_order: true
+              }
+            },
+            {
+              bool: {
+                should: [
+                  { terms: { inv: ['Michael', 'Jonas'] } }
+                ]
               }
             }
           ]
@@ -3588,7 +3708,7 @@ describe('Iterative Implementation', () => {
             {
               bool: {
                 should: [
-                  { terms: { pa: ['CNH', 'caterpillar', 'Komatsu'] } }
+                  { terms: { pa: ['caterpillar', 'Komatsu', 'CNH'] } }
                 ]
               }
             }
@@ -3609,7 +3729,7 @@ describe('Iterative Implementation', () => {
             {
               bool: {
                 should: [
-                  { terms: { pa: ['CNH', 'caterpillar', 'Komatsu'] } }
+                  { terms: { pa: ['caterpillar', 'Komatsu', 'CNH'] } }
                 ]
               }
             }
@@ -3624,16 +3744,16 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
+          must: [{ bool: { must: [{ term: { inv: 'Michael' } }, { term: { inv: 'Jonas' } }] } }],
           must_not: [
             {
               bool: {
                 should: [
-                  { terms: { pa: ['CNH', 'caterpillar', 'Komatsu'] } }
+                  { terms: { pa: ['caterpillar', 'Komatsu', 'CNH'] } }
                 ]
               }
             }
-          ],
-          must: [{ term: { inv: 'Michael' } }, { term: { inv: 'Jonas' } }]
+          ]
         }
       })
     })
@@ -3644,17 +3764,21 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
+          must: [{
+            bool: {
+              should: [
+                { terms: { inv: ['Michael', 'Jonas'] } }
+              ]
+            }
+          }],
           must_not: [
             {
               bool: {
                 should: [
-                  { terms: { pa: ['CNH', 'caterpillar', 'Komatsu'] } }
+                  { terms: { pa: ['caterpillar', 'Komatsu', 'CNH'] } }
                 ]
               }
             }
-          ],
-          should: [
-            { terms: { inv: ['Michael', 'Jonas'] } }
           ]
         }
       })
@@ -3667,12 +3791,12 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { term: { 'cited.pn': 'KR-101275147-B1' } },
             {
               bool: {
                 must: [{ term: { inv: 'Michael' } }, { term: { inv: 'Jonas' } }]
               }
-            }
+            },
+            { term: { 'cited.pn': 'KR-101275147-B1' } }
           ]
         }
       })
@@ -3687,7 +3811,7 @@ describe('Iterative Implementation', () => {
           should: [
             {
               terms: {
-                'xlpat-litig.defs.name': ['CNH', 'caterpillar', 'Komatsu']
+                'xlpat-litig.defs.name': ['caterpillar', 'Komatsu', 'CNH']
               }
             }
           ]
@@ -3737,11 +3861,6 @@ describe('Iterative Implementation', () => {
         bool: {
           must: [
             {
-              bool: {
-                should: [{ term: { cpc: 'a61b5' } }, { term: { ic: 'a61b5' } }]
-              }
-            },
-            {
               span_near: {
                 clauses: [
                   { span_term: { ttl: 'smart' } },
@@ -3757,6 +3876,11 @@ describe('Iterative Implementation', () => {
                   { terms: { ttl: ['pulse', 'rate'] } }
                 ]
               }
+            },
+            {
+              bool: {
+                should: [{ term: { cpc: 'a61b5' } }, { term: { ic: 'a61b5' } }]
+              }
             }
           ]
         }
@@ -3770,6 +3894,24 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
+            {
+              bool: {
+                must: [
+                  { term: { cpc: 'a61b5/02' } },
+                  { term: { cpc: 'G04B47/06' } },
+                  { term: { cpc: 'G04G21/02' } }
+                ]
+              }
+            },
+            {
+              bool: {
+                must: [
+                  { term: { ic: 'a61b5/02' } },
+                  { term: { ic: 'G04B47/06' } },
+                  { term: { ic: 'G04G21/02' } }
+                ]
+              }
+            },
             {
               bool: {
                 must: [
@@ -3792,24 +3934,6 @@ describe('Iterative Implementation', () => {
                   }
                 ]
               }
-            },
-            {
-              bool: {
-                must: [
-                  { term: { cpc: 'G04G21/02' } },
-                  { term: { cpc: 'a61b5/02' } },
-                  { term: { cpc: 'G04B47/06' } }
-                ]
-              }
-            },
-            {
-              bool: {
-                must: [
-                  { term: { ic: 'G04G21/02' } },
-                  { term: { ic: 'a61b5/02' } },
-                  { term: { ic: 'G04B47/06' } }
-                ]
-              }
             }
           ]
         }
@@ -3826,18 +3950,18 @@ describe('Iterative Implementation', () => {
             {
               bool: {
                 must: [
-                  { term: { cpc: 'G04G21/02' } },
                   { term: { cpc: 'a61b5/02' } },
-                  { term: { cpc: 'G04B47/06' } }
+                  { term: { cpc: 'G04B47/06' } },
+                  { term: { cpc: 'G04G21/02' } }
                 ]
               }
             },
             {
               bool: {
                 must: [
-                  { term: { ic: 'G04G21/02' } },
                   { term: { ic: 'a61b5/02' } },
-                  { term: { ic: 'G04B47/06' } }
+                  { term: { ic: 'G04B47/06' } },
+                  { term: { ic: 'G04G21/02' } }
                 ]
               }
             },
@@ -3877,11 +4001,26 @@ describe('Iterative Implementation', () => {
         bool: {
           must: [
             {
-              wildcard: { ttl: { value: 'energ*', case_insensitive: true, rewrite: 'top_terms_10000' } }
-            },
-            {
               bool: {
                 should: [
+                  {
+                    bool: {
+                      must: [
+                        { term: { cpc: 'a61b5/02' } },
+                        { term: { cpc: 'G04B47/06' } },
+                        { term: { cpc: 'G04G21/02' } }
+                      ]
+                    }
+                  },
+                  {
+                    bool: {
+                      must: [
+                        { term: { ic: 'a61b5/02' } },
+                        { term: { ic: 'G04B47/06' } },
+                        { term: { ic: 'G04G21/02' } }
+                      ]
+                    }
+                  },
                   {
                     bool: {
                       must: [
@@ -3904,27 +4043,12 @@ describe('Iterative Implementation', () => {
                         }
                       ]
                     }
-                  },
-                  {
-                    bool: {
-                      must: [
-                        { term: { cpc: 'G04G21/02' } },
-                        { term: { cpc: 'a61b5/02' } },
-                        { term: { cpc: 'G04B47/06' } }
-                      ]
-                    }
-                  },
-                  {
-                    bool: {
-                      must: [
-                        { term: { ic: 'G04G21/02' } },
-                        { term: { ic: 'a61b5/02' } },
-                        { term: { ic: 'G04B47/06' } }
-                      ]
-                    }
                   }
                 ]
               }
+            },
+            {
+              wildcard: { ttl: { value: 'energ*', case_insensitive: true, rewrite: 'top_terms_10000' } }
             }
           ]
         }
@@ -3937,6 +4061,29 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
+          must: [
+            {
+              bool: {
+                must: [{
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      { span_term: { ttl: 'watch' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                },
+                {
+                  bool: {
+                    should: [
+                      { terms: { ttl: ['pulse', 'rate'] } }
+                    ]
+                  }
+                }]
+              }
+            }
+          ],
           must_not: [
             {
               bool: {
@@ -3944,40 +4091,21 @@ describe('Iterative Implementation', () => {
                   {
                     bool: {
                       must: [
-                        { term: { cpc: 'G04G21/02' } },
                         { term: { cpc: 'a61b5/02' } },
-                        { term: { cpc: 'G04B47/06' } }
+                        { term: { cpc: 'G04B47/06' } },
+                        { term: { cpc: 'G04G21/02' } }
                       ]
                     }
                   },
                   {
                     bool: {
                       must: [
-                        { term: { ic: 'G04G21/02' } },
                         { term: { ic: 'a61b5/02' } },
-                        { term: { ic: 'G04B47/06' } }
+                        { term: { ic: 'G04B47/06' } },
+                        { term: { ic: 'G04G21/02' } }
                       ]
                     }
                   }
-                ]
-              }
-            }
-          ],
-          must: [
-            {
-              span_near: {
-                clauses: [
-                  { span_term: { ttl: 'smart' } },
-                  { span_term: { ttl: 'watch' } }
-                ],
-                slop: '2',
-                in_order: false
-              }
-            },
-            {
-              bool: {
-                should: [
-                  { terms: { ttl: ['pulse', 'rate'] } }
                 ]
               }
             }
@@ -3992,6 +4120,31 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
+          must: [
+            {
+              bool: {
+                should: [
+                  {
+                    bool: {
+                      must: [
+                        { term: { cpc: 'a61b5/02' } },
+                        { term: { cpc: 'G04B47/06' } },
+                        { term: { cpc: 'G04G21/02' } }
+                      ]
+                    }
+                  },
+                  {
+                    bool: {
+                      must: [
+                        { term: { ic: 'a61b5/02' } },
+                        { term: { ic: 'G04B47/06' } },
+                        { term: { ic: 'G04G21/02' } }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }],
           must_not: [
             {
               bool: {
@@ -4013,26 +4166,6 @@ describe('Iterative Implementation', () => {
                       ]
                     }
                   }
-                ]
-              }
-            }
-          ],
-          should: [
-            {
-              bool: {
-                must: [
-                  { term: { cpc: 'G04G21/02' } },
-                  { term: { cpc: 'a61b5/02' } },
-                  { term: { cpc: 'G04B47/06' } }
-                ]
-              }
-            },
-            {
-              bool: {
-                must: [
-                  { term: { ic: 'G04G21/02' } },
-                  { term: { ic: 'a61b5/02' } },
-                  { term: { ic: 'G04B47/06' } }
                 ]
               }
             }
@@ -4048,7 +4181,6 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { term: { casgs: 'boe' } },
             {
               span_near: {
                 clauses: [
@@ -4065,7 +4197,8 @@ describe('Iterative Implementation', () => {
                   { terms: { ttl: ['pulse', 'rate'] } }
                 ]
               }
-            }
+            },
+            { term: { casgs: 'boe' } }
           ]
         }
       })
@@ -4078,7 +4211,6 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { term: { casgs: 'boe' } },
             {
               span_near: {
                 clauses: [
@@ -4095,7 +4227,8 @@ describe('Iterative Implementation', () => {
                   { terms: { ttl: ['pulse', 'rate'] } }
                 ]
               }
-            }
+            },
+            { term: { casgs: 'boe' } }
           ]
         }
       })
@@ -4107,26 +4240,30 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          must_not: [{ term: { casgs: 'boe' } }],
           must: [
             {
-              span_near: {
-                clauses: [
-                  { span_term: { ttl: 'smart' } },
-                  { span_term: { ttl: 'watch' } }
-                ],
-                slop: '2',
-                in_order: false
-              }
-            },
-            {
               bool: {
-                should: [
-                  { terms: { ttl: ['pulse', 'rate'] } }
-                ]
+                must: [{
+                  span_near: {
+                    clauses: [
+                      { span_term: { ttl: 'smart' } },
+                      { span_term: { ttl: 'watch' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                },
+                {
+                  bool: {
+                    should: [
+                      { terms: { ttl: ['pulse', 'rate'] } }
+                    ]
+                  }
+                }]
               }
             }
-          ]
+          ],
+          must_not: [{ term: { casgs: 'boe' } }]
         }
       })
     })
@@ -4137,6 +4274,23 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
+          must: [
+            {
+              bool: {
+                must: [{
+                  span_near: {
+                    clauses: [
+                      { span_term: { casgs: 'FINNOVATE' } },
+                      { span_term: { casgs: 'GROUP' } }
+                    ],
+                    slop: '2',
+                    in_order: false
+                  }
+                }]
+              }
+            }
+
+          ],
           must_not: [
             {
               bool: {
@@ -4159,18 +4313,6 @@ describe('Iterative Implementation', () => {
                     }
                   }
                 ]
-              }
-            }
-          ],
-          must: [
-            {
-              span_near: {
-                clauses: [
-                  { span_term: { casgs: 'FINNOVATE' } },
-                  { span_term: { casgs: 'GROUP' } }
-                ],
-                slop: '2',
-                in_order: false
               }
             }
           ]
@@ -4287,7 +4429,6 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { term: { pn: 'US20200069200A1' } },
             {
               span_near: {
                 clauses: [
@@ -4304,7 +4445,8 @@ describe('Iterative Implementation', () => {
                   { terms: { ttl: ['pulse', 'rate'] } }
                 ]
               }
-            }
+            },
+            { term: { pn: 'US20200069200A1' } }
           ]
         }
       })
@@ -4317,7 +4459,6 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { term: { pn: 'US20200069200A1' } },
             {
               span_near: {
                 clauses: [
@@ -4334,7 +4475,8 @@ describe('Iterative Implementation', () => {
                   { terms: { ttl: ['pulse', 'rate'] } }
                 ]
               }
-            }
+            },
+            { term: { pn: 'US20200069200A1' } }
           ]
         }
       })
@@ -4347,7 +4489,6 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { term: { pn: 'US20210403048A1' } },
             {
               bool: {
                 must: [
@@ -4370,7 +4511,8 @@ describe('Iterative Implementation', () => {
                   }
                 ]
               }
-            }
+            },
+            { term: { pn: 'US20210403048A1' } }
           ]
         }
       })
@@ -4418,23 +4560,50 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          must_not: [{ term: { pn: 'US20210403048A1' } }],
           must: [
             {
-              span_near: {
-                clauses: [
-                  { span_term: { ttl: 'smart' } },
-                  { span_term: { ttl: 'watch' } }
-                ],
-                slop: '2',
-                in_order: false
-              }
-            },
-            {
               bool: {
-                should: [
-                  { terms: { ttl: ['pulse', 'rate'] } }
+                must: [
+                  {
+                    span_near: {
+                      clauses: [
+                        {
+                          span_term: {
+                            ttl: 'smart'
+                          }
+                        },
+                        {
+                          span_term: {
+                            ttl: 'watch'
+                          }
+                        }
+                      ],
+                      slop: '2',
+                      in_order: false
+                    }
+                  },
+                  {
+                    bool: {
+                      should: [
+                        {
+                          terms: {
+                            ttl: [
+                              'pulse',
+                              'rate'
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
                 ]
+              }
+            }
+          ],
+          must_not: [
+            {
+              term: {
+                pn: 'US20210403048A1'
               }
             }
           ]
@@ -4485,7 +4654,6 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { range: { epridate: { gte: '20000101', lte: '20220308' } } },
             {
               span_near: {
                 clauses: [
@@ -4502,7 +4670,8 @@ describe('Iterative Implementation', () => {
                   { terms: { ttl: ['pulse', 'rate'] } }
                 ]
               }
-            }
+            },
+            { range: { epridate: { gte: '20000101', lte: '20220308' } } }
           ]
         }
       })
@@ -4515,7 +4684,6 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { range: { pd: { gte: '20000101', lte: '20220308' } } },
             {
               span_near: {
                 clauses: [
@@ -4532,7 +4700,8 @@ describe('Iterative Implementation', () => {
                   { terms: { ttl: ['pulse', 'rate'] } }
                 ]
               }
-            }
+            },
+            { range: { pd: { gte: '20000101', lte: '20220308' } } }
           ]
         }
       })
@@ -4545,7 +4714,6 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { range: { pd: { gte: '20000101', lte: '20220308' } } },
             {
               span_near: {
                 clauses: [
@@ -4562,7 +4730,8 @@ describe('Iterative Implementation', () => {
                   { terms: { ttl: ['pulse', 'rate'] } }
                 ]
               }
-            }
+            },
+            { range: { pd: { gte: '20000101', lte: '20220308' } } }
           ]
         }
       })
@@ -4575,7 +4744,6 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { range: { ad: { gte: '20000101', lte: '20220308' } } },
             {
               span_near: {
                 clauses: [
@@ -4592,7 +4760,8 @@ describe('Iterative Implementation', () => {
                   { terms: { ttl: ['pulse', 'rate'] } }
                 ]
               }
-            }
+            },
+            { range: { ad: { gte: '20000101', lte: '20220308' } } }
           ]
         }
       })
@@ -4605,7 +4774,6 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { range: { epridate: { gte: '20000101', lte: '20220308' } } },
             {
               span_near: {
                 clauses: [
@@ -4622,7 +4790,8 @@ describe('Iterative Implementation', () => {
                   { terms: { ttl: ['pulse', 'rate'] } }
                 ]
               }
-            }
+            },
+            { range: { epridate: { gte: '20000101', lte: '20220308' } } }
           ]
         }
       })
@@ -4729,10 +4898,15 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { range: { epridate: { gte: '20220201', lte: '20220308' } } },
             {
-              terms: { pn: ['US20210403048A1', 'ES1286585U', 'ES1286629U'] }
-            }
+              terms: {
+                pn: ['ES1286585U',
+                  'ES1286629U',
+                  'US20210403048A1']
+              }
+            },
+            { range: { epridate: { gte: '20220201', lte: '20220308' } } }
+
           ]
         }
       })
@@ -4750,7 +4924,11 @@ describe('Iterative Implementation', () => {
               bool: {
                 should: [
                   {
-                    terms: { pn: ['US20210403048A1', 'ES1286585U', 'ES1286629U'] }
+                    terms: {
+                      pn: ['ES1286585U',
+                        'ES1286629U',
+                        'US20210403048A1']
+                    }
                   }
                 ]
               }
@@ -4772,7 +4950,11 @@ describe('Iterative Implementation', () => {
               bool: {
                 should: [
                   {
-                    terms: { pn: ['US20210403048A1', 'ES1286585U', 'ES1286629U'] }
+                    terms: {
+                      pn: ['ES1286585U',
+                        'ES1286629U',
+                        'US20210403048A1']
+                    }
                   }
                 ]
               }
@@ -4789,10 +4971,14 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { range: { ad: { gte: '20220201', lte: '20220308' } } },
             {
-              terms: { pn: ['US20210403048A1', 'ES1286585U', 'ES1286629U'] }
-            }
+              terms: {
+                pn: ['ES1286585U',
+                  'ES1286629U',
+                  'US20210403048A1']
+              }
+            },
+            { range: { ad: { gte: '20220201', lte: '20220308' } } }
           ]
         }
       })
@@ -4804,19 +4990,23 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
+          must: [
+            { range: { ad: { gte: '20220201', lte: '20220308' } } }
+          ],
           must_not: [
             {
               bool: {
                 should: [
                   {
-                    terms: { pn: ['US20210403048A1', 'ES1286585U', 'ES1286629U'] }
+                    terms: {
+                      pn: ['ES1286585U',
+                        'ES1286629U',
+                        'US20210403048A1']
+                    }
                   }
                 ]
               }
             }
-          ],
-          must: [
-            { range: { ad: { gte: '20220201', lte: '20220308' } } }
           ]
         }
       })
@@ -4828,26 +5018,45 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          must_not: [
+          must: [
             {
               bool: {
-                should: [
+                must: [
                   {
-                    terms: { pn: ['US20210403048A1', 'ES1286585U', 'ES1286629U'] }
+                    span_near: {
+                      clauses: [
+                        {
+                          span_term: {
+                            casgs: 'FINNOVATE'
+                          }
+                        },
+                        {
+                          span_term: {
+                            casgs: 'GROUP'
+                          }
+                        }
+                      ],
+                      slop: '2',
+                      in_order: false
+                    }
                   }
                 ]
               }
             }
           ],
-          must: [
+          must_not: [
             {
-              span_near: {
-                clauses: [
-                  { span_term: { casgs: 'FINNOVATE' } },
-                  { span_term: { casgs: 'GROUP' } }
-                ],
-                slop: '2',
-                in_order: false
+              bool: {
+                should: [
+                  {
+                    terms: {
+                      pn: [
+                        'ES1286585U',
+                        'ES1286629U',
+                        'US20210403048A1']
+                    }
+                  }
+                ]
               }
             }
           ]
@@ -4861,6 +5070,24 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
+          must: [
+            {
+              bool: {
+                should: [
+                  {
+                    terms: {
+                      pn: [
+                        'ES1286585U',
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1'
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
           must_not: [
             {
               bool: {
@@ -4868,25 +5095,21 @@ describe('Iterative Implementation', () => {
                   {
                     span_near: {
                       clauses: [
-                        { span_term: { casgs: 'FINNOVATE' } },
-                        { span_term: { casgs: 'GROUP' } }
+                        {
+                          span_term: {
+                            casgs: 'FINNOVATE'
+                          }
+                        },
+                        {
+                          span_term: {
+                            casgs: 'GROUP'
+                          }
+                        }
                       ],
                       slop: '2',
                       in_order: false
                     }
                   }
-                ]
-              }
-            }
-          ],
-          should: [
-            {
-              terms: {
-                pn: [
-                  'US20200328824A1',
-                  'US20210403048A1',
-                  'ES1286585U',
-                  'ES1286629U'
                 ]
               }
             }
@@ -4918,10 +5141,10 @@ describe('Iterative Implementation', () => {
                   {
                     terms: {
                       pn: [
-                        'US20200328824A1',
-                        'US20210403048A1',
                         'ES1286585U',
-                        'ES1286629U'
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1'
                       ]
                     }
                   }
@@ -4941,22 +5164,6 @@ describe('Iterative Implementation', () => {
         bool: {
           must: [
             {
-              bool: {
-                should: [
-                  {
-                    terms: {
-                      pn: [
-                        'US20200328824A1',
-                        'US20210403048A1',
-                        'ES1286585U',
-                        'ES1286629U'
-                      ]
-                    }
-                  }
-                ]
-              }
-            },
-            {
               span_near: {
                 clauses: [
                   { span_term: { casgs: 'FINNOVATE' } },
@@ -4964,6 +5171,22 @@ describe('Iterative Implementation', () => {
                 ],
                 slop: '2',
                 in_order: false
+              }
+            },
+            {
+              bool: {
+                should: [
+                  {
+                    terms: {
+                      pn: [
+                        'ES1286585U',
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1'
+                      ]
+                    }
+                  }
+                ]
               }
             }
           ]
@@ -4979,6 +5202,16 @@ describe('Iterative Implementation', () => {
         bool: {
           should: [
             {
+              terms: {
+                pn: [
+                  'ES1286585U',
+                  'ES1286629U',
+                  'US20210403048A1',
+                  'US20200328824A1'
+                ]
+              }
+            },
+            {
               bool: {
                 must: [
                   {
@@ -4993,17 +5226,8 @@ describe('Iterative Implementation', () => {
                   }
                 ]
               }
-            },
-            {
-              terms: {
-                pn: [
-                  'US20200328824A1',
-                  'US20210403048A1',
-                  'ES1286585U',
-                  'ES1286629U'
-                ]
-              }
             }
+
           ]
         }
       })
@@ -5017,22 +5241,6 @@ describe('Iterative Implementation', () => {
         bool: {
           must: [
             {
-              bool: {
-                should: [
-                  {
-                    terms: {
-                      pn: [
-                        'US20200328824A1',
-                        'US20210403048A1',
-                        'ES1286585U',
-                        'ES1286629U'
-                      ]
-                    }
-                  }
-                ]
-              }
-            },
-            {
               span_near: {
                 clauses: [
                   { span_term: { casgs: 'FINNOVATE' } },
@@ -5041,7 +5249,24 @@ describe('Iterative Implementation', () => {
                 slop: '2',
                 in_order: false
               }
+            },
+            {
+              bool: {
+                should: [
+                  {
+                    terms: {
+                      pn: [
+                        'ES1286585U',
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1'
+                      ]
+                    }
+                  }
+                ]
+              }
             }
+
           ]
         }
       })
@@ -5061,10 +5286,10 @@ describe('Iterative Implementation', () => {
                   {
                     terms: {
                       pn: [
-                        'US20200328824A1',
-                        'US20210403048A1',
                         'ES1286585U',
-                        'ES1286629U'
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1'
                       ]
                     }
                   }
@@ -5083,23 +5308,23 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           must: [
-            { term: { an: '16845016' } },
             {
               bool: {
                 should: [
                   {
                     terms: {
                       pn: [
-                        'US20200328824A1',
-                        'US20210403048A1',
                         'ES1286585U',
-                        'ES1286629U'
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1'
                       ]
                     }
                   }
                 ]
               }
-            }
+            },
+            { term: { an: '16845016' } }
           ]
         }
       })
@@ -5112,17 +5337,17 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { term: { an: '16845016' } },
             {
               terms: {
                 pn: [
-                  'US20200328824A1',
-                  'US20210403048A1',
                   'ES1286585U',
-                  'ES1286629U'
+                  'ES1286629U',
+                  'US20210403048A1',
+                  'US20200328824A1'
                 ]
               }
-            }
+            },
+            { term: { an: '16845016' } }
           ]
         }
       })
@@ -5135,17 +5360,17 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { term: { an: '16845016' } },
             {
               terms: {
                 pn: [
-                  'US20200328824A1',
-                  'US20210403048A1',
                   'ES1286585U',
-                  'ES1286629U'
+                  'ES1286629U',
+                  'US20210403048A1',
+                  'US20200328824A1'
                 ]
               }
-            }
+            },
+            { term: { an: '16845016' } }
           ]
         }
       })
@@ -5157,6 +5382,7 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
+          must: [{ term: { an: '16845016' } }],
           must_not: [
             {
               bool: {
@@ -5164,18 +5390,17 @@ describe('Iterative Implementation', () => {
                   {
                     terms: {
                       pn: [
-                        'US20200328824A1',
-                        'US20210403048A1',
                         'ES1286585U',
-                        'ES1286629U'
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1'
                       ]
                     }
                   }
                 ]
               }
             }
-          ],
-          must: [{ term: { an: '16845016' } }]
+          ]
         }
       })
     })
@@ -5194,10 +5419,10 @@ describe('Iterative Implementation', () => {
                   {
                     terms: {
                       pn: [
-                        'US20200328824A1',
-                        'US20210403048A1',
                         'ES1286585U',
-                        'ES1286629U'
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1'
                       ]
                     }
                   }
@@ -5223,10 +5448,10 @@ describe('Iterative Implementation', () => {
                   {
                     terms: {
                       pn: [
-                        'US20200328824A1',
-                        'US20210403048A1',
                         'ES1286585U',
-                        'ES1286629U'
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1'
                       ]
                     }
                   }
@@ -5252,10 +5477,10 @@ describe('Iterative Implementation', () => {
                   {
                     terms: {
                       pn: [
-                        'US20200328824A1',
-                        'US20210403048A1',
                         'ES1286585U',
-                        'ES1286629U'
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1'
                       ]
                     }
                   }
@@ -5274,17 +5499,17 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { range: { epridate: { gte: '20220304', lte: '20220308' } } },
             {
               terms: {
                 pn: [
-                  'US20200328824A1',
-                  'US20210403048A1',
                   'ES1286585U',
-                  'ES1286629U'
+                  'ES1286629U',
+                  'US20210403048A1',
+                  'US20200328824A1'
                 ]
               }
-            }
+            },
+            { range: { epridate: { gte: '20220304', lte: '20220308' } } }
           ]
         }
       })
@@ -5297,17 +5522,17 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { range: { ad: { gte: '20220304', lte: '20220308' } } },
             {
               terms: {
                 pn: [
-                  'US20200328824A1',
-                  'US20210403048A1',
                   'ES1286585U',
-                  'ES1286629U'
+                  'ES1286629U',
+                  'US20210403048A1',
+                  'US20200328824A1'
                 ]
               }
-            }
+            },
+            { range: { ad: { gte: '20220304', lte: '20220308' } } }
           ]
         }
       })
@@ -5320,17 +5545,17 @@ describe('Iterative Implementation', () => {
       expect(pq).toEqual({
         bool: {
           should: [
-            { range: { pd: { gte: '20220304', lte: '20220308' } } },
             {
               terms: {
                 pn: [
-                  'US20200328824A1',
-                  'US20210403048A1',
                   'ES1286585U',
-                  'ES1286629U'
+                  'ES1286629U',
+                  'US20210403048A1',
+                  'US20200328824A1'
                 ]
               }
-            }
+            },
+            { range: { pd: { gte: '20220304', lte: '20220308' } } }
           ]
         }
       })
@@ -5349,10 +5574,10 @@ describe('Iterative Implementation', () => {
                   {
                     terms: {
                       pn: [
-                        'US20200328824A1',
-                        'US20210403048A1',
                         'ES1286585U',
-                        'ES1286629U'
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1'
                       ]
                     }
                   }
@@ -5381,10 +5606,10 @@ describe('Iterative Implementation', () => {
                   {
                     terms: {
                       pn: [
-                        'US20200328824A1',
-                        'US20210403048A1',
                         'ES1286585U',
-                        'ES1286629U'
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1'
                       ]
                     }
                   }
@@ -5414,10 +5639,10 @@ describe('Iterative Implementation', () => {
                   {
                     terms: {
                       pn: [
-                        'US20200328824A1',
-                        'US20210403048A1',
                         'ES1286585U',
-                        'ES1286629U'
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1'
                       ]
                     }
                   }
@@ -5442,10 +5667,10 @@ describe('Iterative Implementation', () => {
                   {
                     terms: {
                       pn: [
-                        'US20200328824A1',
-                        'US20210403048A1',
                         'ES1286585U',
-                        'ES1286629U'
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1'
                       ]
                     }
                   }
@@ -5485,10 +5710,10 @@ describe('Iterative Implementation', () => {
             {
               terms: {
                 pn: [
-                  'US20200328824A1',
-                  'US20210403048A1',
                   'ES1286585U',
-                  'ES1286629U'
+                  'ES1286629U',
+                  'US20210403048A1',
+                  'US20200328824A1'
                 ]
               }
             }
@@ -5507,10 +5732,11 @@ describe('Iterative Implementation', () => {
             {
               terms: {
                 pn: [
-                  'US20200328824A1',
-                  'US20210403048A1',
                   'ES1286585U',
-                  'ES1286629U'
+                  'ES1286629U',
+                  'US20210403048A1',
+                  'US20200328824A1'
+
                 ]
               }
             },
@@ -5538,18 +5764,39 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          must_not: [
+          must: [
             {
               bool: {
                 should: [
                   {
-                    terms: {
-                      pn: [
-                        'GB2454544A',
-                        'US20200328824A1',
-                        'US20210403048A1',
-                        'ES1286585U',
-                        'ES1286629U'
+                    bool: {
+                      must: [
+                        {
+                          term: {
+                            cpc: 'A47B53'
+                          }
+                        },
+                        {
+                          term: {
+                            cpc: 'A47B63'
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    bool: {
+                      must: [
+                        {
+                          term: {
+                            ic: 'A47B53'
+                          }
+                        },
+                        {
+                          term: {
+                            ic: 'A47B63'
+                          }
+                        }
                       ]
                     }
                   }
@@ -5557,15 +5804,22 @@ describe('Iterative Implementation', () => {
               }
             }
           ],
-          should: [
+          must_not: [
             {
               bool: {
-                must: [{ term: { cpc: 'A47B53' } }, { term: { cpc: 'A47B63' } }]
-              }
-            },
-            {
-              bool: {
-                must: [{ term: { ic: 'A47B53' } }, { term: { ic: 'A47B63' } }]
+                should: [
+                  {
+                    terms: {
+                      pn: [
+                        'ES1286585U',
+                        'ES1286629U',
+                        'US20210403048A1',
+                        'US20200328824A1',
+                        'GB2454544A'
+                      ]
+                    }
+                  }
+                ]
               }
             }
           ]

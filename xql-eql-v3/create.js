@@ -521,7 +521,7 @@ function create (left, right, operator, slop) {
           const copy = cloneDeep(left)
           const jsonClause = JSON.stringify(right)
 
-          for (item of left.bool.should) {
+          for (const item of left.bool.should) {
             if (JSON.stringify(item) === jsonClause) {
               return copy
             }
@@ -534,7 +534,7 @@ function create (left, right, operator, slop) {
           const copy = cloneDeep(right)
           const jsonClause = JSON.stringify(left)
 
-          for (item of right.bool.should) {
+          for (const item of right.bool.should) {
             if (JSON.stringify(item) === jsonClause) {
               return copy
             }
@@ -1688,7 +1688,7 @@ function create (left, right, operator, slop) {
                         slop: 0
                       }
                     } else {
-                      iterator.span_term = { [k]: phrase }
+                      iterator.span_term = { [k]: value }
                     }
 
                     delete iterator.match_phrase
