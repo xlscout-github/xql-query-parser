@@ -1,6 +1,5 @@
 // const { genEqlIter, genEqlRec } = require('./gen-eql')
 const genEqlIter = require('./dfs')
-const genEqlRec = genEqlIter
 
 describe('Iterative Implementation', () => {
   describe('Proximity Queries', () => {
@@ -651,18 +650,27 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    // it('Check Wrapping of Terms with leading "NOT" containing duplicate', () => {
-    //   const query = 'ttl: NOT apple NOT banana NOT banana'
-    //   const pq = genEqlIter(query)
+    it('Check Wrapping of Terms with leading "NOT" containing duplicate', () => {
+      const query = 'ttl: NOT apple NOT banana NOT banana'
+      const pq = genEqlIter(query)
 
-    //   expect(pq).toEqual({
-    //     bool: {
-    //       must_not: [
-    //         { terms: { ttl: ['banana', 'apple'] } }
-    //       ]
-    //     }
-    //   })
-    // })
+      expect(pq).toEqual({
+        bool: {
+          must_not: [
+            {
+              term: {
+                ttl: 'apple'
+              }
+            },
+            {
+              term: {
+                ttl: 'banana'
+              }
+            }
+          ]
+        }
+      })
+    })
 
     it('Check Wrapping of Terms without leading "NOT"', () => {
       const query = 'ttl: apple NOT banana NOT orange'
@@ -693,17 +701,18 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    // it('Check Wrapping of Terms without leading "NOT" containing duplicate', () => {
-    //   const query = 'ttl: apple NOT banana NOT banana'
-    //   const pq = genEqlIter(query)
+    it('Check Wrapping of Terms without leading "NOT" containing duplicate', () => {
+      const query = 'ttl: apple NOT banana NOT banana'
+      const pq = genEqlIter(query)
 
-    //   expect(pq).toEqual({
-    //     bool: {
-    //       must_not: [{ term: { ttl: 'banana' } }],
-    //       must: [{ term: { ttl: 'apple' } }]
-    //     }
-    //   })
-    // })
+      expect(pq).toEqual({
+        bool: {
+          must: [{ term: { ttl: 'apple' } }],
+          must_not: [{ term: { ttl: 'banana' } }]
+
+        }
+      })
+    })
   })
 
   describe('Left Recursive Queries', () => {
@@ -885,17 +894,17 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    // it('Check "NOT" when left has bool must_not query while ignoring duplicates', () => {
-    //   const query = '(ttl:(apple NOT orange NOT orange))'
-    //   const pq = genEqlIter(query)
+    it('Check "NOT" when left has bool must_not query while ignoring duplicates', () => {
+      const query = '(ttl:(apple NOT orange NOT orange))'
+      const pq = genEqlIter(query)
 
-    //   expect(pq).toEqual({
-    //     bool: {
-    //       must_not: [{ term: { ttl: 'orange' } }],
-    //       must: [{ term: { ttl: 'apple' } }]
-    //     }
-    //   })
-    // })
+      expect(pq).toEqual({
+        bool: {
+          must: [{ term: { ttl: 'apple' } }],
+          must_not: [{ term: { ttl: 'orange' } }]
+        }
+      })
+    })
 
     it('Check "NEAR" when left is a composite query', () => {
       expect.assertions(1)
