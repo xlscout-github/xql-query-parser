@@ -960,65 +960,6 @@ function create (left, right, operator, slop) {
       }
     }
     case 'NOT': {
-      if (left == null) {
-        if (right.bool) {
-          return {
-            bool: {
-              must_not: [right]
-            }
-          }
-        } else {
-          let clause
-
-          if (typeof right.val === 'string') {
-            if (right.val.startsWith('"') && right.val.endsWith('"')) {
-              clause = {
-                match_phrase: {
-                  [right.key]: right.val.slice(1, -1).trim()
-                }
-              }
-            } else if (right.val.includes('*') || right.val.includes('?')) {
-              clause = {
-                wildcard: {
-                  [right.key]: {
-                    value: right.val,
-                    case_insensitive: true,
-                    rewrite: REWRITE
-                  }
-                }
-              }
-            } else {
-              clause = { term: { [right.key]: right.val } }
-            }
-          } else if (
-            typeof right.val === 'object' &&
-            right.val.from &&
-            right.val.to
-          ) {
-            const range = { [right.key]: {} }
-
-            if (right.val.from !== '*') {
-              range[right.key] = { gte: right.val.from }
-            }
-
-            if (right.val.to !== '*') {
-              range[right.key] = {
-                ...range[right.key],
-                lte: right.val.to
-              }
-            }
-
-            clause = { range }
-          }
-
-          return {
-            bool: {
-              must_not: [clause]
-            }
-          }
-        }
-      }
-
       if (left.bool && right.bool) {
         return {
           bool: {
@@ -1070,11 +1011,22 @@ function create (left, right, operator, slop) {
           clause = { range }
         }
 
-        return {
-          bool: {
-            must: [left],
-            must_not: [clause]
+        if (left.bool.must_not) {
+          const jsonClause = JSON.stringify(clause)
+
+          for (const item of left.bool.must_not) {
+            if (JSON.stringify(item) === jsonClause) {
+              return left
+            }
           }
+
+          left.bool.must_not.push(clause)
+
+          return left
+        } else {
+          left.bool.must_not = [clause]
+
+          return left
         }
       } else if (right.bool) {
         let clause
@@ -1127,9 +1079,11 @@ function create (left, right, operator, slop) {
           }
         }
       } else {
-        const booleanQuery = { bool: { must: [], must_not: [] } }
+        const booleanQuery = { bool: {} }
 
         if (typeof left.val === 'string') {
+          booleanQuery.bool.must = []
+
           if (left.val.startsWith('"') && left.val.endsWith('"')) {
             booleanQuery.bool.must.push({
               match_phrase: {
@@ -1154,6 +1108,8 @@ function create (left, right, operator, slop) {
           left.val.from &&
           left.val.to
         ) {
+          booleanQuery.bool.must = []
+
           const range = { [left.key]: {} }
 
           if (left.val.from !== '*') {
@@ -1171,6 +1127,8 @@ function create (left, right, operator, slop) {
         }
 
         if (typeof right.val === 'string') {
+          booleanQuery.bool.must_not = []
+
           if (right.val.startsWith('"') && right.val.endsWith('"')) {
             booleanQuery.bool.must_not.push({
               match_phrase: {
@@ -1197,6 +1155,8 @@ function create (left, right, operator, slop) {
           right.val.from &&
           right.val.to
         ) {
+          booleanQuery.bool.must_not = []
+
           const range = { [right.key]: {} }
 
           if (right.val.from !== '*') {
@@ -2226,17 +2186,21 @@ function create (left, right, operator, slop) {
 // const left = {
 //   bool: {
 //     must: [{ term: { ttl: 'kiwi' } }],
-//     must_not: [{ term: { ttl: 'mango' } }]
+//     must_not: [{term: {ttl: "banana"}}]
 //   }
 // }
 
 // const right = {
 //   bool: {
-//     should: [{ terms: { ttl: ['banana', 'apple'] } }]
+//     should: [
+//       { terms: { ttl: ['kiwi', 'banana'] } }
+//     ]
 //   }
 // }
 
-// console.dir(create(left, right, 'NEAR', '2'), {
+// const left = { key: 'ttl', val: 'apple' }
+
+// console.dir(create(left, right, 'NOT'), {
 //   depth: null
 // })
 

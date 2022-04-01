@@ -264,23 +264,27 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          must: [{
-            bool: {
-              should: [{
-                terms: {
-                  'pn-nok.keyword': [
-                    'US20200233814',
-                    'US9774086',
-                    'WO2020251708',
-                    'EP3856098',
-                    'WO2019165110',
-                    'US7545845'
-                  ]
-                }
-              }]
+          should: [
+            {
+              terms: {
+                'pn-nok.keyword': [
+                  'US20200233814',
+                  'US9774086',
+                  'WO2020251708',
+                  'EP3856098',
+                  'WO2019165110',
+                  'US7545845'
+                ]
+              }
             }
-          }],
-          must_not: [{ term: { ttl: 'wireless' } }]
+          ],
+          must_not: [
+            {
+              term: {
+                ttl: 'wireless'
+              }
+            }
+          ]
         }
       })
     })
@@ -626,34 +630,17 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          must: [
-            {
-              bool: {
-                must: [
-                  {
-                    bool: {
-                      must: [],
-                      must_not: [
-                        {
-                          term: {
-                            ttl: 'apple'
-                          }
-                        }
-                      ]
-                    }
-                  }
-                ],
-                must_not: [
-                  {
-                    term: {
-                      ttl: 'banana'
-                    }
-                  }
-                ]
-              }
-            }
-          ],
           must_not: [
+            {
+              term: {
+                ttl: 'apple'
+              }
+            },
+            {
+              term: {
+                ttl: 'banana'
+              }
+            },
             {
               term: {
                 ttl: 'orange'
@@ -685,25 +672,17 @@ describe('Iterative Implementation', () => {
         bool: {
           must: [
             {
-              bool: {
-                must: [
-                  {
-                    term: {
-                      ttl: 'apple'
-                    }
-                  }
-                ],
-                must_not: [
-                  {
-                    term: {
-                      ttl: 'banana'
-                    }
-                  }
-                ]
+              term: {
+                ttl: 'apple'
               }
             }
           ],
           must_not: [
+            {
+              term: {
+                ttl: 'banana'
+              }
+            },
             {
               term: {
                 ttl: 'orange'
@@ -885,25 +864,17 @@ describe('Iterative Implementation', () => {
         bool: {
           must: [
             {
-              bool: {
-                must: [
-                  {
-                    term: {
-                      ttl: 'apple'
-                    }
-                  }
-                ],
-                must_not: [
-                  {
-                    term: {
-                      ttl: 'orange'
-                    }
-                  }
-                ]
+              term: {
+                ttl: 'apple'
               }
             }
           ],
           must_not: [
+            {
+              term: {
+                ttl: 'orange'
+              }
+            },
             {
               term: {
                 ttl: 'ball'
@@ -2289,33 +2260,29 @@ describe('Iterative Implementation', () => {
 
       expect(pq).toEqual({
         bool: {
-          must: [{
-            bool: {
-              should: [
-                {
-                  bool: {
-                    must: [
-                      {
-                        term: {
-                          ttl: 'mobile'
-                        }
-                      },
-                      {
-                        term: {
-                          ttl: 'phone'
-                        }
-                      }
-                    ]
+          should: [
+            {
+              bool: {
+                must: [
+                  {
+                    term: {
+                      ttl: 'mobile'
+                    }
+                  },
+                  {
+                    term: {
+                      ttl: 'phone'
+                    }
                   }
-                },
-                {
-                  term: {
-                    ttl: 'screen'
-                  }
-                }
-              ]
+                ]
+              }
+            },
+            {
+              term: {
+                ttl: 'screen'
+              }
             }
-          }],
+          ],
           must_not: [
             {
               term: {
@@ -4242,24 +4209,20 @@ describe('Iterative Implementation', () => {
         bool: {
           must: [
             {
+              span_near: {
+                clauses: [
+                  { span_term: { ttl: 'smart' } },
+                  { span_term: { ttl: 'watch' } }
+                ],
+                slop: '2',
+                in_order: false
+              }
+            },
+            {
               bool: {
-                must: [{
-                  span_near: {
-                    clauses: [
-                      { span_term: { ttl: 'smart' } },
-                      { span_term: { ttl: 'watch' } }
-                    ],
-                    slop: '2',
-                    in_order: false
-                  }
-                },
-                {
-                  bool: {
-                    should: [
-                      { terms: { ttl: ['pulse', 'rate'] } }
-                    ]
-                  }
-                }]
+                should: [
+                  { terms: { ttl: ['pulse', 'rate'] } }
+                ]
               }
             }
           ],
@@ -4562,37 +4525,31 @@ describe('Iterative Implementation', () => {
         bool: {
           must: [
             {
-              bool: {
-                must: [
+              span_near: {
+                clauses: [
                   {
-                    span_near: {
-                      clauses: [
-                        {
-                          span_term: {
-                            ttl: 'smart'
-                          }
-                        },
-                        {
-                          span_term: {
-                            ttl: 'watch'
-                          }
-                        }
-                      ],
-                      slop: '2',
-                      in_order: false
+                    span_term: {
+                      ttl: 'smart'
                     }
                   },
                   {
-                    bool: {
-                      should: [
-                        {
-                          terms: {
-                            ttl: [
-                              'pulse',
-                              'rate'
-                            ]
-                          }
-                        }
+                    span_term: {
+                      ttl: 'watch'
+                    }
+                  }
+                ],
+                slop: '2',
+                in_order: false
+              }
+            },
+            {
+              bool: {
+                should: [
+                  {
+                    terms: {
+                      ttl: [
+                        'pulse',
+                        'rate'
                       ]
                     }
                   }
