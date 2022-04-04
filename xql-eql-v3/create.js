@@ -1,6 +1,102 @@
 const REWRITE = 'top_terms_10000'
 const SPAN_MULTI_WILDCARD_REWRITE = 'top_terms_1000'
 
+function makeClause (field, value) {
+  if (typeof value === 'string') {
+    if (value.startsWith('"') && value.endsWith('"')) {
+      return {
+        match_phrase: {
+          [field]: value.slice(1, -1).trim()
+        }
+      }
+    } else if (value.includes('*') || value.includes('?')) {
+      return {
+        wildcard: {
+          [field]: {
+            value: value,
+            case_insensitive: true,
+            rewrite: REWRITE
+          }
+        }
+      }
+    } else {
+      return { term: { [field]: value } }
+    }
+  } else if (
+    typeof value === 'object' &&
+    value.from &&
+    value.to
+  ) {
+    const range = { [field]: {} }
+
+    if (value.from !== '*') {
+      range[field] = { gte: value.from }
+    }
+
+    if (value.to !== '*') {
+      range[field] = {
+        ...range[field],
+        lte: value.to
+      }
+    }
+
+    return { range }
+  }
+}
+
+function makeProximityClause (field, value) {
+  if (value.startsWith('"') && value.endsWith('"')) {
+    value = value.slice(1, -1).trim()
+    const terms = value.split(/ +/)
+
+    if (terms.length > 1) {
+      const clauses = terms.reduce((previousValue, currentValue) => {
+        previousValue.push({
+          span_term: {
+            [field]: currentValue
+          }
+        })
+
+        return previousValue
+      }, [])
+
+      return {
+        span_near: {
+          clauses,
+          in_order: true,
+          slop: 0
+        }
+      }
+    } else {
+      return {
+        span_term: {
+          [field]: value
+        }
+      }
+    }
+  } else if (value.includes('*') || value.includes('?')) {
+    return {
+      span_multi: {
+        match: {
+          wildcard: {
+            [field]: {
+              value,
+              case_insensitive: true,
+              rewrite: SPAN_MULTI_WILDCARD_REWRITE
+            }
+          }
+        }
+      }
+    }
+  } else {
+    return {
+      span_term: {
+        [field]: value
+      }
+    }
+  }
+}
+
 function create (left, right, operator, slop) {
   switch (operator) {
     case 'AND': {
@@ -132,48 +228,7 @@ function create (left, right, operator, slop) {
           }
         }
       } else if (left.bool) {
-        let clause
-
-        if (typeof right.val === 'string') {
-          if (right.val.startsWith('"') && right.val.endsWith('"')) {
-            clause = {
-              match_phrase: {
-                [right.key]: right.val.slice(1, -1).trim()
-              }
-            }
-          } else if (right.val.includes('*') || right.val.includes('?')) {
-            clause = {
-              wildcard: {
-                [right.key]: {
-                  value: right.val,
-                  case_insensitive: true,
-                  rewrite: REWRITE
-                }
-              }
-            }
-          } else {
-            clause = { term: { [right.key]: right.val } }
-          }
-        } else if (
-          typeof right.val === 'object' &&
-          right.val.from &&
-          right.val.to
-        ) {
-          const range = { [right.key]: {} }
-
-          if (right.val.from !== '*') {
-            range[right.key] = { gte: right.val.from }
-          }
-
-          if (right.val.to !== '*') {
-            range[right.key] = {
-              ...range[right.key],
-              lte: right.val.to
-            }
-          }
-
-          clause = { range }
-        }
+        const clause = makeClause(right.key, right.val)
 
         if (left.bool.must) {
           const jsonClause = JSON.stringify(clause)
@@ -199,48 +254,7 @@ function create (left, right, operator, slop) {
           }
         }
       } else if (right.bool) {
-        let clause
-
-        if (typeof left.val === 'string') {
-          if (left.val.startsWith('"') && left.val.endsWith('"')) {
-            clause = {
-              match_phrase: {
-                [left.key]: left.val.slice(1, -1).trim()
-              }
-            }
-          } else if (left.val.includes('*') || left.val.includes('?')) {
-            clause = {
-              wildcard: {
-                [left.key]: {
-                  value: left.val,
-                  case_insensitive: true,
-                  rewrite: REWRITE
-                }
-              }
-            }
-          } else {
-            clause = { term: { [left.key]: left.val } }
-          }
-        } else if (
-          typeof left.val === 'object' &&
-          left.val.from &&
-          left.val.to
-        ) {
-          const range = { [left.key]: {} }
-
-          if (left.val.from !== '*') {
-            range[left.key] = { gte: left.val.from }
-          }
-
-          if (left.val.to !== '*') {
-            range[left.key] = {
-              ...range[left.key],
-              lte: left.val.to
-            }
-          }
-
-          clause = { range }
-        }
+        const clause = makeClause(left.key, left.val)
 
         if (right.bool.must) {
           const jsonClause = JSON.stringify(clause)
@@ -269,148 +283,17 @@ function create (left, right, operator, slop) {
         if (JSON.stringify(left) !== JSON.stringify(right)) {
           const booleanQuery = { bool: { must: [] } }
 
-          if (typeof left.val === 'string') {
-            if (left.val.startsWith('"') && left.val.endsWith('"')) {
-              booleanQuery.bool.must.push({
-                match_phrase: {
-                  [left.key]: left.val.slice(1, -1).trim()
-                }
-              })
-            } else if (left.val.includes('*') || left.val.includes('?')) {
-              booleanQuery.bool.must.push({
-                wildcard: {
-                  [left.key]: {
-                    value: left.val,
-                    case_insensitive: true,
-                    rewrite: REWRITE
-                  }
-                }
-              })
-            } else {
-              booleanQuery.bool.must.push({ term: { [left.key]: left.val } })
-            }
-          } else if (
-            typeof left.val === 'object' &&
-            left.val.from &&
-            left.val.to
-          ) {
-            const range = { [left.key]: {} }
+          booleanQuery.bool.must.push(makeClause(left.key, left.val))
 
-            if (left.val.from !== '*') {
-              range[left.key] = { gte: left.val.from }
-            }
+          const clause = makeClause(right.key, right.val)
 
-            if (left.val.to !== '*') {
-              range[left.key] = {
-                ...range[left.key],
-                lte: left.val.to
-              }
-            }
-
-            booleanQuery.bool.must.push({ range })
-          }
-
-          if (typeof right.val === 'string') {
-            if (right.val.startsWith('"') && right.val.endsWith('"')) {
-              booleanQuery.bool.must.push({
-                match_phrase: {
-                  [right.key]: right.val.slice(1, -1).trim()
-                }
-              })
-            } else if (right.val.includes('*') || right.val.includes('?')) {
-              booleanQuery.bool.must.push({
-                wildcard: {
-                  [right.key]: {
-                    value: right.val,
-                    case_insensitive: true,
-                    rewrite: REWRITE
-                  }
-                }
-              })
-            } else {
-              booleanQuery.bool.must.push({ term: { [right.key]: right.val } })
-            }
-          } else if (
-            typeof right.val === 'object' &&
-            right.val.from &&
-            right.val.to
-          ) {
-            const range = { [right.key]: {} }
-
-            if (right.val.from !== '*') {
-              range[right.key] = { gte: right.val.from }
-            }
-
-            if (right.val.to !== '*') {
-              range[right.key] = {
-                ...range[right.key],
-                lte: right.val.to
-              }
-            }
-
-            booleanQuery.bool.must.push({ range })
-          }
+          if (clause) booleanQuery.bool.must.push(clause)
 
           return booleanQuery
         } else {
-          if (typeof left.val === 'string') {
-            if (left.val.startsWith('"') && left.val.endsWith('"')) {
-              return {
-                bool: {
-                  must: [
-                    {
-                      match_phrase: {
-                        [left.key]: left.val.slice(1, -1).trim()
-                      }
-                    }
-                  ]
-                }
-              }
-            } else if (left.val.includes('*') || left.val.includes('?')) {
-              return {
-                bool: {
-                  must: [
-                    {
-                      wildcard: {
-                        [left.key]: {
-                          value: left.val,
-                          case_insensitive: true,
-                          rewrite: REWRITE
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            } else {
-              return {
-                bool: {
-                  must: [{ term: { [left.key]: left.val } }]
-                }
-              }
-            }
-          } else if (
-            typeof left.val === 'object' &&
-            left.val.from &&
-            left.val.to
-          ) {
-            const range = { [left.key]: {} }
-
-            if (left.val.from !== '*') {
-              range[left.key] = { gte: left.val.from }
-            }
-
-            if (left.val.to !== '*') {
-              range[left.key] = {
-                ...range[left.key],
-                lte: left.val.to
-              }
-            }
-
-            return {
-              bool: {
-                must: [{ range }]
-              }
+          return {
+            bool: {
+              must: [makeClause(left.key, left.val)]
             }
           }
         }
@@ -535,48 +418,7 @@ function create (left, right, operator, slop) {
           }
         }
       } else if (left.bool) {
-        let clause
-
-        if (typeof right.val === 'string') {
-          if (right.val.startsWith('"') && right.val.endsWith('"')) {
-            clause = {
-              match_phrase: {
-                [right.key]: right.val.slice(1, -1).trim()
-              }
-            }
-          } else if (right.val.includes('*') || right.val.includes('?')) {
-            clause = {
-              wildcard: {
-                [right.key]: {
-                  value: right.val,
-                  case_insensitive: true,
-                  rewrite: REWRITE
-                }
-              }
-            }
-          } else {
-            clause = { term: { [right.key]: right.val } }
-          }
-        } else if (
-          typeof right.val === 'object' &&
-          right.val.from &&
-          right.val.to
-        ) {
-          const range = { [right.key]: {} }
-
-          if (right.val.from !== '*') {
-            range[right.key] = { gte: right.val.from }
-          }
-
-          if (right.val.to !== '*') {
-            range[right.key] = {
-              ...range[right.key],
-              lte: right.val.to
-            }
-          }
-
-          clause = { range }
-        }
+        const clause = makeClause(right.key, right.val)
 
         if (left.bool.should) {
           const jsonClause = JSON.stringify(clause)
@@ -622,48 +464,7 @@ function create (left, right, operator, slop) {
           }
         }
       } else if (right.bool) {
-        let clause
-
-        if (typeof left.val === 'string') {
-          if (left.val.startsWith('"') && left.val.endsWith('"')) {
-            clause = {
-              match_phrase: {
-                [left.key]: left.val.slice(1, -1).trim()
-              }
-            }
-          } else if (left.val.includes('*') || left.val.includes('?')) {
-            clause = {
-              wildcard: {
-                [left.key]: {
-                  value: left.val,
-                  case_insensitive: true,
-                  rewrite: REWRITE
-                }
-              }
-            }
-          } else {
-            clause = { term: { [left.key]: left.val } }
-          }
-        } else if (
-          typeof left.val === 'object' &&
-          left.val.from &&
-          left.val.to
-        ) {
-          const range = { [left.key]: {} }
-
-          if (left.val.from !== '*') {
-            range[left.key] = { gte: left.val.from }
-          }
-
-          if (left.val.to !== '*') {
-            range[left.key] = {
-              ...range[left.key],
-              lte: left.val.to
-            }
-          }
-
-          clause = { range }
-        }
+        const clause = makeClause(left.key, left.val)
 
         if (right.bool.should) {
           const jsonClause = JSON.stringify(clause)
@@ -713,247 +514,27 @@ function create (left, right, operator, slop) {
           if (left.val !== right.val) {
             const booleanQuery = { bool: { should: [] } }
 
-            if (typeof left.val === 'string') {
-              if (left.val.startsWith('"') && left.val.endsWith('"')) {
-                booleanQuery.bool.should.push({
-                  match_phrase: {
-                    [left.key]: left.val.slice(1, -1).trim()
-                  }
-                })
-              } else if (left.val.includes('*') || left.val.includes('?')) {
-                booleanQuery.bool.should.push({
-                  wildcard: {
-                    [left.key]: {
-                      value: left.val,
-                      case_insensitive: true,
-                      rewrite: REWRITE
-                    }
-                  }
-                })
-              } else {
-                booleanQuery.bool.should.push({
-                  term: { [left.key]: left.val }
-                })
-              }
-            } else if (
-              typeof left.val === 'object' &&
-              left.val.from &&
-              left.val.to
-            ) {
-              const range = { [left.key]: {} }
+            booleanQuery.bool.should.push(makeClause(left.key, left.val), makeClause(right.key, right.val))
 
-              if (left.val.from !== '*') {
-                range[left.key] = { gte: left.val.from }
-              }
-
-              if (left.val.to !== '*') {
-                range[left.key] = {
-                  ...range[left.key],
-                  lte: left.val.to
-                }
-              }
-
-              booleanQuery.bool.should.push({ range })
-            }
-
-            if (typeof right.val === 'string') {
-              if (right.val.startsWith('"') && right.val.endsWith('"')) {
-                booleanQuery.bool.should.push({
-                  match_phrase: {
-                    [right.key]: right.val.slice(1, -1).trim()
-                  }
-                })
-              } else if (right.val.includes('*') || right.val.includes('?')) {
-                booleanQuery.bool.should.push({
-                  wildcard: {
-                    [right.key]: {
-                      value: right.val,
-                      case_insensitive: true,
-                      rewrite: REWRITE
-                    }
-                  }
-                })
-              } else {
-                if (booleanQuery.bool.should[0].term) {
-                  booleanQuery.bool.should.splice(0, 1, {
-                    terms: { [right.key]: [left.val, right.val] }
-                  })
-                } else {
-                  booleanQuery.bool.should.push({
-                    term: { [right.key]: right.val }
-                  })
-                }
-              }
-            } else if (
-              typeof right.val === 'object' &&
-              right.val.from &&
-              right.val.to
-            ) {
-              const range = { [right.key]: {} }
-
-              if (right.val.from !== '*') {
-                range[right.key] = { gte: right.val.from }
-              }
-
-              if (right.val.to !== '*') {
-                range[right.key] = {
-                  ...range[right.key],
-                  lte: right.val.to
-                }
-              }
-
-              booleanQuery.bool.should.push({ range })
+            if (booleanQuery.bool.should.every(value => value.term)) {
+              booleanQuery.bool.should = []
+              booleanQuery.bool.should.push({
+                terms: { [left.key]: [left.val, right.val] }
+              })
             }
 
             return booleanQuery
           } else {
-            if (typeof left.val === 'string') {
-              if (left.val.startsWith('"') && left.val.endsWith('"')) {
-                return {
-                  bool: {
-                    should: [
-                      {
-                        match_phrase: {
-                          [left.key]: left.val.slice(1, -1).trim()
-                        }
-                      }
-                    ]
-                  }
-                }
-              } else if (left.val.includes('*') || left.val.includes('?')) {
-                return {
-                  bool: {
-                    should: [
-                      {
-                        wildcard: {
-                          [left.key]: {
-                            value: left.val,
-                            case_insensitive: true,
-                            rewrite: REWRITE
-                          }
-                        }
-                      }
-                    ]
-                  }
-                }
-              } else {
-                return {
-                  bool: {
-                    should: [{ term: { [left.key]: left.val } }]
-                  }
-                }
-              }
-            } else if (
-              typeof left.val === 'object' &&
-              left.val.from &&
-              left.val.to
-            ) {
-              const range = { [left.key]: {} }
-
-              if (left.val.from !== '*') {
-                range[left.key] = { gte: left.val.from }
-              }
-
-              if (left.val.to !== '*') {
-                range[left.key] = {
-                  ...range[left.key],
-                  lte: left.val.to
-                }
-              }
-
-              return {
-                bool: {
-                  should: [{ range }]
-                }
+            return {
+              bool: {
+                should: [makeClause(left.key, left.val)]
               }
             }
           }
         } else {
           const booleanQuery = { bool: { should: [] } }
 
-          if (typeof left.val === 'string') {
-            if (left.val.startsWith('"') && left.val.endsWith('"')) {
-              booleanQuery.bool.should.push({
-                match_phrase: {
-                  [left.key]: left.val.slice(1, -1).trim()
-                }
-              })
-            } else if (left.val.includes('*') || left.val.includes('?')) {
-              booleanQuery.bool.should.push({
-                wildcard: {
-                  [left.key]: {
-                    value: left.val,
-                    case_insensitive: true,
-                    rewrite: REWRITE
-                  }
-                }
-              })
-            } else {
-              booleanQuery.bool.should.push({ term: { [left.key]: left.val } })
-            }
-          } else if (
-            typeof left.val === 'object' &&
-            left.val.from &&
-            left.val.to
-          ) {
-            const range = { [left.key]: {} }
-
-            if (left.val.from !== '*') {
-              range[left.key] = { gte: left.val.from }
-            }
-
-            if (left.val.to !== '*') {
-              range[left.key] = {
-                ...range[left.key],
-                lte: left.val.to
-              }
-            }
-
-            booleanQuery.bool.should.push({ range })
-          }
-
-          if (typeof right.val === 'string') {
-            if (right.val.startsWith('"') && right.val.endsWith('"')) {
-              booleanQuery.bool.should.push({
-                match_phrase: {
-                  [right.key]: right.val.slice(1, -1).trim()
-                }
-              })
-            } else if (right.val.includes('*') || right.val.includes('?')) {
-              booleanQuery.bool.should.push({
-                wildcard: {
-                  [right.key]: {
-                    value: right.val,
-                    case_insensitive: true,
-                    rewrite: REWRITE
-                  }
-                }
-              })
-            } else {
-              booleanQuery.bool.should.push({
-                term: { [right.key]: right.val }
-              })
-            }
-          } else if (
-            typeof right.val === 'object' &&
-            right.val.from &&
-            right.val.to
-          ) {
-            const range = { [right.key]: {} }
-
-            if (right.val.from !== '*') {
-              range[right.key] = { gte: right.val.from }
-            }
-
-            if (right.val.to !== '*') {
-              range[right.key] = {
-                ...range[right.key],
-                lte: right.val.to
-              }
-            }
-
-            booleanQuery.bool.should.push({ range })
-          }
+          booleanQuery.bool.should.push(makeClause(left.key, left.val), makeClause(right.key, right.val))
 
           return booleanQuery
         }
@@ -968,48 +549,7 @@ function create (left, right, operator, slop) {
           }
         }
       } else if (left.bool) {
-        let clause
-
-        if (typeof right.val === 'string') {
-          if (right.val.startsWith('"') && right.val.endsWith('"')) {
-            clause = {
-              match_phrase: {
-                [right.key]: right.val.slice(1, -1).trim()
-              }
-            }
-          } else if (right.val.includes('*') || right.val.includes('?')) {
-            clause = {
-              wildcard: {
-                [right.key]: {
-                  value: right.val,
-                  case_insensitive: true,
-                  rewrite: REWRITE
-                }
-              }
-            }
-          } else {
-            clause = { term: { [right.key]: right.val } }
-          }
-        } else if (
-          typeof right.val === 'object' &&
-          right.val.from &&
-          right.val.to
-        ) {
-          const range = { [right.key]: {} }
-
-          if (right.val.from !== '*') {
-            range[right.key] = { gte: right.val.from }
-          }
-
-          if (right.val.to !== '*') {
-            range[right.key] = {
-              ...range[right.key],
-              lte: right.val.to
-            }
-          }
-
-          clause = { range }
-        }
+        const clause = makeClause(right.key, right.val)
 
         if (left.bool.must_not) {
           const jsonClause = JSON.stringify(clause)
@@ -1029,48 +569,7 @@ function create (left, right, operator, slop) {
           return left
         }
       } else if (right.bool) {
-        let clause
-
-        if (typeof left.val === 'string') {
-          if (left.val.startsWith('"') && left.val.endsWith('"')) {
-            clause = {
-              match_phrase: {
-                [left.key]: left.val.slice(1, -1).trim()
-              }
-            }
-          } else if (left.val.includes('*') || left.val.includes('?')) {
-            clause = {
-              wildcard: {
-                [left.key]: {
-                  value: left.val,
-                  case_insensitive: true,
-                  rewrite: REWRITE
-                }
-              }
-            }
-          } else {
-            clause = { term: { [left.key]: left.val } }
-          }
-        } else if (
-          typeof left.val === 'object' &&
-          left.val.from &&
-          left.val.to
-        ) {
-          const range = { [left.key]: {} }
-
-          if (left.val.from !== '*') {
-            range[left.key] = { gte: left.val.from }
-          }
-
-          if (left.val.to !== '*') {
-            range[left.key] = {
-              ...range[left.key],
-              lte: left.val.to
-            }
-          }
-
-          clause = { range }
-        }
+        const clause = makeClause(left.key, left.val)
 
         return {
           bool: {
@@ -1079,99 +578,16 @@ function create (left, right, operator, slop) {
           }
         }
       } else {
-        const booleanQuery = { bool: {} }
+        const booleanQuery = { bool: { must_not: [] } }
 
-        if (typeof left.val === 'string') {
+        const clause = makeClause(left.key, left.val)
+
+        if (clause) {
           booleanQuery.bool.must = []
-
-          if (left.val.startsWith('"') && left.val.endsWith('"')) {
-            booleanQuery.bool.must.push({
-              match_phrase: {
-                [left.key]: left.val.slice(1, -1).trim()
-              }
-            })
-          } else if (left.val.includes('*') || left.val.includes('?')) {
-            booleanQuery.bool.must.push({
-              wildcard: {
-                [left.key]: {
-                  value: left.val,
-                  case_insensitive: true,
-                  rewrite: REWRITE
-                }
-              }
-            })
-          } else {
-            booleanQuery.bool.must.push({ term: { [left.key]: left.val } })
-          }
-        } else if (
-          typeof left.val === 'object' &&
-          left.val.from &&
-          left.val.to
-        ) {
-          booleanQuery.bool.must = []
-
-          const range = { [left.key]: {} }
-
-          if (left.val.from !== '*') {
-            range[left.key] = { gte: left.val.from }
-          }
-
-          if (left.val.to !== '*') {
-            range[left.key] = {
-              ...range[left.key],
-              lte: left.val.to
-            }
-          }
-
-          booleanQuery.bool.must.push({ range })
+          booleanQuery.bool.must.push(clause)
         }
 
-        if (typeof right.val === 'string') {
-          booleanQuery.bool.must_not = []
-
-          if (right.val.startsWith('"') && right.val.endsWith('"')) {
-            booleanQuery.bool.must_not.push({
-              match_phrase: {
-                [right.key]: right.val.slice(1, -1).trim()
-              }
-            })
-          } else if (right.val.includes('*') || right.val.includes('?')) {
-            booleanQuery.bool.must_not.push({
-              wildcard: {
-                [right.key]: {
-                  value: right.val,
-                  case_insensitive: true,
-                  rewrite: REWRITE
-                }
-              }
-            })
-          } else {
-            booleanQuery.bool.must_not.push({
-              term: { [right.key]: right.val }
-            })
-          }
-        } else if (
-          typeof right.val === 'object' &&
-          right.val.from &&
-          right.val.to
-        ) {
-          booleanQuery.bool.must_not = []
-
-          const range = { [right.key]: {} }
-
-          if (right.val.from !== '*') {
-            range[right.key] = { gte: right.val.from }
-          }
-
-          if (right.val.to !== '*') {
-            range[right.key] = {
-              ...range[right.key],
-              lte: right.val.to
-            }
-          }
-
-          booleanQuery.bool.must_not.push({ range })
-        }
+        booleanQuery.bool.must_not.push(makeClause(right.key, right.val))
 
         return booleanQuery
       }
@@ -1527,58 +943,7 @@ function create (left, right, operator, slop) {
 
         if (Object.keys(left.bool).length > 1) throw new Error('malformed query')
 
-        let clause
-
-        if (right.val.startsWith('"') && right.val.endsWith('"')) {
-          const value = right.val.slice(1, -1).trim()
-          const terms = value.split(/ +/)
-
-          if (terms.length > 1) {
-            const clauses = terms.reduce((previousValue, currentValue) => {
-              previousValue.push({
-                span_term: {
-                  [right.key]: currentValue
-                }
-              })
-
-              return previousValue
-            }, [])
-
-            clause = {
-              span_near: {
-                clauses,
-                in_order: true,
-                slop: 0
-              }
-            }
-          } else {
-            clause = {
-              span_term: {
-                [right.key]: value
-              }
-            }
-          }
-        } else if (right.val.includes('*') || right.val.includes('?')) {
-          clause = {
-            span_multi: {
-              match: {
-                wildcard: {
-                  [right.key]: {
-                    value: right.val,
-                    case_insensitive: true,
-                    rewrite: SPAN_MULTI_WILDCARD_REWRITE
-                  }
-                }
-              }
-            }
-          }
-        } else {
-          clause = {
-            span_term: {
-              [right.key]: right.val
-            }
-          }
-        }
+        const clause = makeProximityClause(right.key, right.val)
 
         for (const k in left.bool) {
           switch (k) {
@@ -1767,58 +1132,7 @@ function create (left, right, operator, slop) {
 
         if (Object.keys(right.bool).length > 1) throw new Error('malformed query')
 
-        let clause
-
-        if (left.val.startsWith('"') && left.val.endsWith('"')) {
-          const value = left.val.slice(1, -1).trim()
-          const terms = value.split(/ +/)
-
-          if (terms.length > 1) {
-            const clauses = terms.reduce((previousValue, currentValue) => {
-              previousValue.push({
-                span_term: {
-                  [left.key]: currentValue
-                }
-              })
-
-              return previousValue
-            }, [])
-
-            clause = {
-              span_near: {
-                clauses,
-                in_order: true,
-                slop: 0
-              }
-            }
-          } else {
-            clause = {
-              span_term: {
-                [left.key]: value
-              }
-            }
-          }
-        } else if (left.val.includes('*') || left.val.includes('?')) {
-          clause = {
-            span_multi: {
-              match: {
-                wildcard: {
-                  [left.key]: {
-                    value: left.val,
-                    case_insensitive: true,
-                    rewrite: SPAN_MULTI_WILDCARD_REWRITE
-                  }
-                }
-              }
-            }
-          }
-        } else {
-          clause = {
-            span_term: {
-              [left.key]: left.val
-            }
-          }
-        }
+        const clause = makeProximityClause(left.key, left.val)
 
         for (const k in right.bool) {
           switch (k) {
@@ -2011,221 +1325,12 @@ function create (left, right, operator, slop) {
           }
         }
 
-        if (left.val.startsWith('"') && left.val.endsWith('"')) {
-          const value = left.val.slice(1, -1).trim()
-          const terms = value.split(/ +/)
-
-          if (terms.length > 1) {
-            const clauses = terms.reduce((previousValue, currentValue) => {
-              previousValue.push({
-                span_term: {
-                  [left.key]: currentValue
-                }
-              })
-
-              return previousValue
-            }, [])
-
-            booleanQuery.bool.must[0].span_near.clauses.push({
-              span_near: {
-                clauses,
-                in_order: true,
-                slop: 0
-              }
-            })
-          } else {
-            booleanQuery.bool.must[0].span_near.clauses.push({
-              span_term: {
-                [left.key]: value
-              }
-            })
-          }
-        } else if (left.val.includes('*') || left.val.includes('?')) {
-          booleanQuery.bool.must[0].span_near.clauses.push({
-            span_multi: {
-              match: {
-                wildcard: {
-                  [left.key]: {
-                    value: left.val,
-                    case_insensitive: true,
-                    rewrite: SPAN_MULTI_WILDCARD_REWRITE
-                  }
-                }
-              }
-            }
-          })
-        } else {
-          booleanQuery.bool.must[0].span_near.clauses.push({
-            span_term: {
-              [left.key]: left.val
-            }
-          })
-        }
-
-        if (right.val.startsWith('"') && right.val.endsWith('"')) {
-          const value = right.val.slice(1, -1).trim()
-          const terms = value.split(/ +/)
-
-          if (terms.length > 1) {
-            const clauses = terms.reduce((previousValue, currentValue) => {
-              previousValue.push({
-                span_term: {
-                  [right.key]: currentValue
-                }
-              })
-
-              return previousValue
-            }, [])
-
-            booleanQuery.bool.must[0].span_near.clauses.push({
-              span_near: {
-                clauses,
-                in_order: true,
-                slop: 0
-              }
-            })
-          } else {
-            booleanQuery.bool.must[0].span_near.clauses.push({
-              span_term: {
-                [right.key]: value
-              }
-            })
-          }
-        } else if (right.val.includes('*') || right.val.includes('?')) {
-          booleanQuery.bool.must[0].span_near.clauses.push({
-            span_multi: {
-              match: {
-                wildcard: {
-                  [right.key]: {
-                    value: right.val,
-                    case_insensitive: true,
-                    rewrite: SPAN_MULTI_WILDCARD_REWRITE
-                  }
-                }
-              }
-            }
-          })
-        } else {
-          booleanQuery.bool.must[0].span_near.clauses.push({
-            span_term: {
-              [right.key]: right.val
-            }
-          })
-        }
+        booleanQuery.bool.must[0].span_near.clauses.push(makeProximityClause(left.key, left.val), makeProximityClause(right.key, right.val))
 
         return booleanQuery
       }
     }
   }
 }
-
-// const left = {
-//   bool: {
-//     should: [
-//       { term: { "cpc.sub-grp": "Y02T90_1" } },
-//       { term: { "upc.sub-grp": "Y02T90_1" } },
-//       { terms: { "ipc.sub-grp": ["Y02T90_1"] } },
-//     ],
-//   },
-// };
-
-// const left = {
-//   bool: {
-//     should: [
-//       { match_phrase: { "cpc.sub-grp": "Y02T90_2" } },
-//       { term: { "upc.sub-grp": "Y02T90_3" } },
-//     ],
-//   },
-// };
-
-// const right = {
-//   bool: {
-//     must: [
-//       { match_phrase: { "cpc.sub-grp": "Y02T90_1" } },
-//       { term: { "upc.sub-grp": "Y02T90_1" } },
-//     ],
-//   },
-// };
-
-// const right = {
-//   bool: {
-//     should: [
-//       { term: { "cpc.sub-grp": "Y02T90_2" } },
-//       { term: { "ipc.sub-grp": "Y02T90_1" } },
-//       { terms: { "upc.sub-grp": ["Y02T90_1", "Y02T90_2"] } },
-//     ],
-//   },
-// };
-
-// const left = {
-//   bool: {
-//     should: [
-//       { terms: { pa: ["apple", "kiwi"] } },
-//       { match_phrase: { pa: "orange" } },
-//     ],
-//   },
-// };
-
-// const left = {
-//   bool: {
-//     must: [{
-//       span_near: {
-//         clauses: [
-//           { span_term: { pa: "banana" } },
-//           { span_term: { pa: "apple" } },
-//         ],
-//         slop: "2",
-//         in_order: true,
-//       },
-//     }],
-//   },
-// };
-
-// const right = { key: "pa", val: "apple*" };
-
-// const left = {
-//   bool: {
-//     must: [{ term: { ttl: 'kiwi' } }],
-//     must_not: [{term: {ttl: "banana"}}]
-//   }
-// }
-
-// const right = {
-//   bool: {
-//     should: [
-//       { terms: { ttl: ['kiwi', 'banana'] } }
-//     ]
-//   }
-// }
-
-// const left = { key: 'ttl', val: 'apple' }
-
-// console.dir(create(left, right, 'NOT'), {
-//   depth: null
-// })
-
-// { key: 'ttl', val: 'a' }
-// or
-// { key: 'ttl', val: 'b' }
-
-// {
-//     bool: {
-//       must: [
-//         { term: { 'cpc.sub-grp': 'Y02T90_4' } },
-//         { term: { 'cpc.sub-grp': 'Y02T90_3' } }
-//       ]
-//     }
-// }
-
-// and
-
-// {
-//     bool: {
-//       must: [
-//         { term: { 'cpc.sub-grp': 'Y02T90_4' } },
-//         { term: { 'cpc.sub-grp': 'Y02T90_3' } }
-//       ]
-//     }
-// }
 
 module.exports = create
