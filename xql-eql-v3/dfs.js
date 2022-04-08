@@ -63,7 +63,7 @@ function postorder (head, transformer) {
   return head.parsed
 }
 
-// const q = '(text:(((emf*) OR (nod*)) AND ((track*) OR (body*))))' // incorrect query
+// const q = '(text:(((emf*) OR (nod*)) AND ((track*) OR (body*))))'
 
 // console.time('time')
 // require('fs').writeFileSync('output.json', JSON.stringify(postorder(parse(q, false, { children: false })), null, 2))

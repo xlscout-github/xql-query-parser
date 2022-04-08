@@ -5792,6 +5792,503 @@ describe('Iterative Implementation', () => {
         }
       })
     })
+
+    it('#78', () => {
+      const query = '(ttl: (apple NOT banana NOT pineapple) AND (apple NOT banana NOT grapes))'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          must_not: [
+            {
+              term: {
+                ttl: 'banana'
+              }
+            },
+            {
+              term: {
+                ttl: 'pineapple'
+              }
+            },
+            {
+              term: {
+                ttl: 'grapes'
+              }
+            }
+          ],
+          must: [
+            {
+              term: {
+                ttl: 'apple'
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#78', () => {
+      const query = '(ttl: (apple AND apple) AND (apple NOT banana NOT grapes))'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          must: [
+            {
+              term: {
+                ttl: 'apple'
+              }
+            }
+          ],
+          must_not: [
+            {
+              term: {
+                ttl: 'banana'
+              }
+            },
+            {
+              term: {
+                ttl: 'grapes'
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#79', () => {
+      const query = '(ttl: (apple AND apple AND (mango OR pineapple)) AND (mango OR pineapple))'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          must: [
+            {
+              term: {
+                ttl: 'apple'
+              }
+            },
+            {
+              bool: {
+                should: [
+                  {
+                    terms: {
+                      ttl: [
+                        'mango',
+                        'pineapple'
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#80', () => {
+      const query = '(ttl: (apple AND apple) AND (NOT mango NOT pineapple))'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          must: [
+            {
+              term: {
+                ttl: 'apple'
+              }
+            }
+          ],
+          must_not: [
+            {
+              term: {
+                ttl: 'mango'
+              }
+            },
+            {
+              term: {
+                ttl: 'pineapple'
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#81', () => {
+      const query = '(ttl: (apple AND apple NOT mango NOT rainbow) AND (NOT mango NOT pineapple))'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          must: [
+            {
+              term: {
+                ttl: 'apple'
+              }
+            }
+          ],
+          must_not: [
+            {
+              term: {
+                ttl: 'mango'
+              }
+            },
+            {
+              term: {
+                ttl: 'rainbow'
+              }
+            },
+            {
+              term: {
+                ttl: 'pineapple'
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#82', () => {
+      const query = '(ttl: (NOT mango NOT pineapple) AND (apple AND apple NOT mango NOT rainbow))'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          must: [
+            {
+              term: {
+                ttl: 'apple'
+              }
+            }
+          ],
+          must_not: [
+            {
+              term: {
+                ttl: 'mango'
+              }
+            },
+            {
+              term: {
+                ttl: 'rainbow'
+              }
+            },
+            {
+              term: {
+                ttl: 'pineapple'
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#83', () => {
+      const query = '(ttl: (NOT mango NOT pineapple) AND (apple AND apple))'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          must: [
+            {
+              term: {
+                ttl: 'apple'
+              }
+            }
+          ],
+          must_not: [
+            {
+              term: {
+                ttl: 'mango'
+              }
+            },
+            {
+              term: {
+                ttl: 'pineapple'
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#84', () => {
+      const query = '(ttl: (mango OR pineapple) AND (apple AND apple AND (mango OR pineapple)))'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          must: [
+            {
+              term: {
+                ttl: 'apple'
+              }
+            },
+            {
+              bool: {
+                should: [
+                  {
+                    terms: {
+                      ttl: [
+                        'mango',
+                        'pineapple'
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#85', () => {
+      const query = '(ttl: (NOT mango NOT pineapple) AND (NOT apple NOT mango))'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          must_not: [
+            {
+              term: {
+                ttl: 'mango'
+              }
+            },
+            {
+              term: {
+                ttl: 'pineapple'
+              }
+            },
+            {
+              term: {
+                ttl: 'apple'
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#86', () => {
+      const query = '(ttl: (NOT mango NOT pineapple) AND (apple))'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          must_not: [
+            {
+              term: {
+                ttl: 'mango'
+              }
+            },
+            {
+              term: {
+                ttl: 'pineapple'
+              }
+            }
+          ],
+          must: [
+            {
+              term: {
+                ttl: 'apple'
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#87', () => {
+      const query = '(ttl: (apple) AND (NOT mango NOT pineapple))'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          must_not: [
+            {
+              term: {
+                ttl: 'mango'
+              }
+            },
+            {
+              term: {
+                ttl: 'pineapple'
+              }
+            }
+          ],
+          must: [
+            {
+              term: {
+                ttl: 'apple'
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#88', () => {
+      const query = '(ttl: (NOT apple) OR (mango OR NOT apple))'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          should: [
+            {
+              term: {
+                ttl: 'mango'
+              }
+            },
+            {
+              bool: {
+                must_not: [
+                  {
+                    term: {
+                      ttl: 'apple'
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#89', () => {
+      const query = '(ttl: (mango OR NOT apple) OR (NOT apple))'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          should: [
+            {
+              term: {
+                ttl: 'mango'
+              }
+            },
+            {
+              bool: {
+                must_not: [
+                  {
+                    term: {
+                      ttl: 'apple'
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#90', () => {
+      const query = '(((ttl:(mango)) OR (pa:(mango))) OR text:pineapple OR pineapple)'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          should: [
+            {
+              term: {
+                ttl: 'mango'
+              }
+            },
+            {
+              term: {
+                pa: 'mango'
+              }
+            },
+            {
+              term: {
+                text: 'pineapple'
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#91', () => {
+      const query = '(((ttl:(mango)) OR (pa:(mango))) OR pa:pineapple OR apple)'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          should: [
+            {
+              term: {
+                ttl: 'mango'
+              }
+            },
+            {
+              terms: {
+                pa: [
+                  'pineapple',
+                  'apple',
+                  'mango'
+                ]
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#92', () => {
+      const query = '(((ttl:(mango)) OR (pa:(mango OR rainbow))) OR pa:pineapple OR apple)'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          should: [
+            {
+              terms: {
+                pa: [
+                  'mango',
+                  'rainbow',
+                  'pineapple',
+                  'apple'
+                ]
+              }
+            },
+            {
+              term: {
+                ttl: 'mango'
+              }
+            }
+          ]
+        }
+      })
+    })
+
+    it('#93', () => {
+      const query = '(((ttl:(mango)) OR (pa:(rainbow))) OR pa:pineapple OR pineapple)'
+      const pq = genEqlIter(query)
+
+      expect(pq).toEqual({
+        bool: {
+          should: [
+            {
+              term: {
+                ttl: 'mango'
+              }
+            },
+            {
+              terms: {
+                pa: [
+                  'rainbow',
+                  'pineapple'
+                ]
+              }
+            }
+          ]
+        }
+      })
+    })
   })
 })
 
