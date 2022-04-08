@@ -5827,7 +5827,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#78', () => {
+    it('#79', () => {
       const query = '(ttl: (apple AND apple) AND (apple NOT banana NOT grapes))'
       const pq = genEqlIter(query)
 
@@ -5856,7 +5856,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#79', () => {
+    it('#80', () => {
       const query = '(ttl: (apple AND apple AND (mango OR pineapple)) AND (mango OR pineapple))'
       const pq = genEqlIter(query)
 
@@ -5887,7 +5887,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#80', () => {
+    it('#81', () => {
       const query = '(ttl: (apple AND apple) AND (NOT mango NOT pineapple))'
       const pq = genEqlIter(query)
 
@@ -5916,7 +5916,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#81', () => {
+    it('#82', () => {
       const query = '(ttl: (apple AND apple NOT mango NOT rainbow) AND (NOT mango NOT pineapple))'
       const pq = genEqlIter(query)
 
@@ -5950,7 +5950,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#82', () => {
+    it('#83', () => {
       const query = '(ttl: (NOT mango NOT pineapple) AND (apple AND apple NOT mango NOT rainbow))'
       const pq = genEqlIter(query)
 
@@ -5984,7 +5984,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#83', () => {
+    it('#84', () => {
       const query = '(ttl: (NOT mango NOT pineapple) AND (apple AND apple))'
       const pq = genEqlIter(query)
 
@@ -6013,7 +6013,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#84', () => {
+    it('#85', () => {
       const query = '(ttl: (mango OR pineapple) AND (apple AND apple AND (mango OR pineapple)))'
       const pq = genEqlIter(query)
 
@@ -6044,7 +6044,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#85', () => {
+    it('#86', () => {
       const query = '(ttl: (NOT mango NOT pineapple) AND (NOT apple NOT mango))'
       const pq = genEqlIter(query)
 
@@ -6071,7 +6071,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#86', () => {
+    it('#87', () => {
       const query = '(ttl: (NOT mango NOT pineapple) AND (apple))'
       const pq = genEqlIter(query)
 
@@ -6100,7 +6100,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#87', () => {
+    it('#88', () => {
       const query = '(ttl: (apple) AND (NOT mango NOT pineapple))'
       const pq = genEqlIter(query)
 
@@ -6129,7 +6129,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#88', () => {
+    it('#89', () => {
       const query = '(ttl: (NOT apple) OR (mango OR NOT apple))'
       const pq = genEqlIter(query)
 
@@ -6157,7 +6157,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#89', () => {
+    it('#90', () => {
       const query = '(ttl: (mango OR NOT apple) OR (NOT apple))'
       const pq = genEqlIter(query)
 
@@ -6185,7 +6185,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#90', () => {
+    it('#91', () => {
       const query = '(((ttl:(mango)) OR (pa:(mango))) OR text:pineapple OR pineapple)'
       const pq = genEqlIter(query)
 
@@ -6212,7 +6212,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#91', () => {
+    it('#92', () => {
       const query = '(((ttl:(mango)) OR (pa:(mango))) OR pa:pineapple OR apple)'
       const pq = genEqlIter(query)
 
@@ -6238,7 +6238,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#92', () => {
+    it('#93', () => {
       const query = '(((ttl:(mango)) OR (pa:(mango OR rainbow))) OR pa:pineapple OR apple)'
       const pq = genEqlIter(query)
 
@@ -6265,7 +6265,7 @@ describe('Iterative Implementation', () => {
       })
     })
 
-    it('#93', () => {
+    it('#94', () => {
       const query = '(((ttl:(mango)) OR (pa:(rainbow))) OR pa:pineapple OR pineapple)'
       const pq = genEqlIter(query)
 
