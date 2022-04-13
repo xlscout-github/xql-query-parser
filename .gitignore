@@ -1,3 +1,4 @@
 node_modules
 grammar.js
 coverage
+test-report.xml
