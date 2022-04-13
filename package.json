@@ -20,6 +20,10 @@
     "nearley": "^2.20.1"
   },
   "devDependencies": {
-    "jest": "^26.6.3"
+    "jest": "^26.6.3",
+    "jest-sonar-reporter": "^2.0.0"
+  },
+  "jest": {
+    "testResultsProcessor": "jest-sonar-reporter"
   }
 }
