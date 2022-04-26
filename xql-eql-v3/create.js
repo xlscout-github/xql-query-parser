@@ -97,6 +97,140 @@ function makeProximityClause (field, value) {
   }
 }
 
+function adaptMust (must) {
+  for (const iterator of must) {
+    if (iterator.term) {
+      iterator.span_term = iterator.term
+      delete iterator.term
+    } else if (iterator.wildcard) {
+      const [wc] = Object.keys(iterator.wildcard)
+      iterator.span_multi = {
+        match: {
+          wildcard: {
+            [wc]: {
+              ...iterator.wildcard[wc],
+              rewrite: SPAN_MULTI_WILDCARD_REWRITE
+            }
+          }
+        }
+      }
+      delete iterator.wildcard
+    } else if (iterator.match_phrase) {
+      const [mp] = Object.keys(iterator.match_phrase)
+      const value = iterator.match_phrase[mp]
+      const terms = value.split(/ +/)
+
+      if (terms.length > 1) {
+        const clauses = terms.reduce(
+          (previousValue, currentValue) => {
+            previousValue.push({
+              span_term: {
+                [mp]: currentValue
+              }
+            })
+
+            return previousValue
+          },
+          []
+        )
+
+        iterator.span_near = {
+          clauses,
+          in_order: true,
+          slop: 0
+        }
+      } else {
+        iterator.span_term = { [mp]: value }
+      }
+
+      delete iterator.match_phrase
+    } else if (!iterator.span_near) {
+      throw new Error('malformed query')
+    }
+  }
+
+  return must
+}
+
+function adaptShould (should) {
+  return should.reduce(
+    (previousValue, currentValue) => {
+      if (currentValue.term) {
+        previousValue.push({
+          span_term: currentValue.term
+        })
+      } else if (currentValue.terms) {
+        for (const key in currentValue.terms) {
+          currentValue.terms[key].forEach(
+            (term) => {
+              previousValue.push({
+                span_term: { [key]: term }
+              })
+            }
+          )
+        }
+      } else if (currentValue.wildcard) {
+        const [wc] = Object.keys(currentValue.wildcard)
+        previousValue.push({
+          span_multi: {
+            match: {
+              wildcard: {
+                [wc]: {
+                  ...currentValue.wildcard[wc],
+                  rewrite:
+                      SPAN_MULTI_WILDCARD_REWRITE
+                }
+              }
+            }
+          }
+        })
+      } else if (currentValue.match_phrase) {
+        const [mp] = Object.keys(currentValue.match_phrase)
+        const phrase =
+            currentValue.match_phrase[mp]
+        const terms = phrase.split(/ +/)
+
+        if (terms.length > 1) {
+          previousValue.push({
+            span_near: {
+              clauses: terms.reduce(
+                (previousValue, currentValue) => {
+                  previousValue.push({
+                    span_term: {
+                      [mp]: currentValue
+                    }
+                  })
+
+                  return previousValue
+                },
+                []
+              ),
+              in_order: true,
+              slop: 0
+            }
+          })
+        } else {
+          previousValue.push({
+            span_term: { [mp]: phrase }
+          })
+        }
+      } else if (
+        currentValue.bool.must &&
+        currentValue.bool.must[0].span_near
+      ) {
+        previousValue.push(
+          currentValue.bool.must[0]
+        )
+      } else {
+        throw new Error('malformed query')
+      }
+
+      return previousValue
+    },
+    []
+  )
+}
+
 function create (left, right, operator, slop) {
   switch (operator) {
     case 'AND': {
@@ -610,324 +744,70 @@ function create (left, right, operator, slop) {
             slop = '50'
         }
 
-        for (const k in left.bool) {
-          switch (k) {
-            case 'must': {
-              for (const iterator of left.bool[k]) {
-                if (iterator.term) {
-                  iterator.span_term = iterator.term
-                  delete iterator.term
-                } else if (iterator.wildcard) {
-                  for (const k in iterator.wildcard) {
-                    iterator.span_multi = {
-                      match: {
-                        wildcard: {
-                          [k]: {
-                            ...iterator.wildcard[k],
-                            rewrite: SPAN_MULTI_WILDCARD_REWRITE
-                          }
-                        }
-                      }
-                    }
-                    delete iterator.wildcard
-                  }
-                } else if (iterator.match_phrase) {
-                  for (const k in iterator.match_phrase) {
-                    const value = iterator.match_phrase[k]
-                    const terms = value.split(/ +/)
+        const [cl] = Object.keys(left.bool)
 
-                    if (terms.length > 1) {
-                      const clauses = terms.reduce(
-                        (previousValue, currentValue) => {
-                          previousValue.push({
-                            span_term: {
-                              [k]: currentValue
-                            }
-                          })
-
-                          return previousValue
-                        },
-                        []
-                      )
-
-                      iterator.span_near = {
-                        clauses,
-                        in_order: true,
-                        slop: 0
-                      }
-                    } else {
-                      iterator.span_term = { [k]: value }
-                    }
-
-                    delete iterator.match_phrase
-                  }
-                } else if (!iterator.span_near) {
-                  throw new Error('malformed query')
+        switch (cl) {
+          case 'must': {
+            clause = adaptMust(left.bool.must)
+            break
+          }
+          case 'should': {
+            clause = [
+              {
+                span_or: {
+                  clauses: adaptShould(left.bool.should)
                 }
               }
-
-              clause = left.bool.must
-              break
-            }
-            case 'should': {
-              clause = [
-                {
-                  span_or: {
-                    clauses: left.bool[k].reduce(
-                      (previousValue, currentValue) => {
-                        if (currentValue.term) {
-                          previousValue.push({
-                            span_term: currentValue.term
-                          })
-                        } else if (currentValue.terms) {
-                          for (const key in currentValue.terms) {
-                            currentValue.terms[key].forEach((term) => {
-                              previousValue.push({
-                                span_term: { [key]: term }
-                              })
-                            })
-                          }
-                        } else if (currentValue.wildcard) {
-                          for (const key in currentValue.wildcard) {
-                            previousValue.push({
-                              span_multi: {
-                                match: {
-                                  wildcard: {
-                                    [key]: {
-                                      ...currentValue.wildcard[key],
-                                      rewrite: SPAN_MULTI_WILDCARD_REWRITE
-                                    }
-                                  }
-                                }
-                              }
-                            })
-                          }
-                        } else if (currentValue.match_phrase) {
-                          for (const key in currentValue.match_phrase) {
-                            const phrase = currentValue.match_phrase[key]
-                            const terms = phrase.split(/ +/)
-
-                            if (terms.length > 1) {
-                              previousValue.push({
-                                span_near: {
-                                  clauses: terms.reduce(
-                                    (previousValue, currentValue) => {
-                                      previousValue.push({
-                                        span_term: {
-                                          [key]: currentValue
-                                        }
-                                      })
-
-                                      return previousValue
-                                    },
-                                    []
-                                  ),
-                                  in_order: true,
-                                  slop: 0
-                                }
-                              })
-                            } else {
-                              previousValue.push({
-                                span_term: { [key]: phrase }
-                              })
-                            }
-                          }
-                        } else if (
-                          currentValue.bool.must &&
-                          currentValue.bool.must[0].span_near
-                        ) {
-                          previousValue.push(currentValue.bool.must[0])
-                        } else {
-                          throw new Error('malformed query')
-                        }
-
-                        return previousValue
-                      },
-                      []
-                    )
-                  }
-                }
-              ]
-              break
-            }
-            default: {
-              throw new Error('malformed query')
-            }
+            ]
+            break
+          }
+          default: {
+            throw new Error('malformed query')
           }
         }
 
-        for (const k in right.bool) {
-          switch (k) {
-            case 'must': {
-              for (const iterator of right.bool[k]) {
-                if (iterator.term) {
-                  iterator.span_term = iterator.term
-                  delete iterator.term
-                } else if (iterator.wildcard) {
-                  for (const k in iterator.wildcard) {
-                    iterator.span_multi = {
-                      match: {
-                        wildcard: {
-                          [k]: {
-                            ...iterator.wildcard[k],
-                            rewrite: SPAN_MULTI_WILDCARD_REWRITE
+        const [clm] = Object.keys(right.bool)
+
+        switch (clm) {
+          case 'must': {
+            return {
+              bool: {
+                must: [
+                  {
+                    span_near: {
+                      clauses: [...clause, ...adaptMust(right.bool.must)],
+                      slop,
+                      in_order: inOrder
+                    }
+                  }
+                ]
+              }
+            }
+          }
+          case 'should': {
+            return {
+              bool: {
+                must: [
+                  {
+                    span_near: {
+                      clauses: [
+                        ...clause,
+                        {
+                          span_or: {
+                            clauses: adaptShould(right.bool.should)
                           }
                         }
-                      }
+                      ],
+                      slop,
+                      in_order: inOrder
                     }
-                    delete iterator.wildcard
                   }
-                } else if (iterator.match_phrase) {
-                  for (const k in iterator.match_phrase) {
-                    const value = iterator.match_phrase[k]
-                    const terms = value.split(/ +/)
-
-                    if (terms.length > 1) {
-                      const clauses = terms.reduce(
-                        (previousValue, currentValue) => {
-                          previousValue.push({
-                            span_term: {
-                              [k]: currentValue
-                            }
-                          })
-
-                          return previousValue
-                        },
-                        []
-                      )
-
-                      iterator.span_near = {
-                        clauses,
-                        in_order: true,
-                        slop: 0
-                      }
-                    } else {
-                      iterator.span_term = { [k]: value }
-                    }
-
-                    delete iterator.match_phrase
-                  }
-                } else if (!iterator.span_near) {
-                  throw new Error('malformed query')
-                }
-              }
-
-              return {
-                bool: {
-                  must: [
-                    {
-                      span_near: {
-                        clauses: [...clause, ...right.bool.must],
-                        slop,
-                        in_order: inOrder
-                      }
-                    }
-                  ]
-                }
+                ]
               }
             }
-            case 'should': {
-              return {
-                bool: {
-                  must: [
-                    {
-                      span_near: {
-                        clauses: [
-                          ...clause,
-                          {
-                            span_or: {
-                              clauses: right.bool[k].reduce(
-                                (previousValue, currentValue) => {
-                                  if (currentValue.term) {
-                                    previousValue.push({
-                                      span_term: currentValue.term
-                                    })
-                                  } else if (currentValue.terms) {
-                                    for (const key in currentValue.terms) {
-                                      currentValue.terms[key].forEach(
-                                        (term) => {
-                                          previousValue.push({
-                                            span_term: { [key]: term }
-                                          })
-                                        }
-                                      )
-                                    }
-                                  } else if (currentValue.wildcard) {
-                                    for (const key in currentValue.wildcard) {
-                                      previousValue.push({
-                                        span_multi: {
-                                          match: {
-                                            wildcard: {
-                                              [key]: {
-                                                ...currentValue.wildcard[key],
-                                                rewrite:
-                                                  SPAN_MULTI_WILDCARD_REWRITE
-                                              }
-                                            }
-                                          }
-                                        }
-                                      })
-                                    }
-                                  } else if (currentValue.match_phrase) {
-                                    for (const key in currentValue.match_phrase) {
-                                      const phrase =
-                                        currentValue.match_phrase[key]
-                                      const terms = phrase.split(/ +/)
-
-                                      if (terms.length > 1) {
-                                        previousValue.push({
-                                          span_near: {
-                                            clauses: terms.reduce(
-                                              (previousValue, currentValue) => {
-                                                previousValue.push({
-                                                  span_term: {
-                                                    [key]: currentValue
-                                                  }
-                                                })
-
-                                                return previousValue
-                                              },
-                                              []
-                                            ),
-                                            in_order: true,
-                                            slop: 0
-                                          }
-                                        })
-                                      } else {
-                                        previousValue.push({
-                                          span_term: { [key]: phrase }
-                                        })
-                                      }
-                                    }
-                                  } else if (
-                                    currentValue.bool.must &&
-                                    currentValue.bool.must[0].span_near
-                                  ) {
-                                    previousValue.push(
-                                      currentValue.bool.must[0]
-                                    )
-                                  } else {
-                                    throw new Error('malformed query')
-                                  }
-
-                                  return previousValue
-                                },
-                                []
-                              )
-                            }
-                          }
-                        ],
-                        slop,
-                        in_order: inOrder
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-            default: {
-              throw new Error('malformed query')
-            }
+          }
+          default: {
+            throw new Error('malformed query')
           }
         }
       } else if (left.bool) {
@@ -945,178 +825,48 @@ function create (left, right, operator, slop) {
 
         const clause = makeProximityClause(right.key, right.val)
 
-        for (const k in left.bool) {
-          switch (k) {
-            case 'must': {
-              for (const iterator of left.bool[k]) {
-                if (iterator.term) {
-                  iterator.span_term = iterator.term
-                  delete iterator.term
-                } else if (iterator.wildcard) {
-                  for (const k in iterator.wildcard) {
-                    iterator.span_multi = {
-                      match: {
-                        wildcard: {
-                          [k]: {
-                            ...iterator.wildcard[k],
-                            rewrite: SPAN_MULTI_WILDCARD_REWRITE
+        const [cl] = Object.keys(left.bool)
+
+        switch (cl) {
+          case 'must': {
+            return {
+              bool: {
+                must: [
+                  {
+                    span_near: {
+                      clauses: [...adaptMust(left.bool.must), clause],
+                      slop,
+                      in_order: inOrder
+                    }
+                  }
+                ]
+              }
+            }
+          }
+          case 'should': {
+            return {
+              bool: {
+                must: [
+                  {
+                    span_near: {
+                      clauses: [
+                        {
+                          span_or: {
+                            clauses: adaptShould(left.bool.should)
                           }
-                        }
-                      }
-                    }
-                    delete iterator.wildcard
-                  }
-                } else if (iterator.match_phrase) {
-                  for (const k in iterator.match_phrase) {
-                    const value = iterator.match_phrase[k]
-                    const terms = value.split(/ +/)
-
-                    if (terms.length > 1) {
-                      const clauses = terms.reduce(
-                        (previousValue, currentValue) => {
-                          previousValue.push({
-                            span_term: {
-                              [k]: currentValue
-                            }
-                          })
-
-                          return previousValue
                         },
-                        []
-                      )
-
-                      iterator.span_near = {
-                        clauses,
-                        in_order: true,
-                        slop: 0
-                      }
-                    } else {
-                      iterator.span_term = { [k]: value }
+                        clause
+                      ],
+                      slop,
+                      in_order: inOrder
                     }
-
-                    delete iterator.match_phrase
                   }
-                } else if (!iterator.span_near) {
-                  throw new Error('malformed query')
-                }
-              }
-
-              return {
-                bool: {
-                  must: [
-                    {
-                      span_near: {
-                        clauses: [...left.bool.must, clause],
-                        slop,
-                        in_order: inOrder
-                      }
-                    }
-                  ]
-                }
+                ]
               }
             }
-            case 'should': {
-              return {
-                bool: {
-                  must: [
-                    {
-                      span_near: {
-                        clauses: [
-                          {
-                            span_or: {
-                              clauses: left.bool[k].reduce(
-                                (previousValue, currentValue) => {
-                                  if (currentValue.term) {
-                                    previousValue.push({
-                                      span_term: currentValue.term
-                                    })
-                                  } else if (currentValue.terms) {
-                                    for (const key in currentValue.terms) {
-                                      currentValue.terms[key].forEach(
-                                        (term) => {
-                                          previousValue.push({
-                                            span_term: { [key]: term }
-                                          })
-                                        }
-                                      )
-                                    }
-                                  } else if (currentValue.wildcard) {
-                                    for (const key in currentValue.wildcard) {
-                                      previousValue.push({
-                                        span_multi: {
-                                          match: {
-                                            wildcard: {
-                                              [key]: {
-                                                ...currentValue.wildcard[key],
-                                                rewrite:
-                                                  SPAN_MULTI_WILDCARD_REWRITE
-                                              }
-                                            }
-                                          }
-                                        }
-                                      })
-                                    }
-                                  } else if (currentValue.match_phrase) {
-                                    for (const key in currentValue.match_phrase) {
-                                      const phrase =
-                                        currentValue.match_phrase[key]
-                                      const terms = phrase.split(/ +/)
-
-                                      if (terms.length > 1) {
-                                        previousValue.push({
-                                          span_near: {
-                                            clauses: terms.reduce(
-                                              (previousValue, currentValue) => {
-                                                previousValue.push({
-                                                  span_term: {
-                                                    [key]: currentValue
-                                                  }
-                                                })
-
-                                                return previousValue
-                                              },
-                                              []
-                                            ),
-                                            in_order: true,
-                                            slop: 0
-                                          }
-                                        })
-                                      } else {
-                                        previousValue.push({
-                                          span_term: { [key]: phrase }
-                                        })
-                                      }
-                                    }
-                                  } else if (
-                                    currentValue.bool.must &&
-                                    currentValue.bool.must[0].span_near
-                                  ) {
-                                    previousValue.push(
-                                      currentValue.bool.must[0]
-                                    )
-                                  } else {
-                                    throw new Error('malformed query')
-                                  }
-
-                                  return previousValue
-                                },
-                                []
-                              )
-                            }
-                          },
-                          clause
-                        ],
-                        slop,
-                        in_order: inOrder
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-            default: {
-              throw new Error('malformed query')
-            }
+          }
+          default: {
+            throw new Error('malformed query')
           }
         }
       } else if (right.bool) {
@@ -1134,178 +884,48 @@ function create (left, right, operator, slop) {
 
         const clause = makeProximityClause(left.key, left.val)
 
-        for (const k in right.bool) {
-          switch (k) {
-            case 'must': {
-              for (const iterator of right.bool[k]) {
-                if (iterator.term) {
-                  iterator.span_term = iterator.term
-                  delete iterator.term
-                } else if (iterator.wildcard) {
-                  for (const k in iterator.wildcard) {
-                    iterator.span_multi = {
-                      match: {
-                        wildcard: {
-                          [k]: {
-                            ...iterator.wildcard[k],
-                            rewrite: SPAN_MULTI_WILDCARD_REWRITE
+        const [cl] = Object.keys(right.bool)
+
+        switch (cl) {
+          case 'must': {
+            return {
+              bool: {
+                must: [
+                  {
+                    span_near: {
+                      clauses: [clause, ...adaptMust(right.bool.must)],
+                      slop,
+                      in_order: inOrder
+                    }
+                  }
+                ]
+              }
+            }
+          }
+          case 'should': {
+            return {
+              bool: {
+                must: [
+                  {
+                    span_near: {
+                      clauses: [
+                        clause,
+                        {
+                          span_or: {
+                            clauses: adaptShould(right.bool.should)
                           }
                         }
-                      }
+                      ],
+                      slop,
+                      in_order: inOrder
                     }
-                    delete iterator.wildcard
                   }
-                } else if (iterator.match_phrase) {
-                  for (const k in iterator.match_phrase) {
-                    const value = iterator.match_phrase[k]
-                    const terms = value.split(/ +/)
-
-                    if (terms.length > 1) {
-                      const clauses = terms.reduce(
-                        (previousValue, currentValue) => {
-                          previousValue.push({
-                            span_term: {
-                              [k]: currentValue
-                            }
-                          })
-
-                          return previousValue
-                        },
-                        []
-                      )
-
-                      iterator.span_near = {
-                        clauses,
-                        in_order: true,
-                        slop: 0
-                      }
-                    } else {
-                      iterator.span_term = { [k]: value }
-                    }
-
-                    delete iterator.match_phrase
-                  }
-                } else if (!iterator.span_near) {
-                  throw new Error('malformed query')
-                }
-              }
-
-              return {
-                bool: {
-                  must: [
-                    {
-                      span_near: {
-                        clauses: [clause, ...right.bool.must],
-                        slop,
-                        in_order: inOrder
-                      }
-                    }
-                  ]
-                }
+                ]
               }
             }
-            case 'should': {
-              return {
-                bool: {
-                  must: [
-                    {
-                      span_near: {
-                        clauses: [
-                          clause,
-                          {
-                            span_or: {
-                              clauses: right.bool[k].reduce(
-                                (previousValue, currentValue) => {
-                                  if (currentValue.term) {
-                                    previousValue.push({
-                                      span_term: currentValue.term
-                                    })
-                                  } else if (currentValue.terms) {
-                                    for (const key in currentValue.terms) {
-                                      currentValue.terms[key].forEach(
-                                        (term) => {
-                                          previousValue.push({
-                                            span_term: { [key]: term }
-                                          })
-                                        }
-                                      )
-                                    }
-                                  } else if (currentValue.wildcard) {
-                                    for (const key in currentValue.wildcard) {
-                                      previousValue.push({
-                                        span_multi: {
-                                          match: {
-                                            wildcard: {
-                                              [key]: {
-                                                ...currentValue.wildcard[key],
-                                                rewrite:
-                                                  SPAN_MULTI_WILDCARD_REWRITE
-                                              }
-                                            }
-                                          }
-                                        }
-                                      })
-                                    }
-                                  } else if (currentValue.match_phrase) {
-                                    for (const key in currentValue.match_phrase) {
-                                      const phrase =
-                                        currentValue.match_phrase[key]
-                                      const terms = phrase.split(/ +/)
-
-                                      if (terms.length > 1) {
-                                        previousValue.push({
-                                          span_near: {
-                                            clauses: terms.reduce(
-                                              (previousValue, currentValue) => {
-                                                previousValue.push({
-                                                  span_term: {
-                                                    [key]: currentValue
-                                                  }
-                                                })
-
-                                                return previousValue
-                                              },
-                                              []
-                                            ),
-                                            in_order: true,
-                                            slop: 0
-                                          }
-                                        })
-                                      } else {
-                                        previousValue.push({
-                                          span_term: { [key]: phrase }
-                                        })
-                                      }
-                                    }
-                                  } else if (
-                                    currentValue.bool.must &&
-                                    currentValue.bool.must[0].span_near
-                                  ) {
-                                    previousValue.push(
-                                      currentValue.bool.must[0]
-                                    )
-                                  } else {
-                                    throw new Error('malformed query')
-                                  }
-
-                                  return previousValue
-                                },
-                                []
-                              )
-                            }
-                          }
-                        ],
-                        slop,
-                        in_order: inOrder
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-            default: {
-              throw new Error('malformed query')
-            }
+          }
+          default: {
+            throw new Error('malformed query')
           }
         }
       } else {
