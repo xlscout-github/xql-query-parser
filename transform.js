@@ -223,12 +223,12 @@ function _transform (
   left,
   right,
   operator,
-  extras = {},
-  opt = { children: true }
+  opt = { children: true },
+  props = {}
 ) {
   if (opt.children) {
     const output = {
-      ...extras,
+      ...props,
       opt: operator,
       child: []
     }
@@ -335,7 +335,7 @@ function _transform (
   }
 
   const output = {
-    data: { ...extras, opt: operator }
+    data: { ...props, opt: operator }
   }
 
   if (left == null) {
@@ -504,28 +504,21 @@ function transform (root, opt = { children: true }) {
           }
         }
       } else if (node.leftOperand == null) {
-        const extras = {}
-        if (node.span) extras.span = node.span
-
         node.parsed = _transform(
           node.leftOperand,
           node.rightOperand.parsed,
           node.operator,
-          extras,
           opt
         )
 
         delete node.rightOperand
       } else {
-        const extras = {}
-        if (node.span) extras.span = node.span
-
         node.parsed = _transform(
           node.leftOperand.parsed,
           node.rightOperand.parsed,
           node.operator,
-          extras,
-          opt
+          opt,
+          node.span && { span: node.span }
         )
 
         delete node.leftOperand
