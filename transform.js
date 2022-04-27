@@ -467,7 +467,7 @@ function _transform (
 function transform (root, opt = { children: true }) {
   let node = root
 
-  if (node.leftOperand == null && !node.rightOperand == null) {
+  if (node.leftOperand == null && node.rightOperand == null) {
     if (opt.children) {
       if (node.type === DATE_TYPE) {
         return { key: node.field, val: { from: node.from, to: node.to } }
