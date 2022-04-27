@@ -467,7 +467,7 @@ function _transform (
 function transform (root, opt = { children: true }) {
   let node = root
 
-  if (!node.leftOperand && !node.rightOperand) {
+  if (node.leftOperand == null && !node.rightOperand == null) {
     if (opt.children) {
       if (node.type === DATE_TYPE) {
         return { key: node.field, val: { from: node.from, to: node.to } }
@@ -489,7 +489,7 @@ function transform (root, opt = { children: true }) {
     } else if (node.rightOperand != null && !node.rightOperand.visited) {
       node = node.rightOperand
     } else {
-      if (!node.leftOperand && !node.rightOperand) {
+      if (node.leftOperand == null && node.rightOperand == null) {
         if (opt.children) {
           if (node.type === DATE_TYPE) {
             node.parsed = { field: node.field, value: { from: node.from, to: node.to } }
@@ -503,7 +503,7 @@ function transform (root, opt = { children: true }) {
             node.parsed = { data: { key: node.field, val: node.value }, left: null, right: null }
           }
         }
-      } else if (!node.leftOperand) {
+      } else if (node.leftOperand == null) {
         const extras = {}
         if (node.span) extras.span = node.span
 
