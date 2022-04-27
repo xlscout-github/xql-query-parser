@@ -505,7 +505,7 @@ function transform (root, opt = { children: true }) {
         }
       } else if (node.leftOperand == null) {
         node.parsed = _transform(
-          node.leftOperand,
+          null,
           node.rightOperand.parsed,
           node.operator,
           opt
