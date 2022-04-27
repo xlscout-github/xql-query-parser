@@ -514,6 +514,8 @@ function transform (root, opt = { children: true }) {
           extras,
           opt
         )
+
+        delete node.rightOperand
       } else {
         const extras = {}
         if (node.span) extras.span = node.span
@@ -525,14 +527,9 @@ function transform (root, opt = { children: true }) {
           extras,
           opt
         )
-      }
-      
-      if (node.leftOperand && node.leftOperand.parsed) {
-        node.leftOperand.parsed = null
-      }
 
-      if (node.rightOperand && node.rightOperand.parsed) {
-        node.rightOperand.parsed = null
+        delete node.leftOperand
+        delete node.rightOperand
       }
 
       node.visited = true
