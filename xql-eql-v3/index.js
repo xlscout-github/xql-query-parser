@@ -10,25 +10,25 @@ const genEqlIter = require('./dfs')
 const q = '(ttl:(mobile))'
 
 console.log('final ->', require('fs').writeFileSync('output.json', JSON.stringify(genEqlIter(q, (node) => {
-    // console.log(node.key, node.val);
-    if (node.key === 'pn') {
-        // node.key = 'pn-nok.keyword'
-        node.key = 'ucid-alt.keyword'
-    }
+  // console.log(node.key, node.val);
+  if (node.key === 'pn') {
+    // node.key = 'pn-nok.keyword'
+    node.key = 'ucid-alt.keyword'
+  }
 
-    if(node.key === 'cpc') {
-        node.key = 'cpc.sub-grp'
-        node.val = node.val.replace('/', '_')
-    }
+  if (node.key === 'cpc') {
+    node.key = 'cpc.sub-grp'
+    node.val = node.val.replace('/', '_')
+  }
 
-    if (node.key === 'ipc' || node.key === 'ic') {
-        node.key = 'ipc.sub-grp'
-        node.val = node.val.replace('/', '_')
-    }
+  if (node.key === 'ipc' || node.key === 'ic') {
+    node.key = 'ipc.sub-grp'
+    node.val = node.val.replace('/', '_')
+  }
 
-    if (node.key.includes('.name') && (node.val.startsWith('"') && node.val.endsWith('"'))) {
-        node.val = node.val.replace(/['"]+/g, '')
-    }
+  if (node.key.includes('.name') && (node.val.startsWith('"') && node.val.endsWith('"'))) {
+    node.val = node.val.replace(/['"]+/g, '')
+  }
 }), null, 2)))
 
 //
