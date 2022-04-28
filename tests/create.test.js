@@ -1,9 +1,9 @@
-const { elasticBuilder } = require('..')
+const { parse } = require('../parser')
 
 describe('Proximity Queries', () => {
   it('Check Sentence Slop', () => {
     const query = '(ttl:(apple NEARS banana))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -25,7 +25,7 @@ describe('Proximity Queries', () => {
 
   it('Check Paragraph Slop', () => {
     const query = '(ttl:(apple PREP banana))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -47,7 +47,7 @@ describe('Proximity Queries', () => {
 
   it('Check Phrase with multiple terms', () => {
     const query = '(ttl:("app* tree" NEAR2 de*))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -84,7 +84,7 @@ describe('Proximity Queries', () => {
 
   it('Check Phrase with single term', () => {
     const query = '(ttl:("tree" NEAR2 "de*"))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -108,9 +108,12 @@ describe('Proximity Queries', () => {
 describe('Terms Queries', () => {
   it('Check Terms Query while ignore duplicates on creation with non left-right recursion', () => {
     const query = '(pn:(US9774086 OR US9774086))'
-    const pq = elasticBuilder(query, (node) => {
-      if (node.key === 'pn') {
-        node.key = 'pn-nok.keyword'
+    const pq = parse(query, false, {
+      eql: true,
+      transformFn: (node) => {
+        if (node.key === 'pn') {
+          node.key = 'pn-nok.keyword'
+        }
       }
     })
 
@@ -123,7 +126,7 @@ describe('Terms Queries', () => {
 
   it('Check Terms Query on left recursive duplicate query with duplicate non-recursive right term', () => {
     const query = '(pa:(coco OR coco) OR coco)'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -134,7 +137,7 @@ describe('Terms Queries', () => {
 
   it('Check Terms Query on right recursive duplicate query with duplicate non-recursive left term', () => {
     const query = '(pa:(coco OR (coco OR coco)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -145,7 +148,7 @@ describe('Terms Queries', () => {
 
   it('Check Terms Query on left recursive duplicate query with non-recursive right term', () => {
     const query = '(pa:(coco OR coco) OR milk)'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -158,7 +161,7 @@ describe('Terms Queries', () => {
 
   it('Check Terms Query on right recursive duplicate query with non-recursive left term', () => {
     const query = '(pa:(milk OR (coco OR coco)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -171,7 +174,7 @@ describe('Terms Queries', () => {
 
   it('Check Terms Query if left and right both are compound queries', () => {
     const query = '(pa:(coco OR powder) OR (milk OR cream))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -184,7 +187,7 @@ describe('Terms Queries', () => {
 
   it('Check Terms Query if left is compound query and right is a duplicate compound query', () => {
     const query = '(pa:((milk OR powder) OR (coco OR coco)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -197,7 +200,7 @@ describe('Terms Queries', () => {
 
   it('Check Terms Query if left is compound query and right is a duplicate compound query with duplicate values between them', () => {
     const query = '(pa:((milk OR coco) OR (coco OR coco)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -210,7 +213,7 @@ describe('Terms Queries', () => {
 
   it('Check Terms Query if left and right both are compound queries with duplicate values between them', () => {
     const query = '(pa:(coco OR mocha) OR (coco OR powder))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -225,9 +228,12 @@ describe('Terms Queries', () => {
 describe('PN Queries', () => {
   it('Check PN search query', () => {
     const query = '(pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845))'
-    const pq = elasticBuilder(query, (node) => {
-      if (node.key === 'pn') {
-        node.key = 'pn-nok.keyword'
+    const pq = parse(query, false, {
+      eql: true,
+      transformFn: (node) => {
+        if (node.key === 'pn') {
+          node.key = 'pn-nok.keyword'
+        }
       }
     })
 
@@ -253,9 +259,12 @@ describe('PN Queries', () => {
 
   it('Check PN search query with succeeding "NOT" operator', () => {
     const query = '((pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845)) NOT (ttl:(wireless)))'
-    const pq = elasticBuilder(query, (node) => {
-      if (node.key === 'pn') {
-        node.key = 'pn-nok.keyword'
+    const pq = parse(query, false, {
+      eql: true,
+      transformFn: (node) => {
+        if (node.key === 'pn') {
+          node.key = 'pn-nok.keyword'
+        }
       }
     })
 
@@ -288,9 +297,12 @@ describe('PN Queries', () => {
 
   it('Check PN search query with preceding "NOT" operator', () => {
     const query = '((ttl:(wireless)) NOT (pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845)))'
-    const pq = elasticBuilder(query, (node) => {
-      if (node.key === 'pn') {
-        node.key = 'pn-nok.keyword'
+    const pq = parse(query, false, {
+      eql: true,
+      transformFn: (node) => {
+        if (node.key === 'pn') {
+          node.key = 'pn-nok.keyword'
+        }
       }
     })
 
@@ -323,9 +335,12 @@ describe('PN Queries', () => {
 
   it('Check PN search query with succeeding "AND" operator', () => {
     const query = '((pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845)) AND (ttl:(wireless)))'
-    const pq = elasticBuilder(query, (node) => {
-      if (node.key === 'pn') {
-        node.key = 'pn-nok.keyword'
+    const pq = parse(query, false, {
+      eql: true,
+      transformFn: (node) => {
+        if (node.key === 'pn') {
+          node.key = 'pn-nok.keyword'
+        }
       }
     })
 
@@ -358,9 +373,12 @@ describe('PN Queries', () => {
 
   it('Check PN search query with preceding "AND" operator', () => {
     const query = '((ttl:(wireless)) AND (pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845)))'
-    const pq = elasticBuilder(query, (node) => {
-      if (node.key === 'pn') {
-        node.key = 'pn-nok.keyword'
+    const pq = parse(query, false, {
+      eql: true,
+      transformFn: (node) => {
+        if (node.key === 'pn') {
+          node.key = 'pn-nok.keyword'
+        }
       }
     })
 
@@ -393,9 +411,12 @@ describe('PN Queries', () => {
 
   it('Check PN search query with succeeding "OR" operator', () => {
     const query = '((pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845)) OR (ttl:(wireless)))'
-    const pq = elasticBuilder(query, (node) => {
-      if (node.key === 'pn') {
-        node.key = 'pn-nok.keyword'
+    const pq = parse(query, false, {
+      eql: true,
+      transformFn: (node) => {
+        if (node.key === 'pn') {
+          node.key = 'pn-nok.keyword'
+        }
       }
     })
 
@@ -422,9 +443,12 @@ describe('PN Queries', () => {
 
   it('Check PN search query with preceding "OR" operator', () => {
     const query = '((ttl:(wireless)) OR (pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845)))'
-    const pq = elasticBuilder(query, (node) => {
-      if (node.key === 'pn') {
-        node.key = 'pn-nok.keyword'
+    const pq = parse(query, false, {
+      eql: true,
+      transformFn: (node) => {
+        if (node.key === 'pn') {
+          node.key = 'pn-nok.keyword'
+        }
       }
     })
 
@@ -453,7 +477,7 @@ describe('PN Queries', () => {
 describe('Singleton Queries', () => {
   it('Check Singleton Search Text Query', () => {
     const query = '(ttl:(mobile))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: { must: [{ term: { ttl: 'mobile' } }] }
@@ -462,7 +486,7 @@ describe('Singleton Queries', () => {
 
   it('Check Singleton Phrase Text Query in quotes', () => {
     const query = '(ttl:("apple grader"))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: { must: [{ match_phrase: { ttl: 'apple grader' } }] }
@@ -471,7 +495,7 @@ describe('Singleton Queries', () => {
 
   it('Check Singleton Search Text Wildcard Query', () => {
     const query = '(ttl:(mobi*))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -482,7 +506,7 @@ describe('Singleton Queries', () => {
 
   it('Check Singleton Search Date Query', () => {
     const query = '(pd:[20220218 TO 20220228])'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -495,7 +519,7 @@ describe('Singleton Queries', () => {
 describe('"OR" Queries', () => {
   it('Check Phrase Text Query in quotes', () => {
     const query = '(ttl:(apple OR "coconut jam"))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -509,7 +533,7 @@ describe('"OR" Queries', () => {
 
   it('Check Combination with Range Query', () => {
     const query = '(ttl:("dragon ball") OR pd:([20200825 TO 20201027]))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -523,7 +547,7 @@ describe('"OR" Queries', () => {
 
   it('Check Combination with Range Query with unspecified bounds', () => {
     const query = '(ttl:("dragon ball") OR pd:([* TO *]))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -539,7 +563,7 @@ describe('"OR" Queries', () => {
 describe('"AND" Queries', () => {
   it('Check Phrase Text Query in quotes', () => {
     const query = '(ttl:(banana AND "stuffed bunny"))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -553,7 +577,7 @@ describe('"AND" Queries', () => {
 
   it('Check Combination with Range Query', () => {
     const query = '(ttl:("dragon ball") AND pd:([* TO *]))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -569,7 +593,7 @@ describe('"AND" Queries', () => {
 describe('"NOT" Queries', () => {
   it('Check Phrase Text Query in quotes', () => {
     const query = '(ttl:(apple NOT "apple tree"))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -581,7 +605,7 @@ describe('"NOT" Queries', () => {
 
   it('Check Combination with Range Query', () => {
     const query = '(ttl:("dragon ball") NOT pd:([20200825 TO 20201027]))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -595,7 +619,7 @@ describe('"NOT" Queries', () => {
 
   it('Check Combination with Range Query with unspecified bounds', () => {
     const query = '(ttl:("dragon ball") NOT pd:([* TO *]))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -609,7 +633,7 @@ describe('"NOT" Queries', () => {
 
   it('Check Combination with Wildcard Query', () => {
     const query = '(ttl:("dragon ball" NOT game*))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -623,7 +647,7 @@ describe('"NOT" Queries', () => {
 
   it('Check Wrapping of Terms with leading "NOT"', () => {
     const query = 'ttl: NOT apple NOT banana NOT orange'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -650,7 +674,7 @@ describe('"NOT" Queries', () => {
 
   it('Check Wrapping of Terms with leading "NOT" containing duplicate', () => {
     const query = 'ttl: NOT apple NOT banana NOT banana'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -672,7 +696,7 @@ describe('"NOT" Queries', () => {
 
   it('Check Wrapping of Terms without leading "NOT"', () => {
     const query = 'ttl: apple NOT banana NOT orange'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -701,7 +725,7 @@ describe('"NOT" Queries', () => {
 
   it('Check Wrapping of Terms without leading "NOT" containing duplicate', () => {
     const query = 'ttl: apple NOT banana NOT banana'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -716,7 +740,7 @@ describe('"NOT" Queries', () => {
 describe('Left Recursive Queries', () => {
   it('Check "AND" when left is a composite query', () => {
     const query = '(ttl:((apple NOT banana) AND ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -745,7 +769,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "AND" when left is bool query other than must', () => {
     const query = '(ttl:((apple OR banana) AND ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -765,7 +789,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "AND" when left is bool must query', () => {
     const query = '(ttl:((apple AND banana) AND ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -780,7 +804,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "AND" when left is bool must query while ignoring duplicates', () => {
     const query = '(ttl:((apple AND ball) AND ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -791,7 +815,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "OR" when left is a composite query', () => {
     const query = '(ttl:((apple NOT banana) OR ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -810,7 +834,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "OR" when left is a bool query other than should', () => {
     const query = '(ttl:((apple AND banana) OR ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -828,7 +852,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "OR" when left is a bool should query', () => {
     const query = '(ttl:((apple OR banana OR orange) OR ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -841,7 +865,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "OR" when left is a bool should query while ignoring duplicates', () => {
     const query = '(ttl:((apple OR ball OR orange) OR ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -854,7 +878,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "OR" when left is a bool should query while ignoring duplicate phrases', () => {
     const query = '(pa:("coco" OR powder) OR "coco")'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -865,7 +889,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "NOT" when left has bool must_not query', () => {
     const query = '(ttl:(apple NOT orange NOT ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -894,7 +918,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "NOT" when left has bool must_not query while ignoring duplicates', () => {
     const query = '(ttl:(apple NOT orange NOT orange))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -909,7 +933,7 @@ describe('Left Recursive Queries', () => {
 
     try {
       const query = '(ttl:(apple NOT orange NEAR2 ball))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -923,7 +947,7 @@ describe('Left Recursive Queries', () => {
 
     try {
       const query = '(ttl:(NOT orange NEAR2 ball))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -934,7 +958,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "NEAR" when left is a bool should query', () => {
     const query = '(ttl:(apple OR oran* NEAR2 bal*))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -978,7 +1002,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "NEAR" when left is a bool should query containing span_near clause', () => {
     const query = '(ttl:(apple NEAR2 banana OR orange NEAR2 ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1019,7 +1043,7 @@ describe('Left Recursive Queries', () => {
 
     try {
       const query = '(ttl:(apple AND banana OR orange NEAR2 ball))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -1030,7 +1054,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "NEAR" when left is a bool must query', () => {
     const query = '(ttl:(apple AND oran* NEAR2 ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1059,7 +1083,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "NEAR" when left is a bool must query containing span_near clause', () => {
     const query = '(ttl:(apple NEAR2 orange NEAR2 ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1093,7 +1117,7 @@ describe('Left Recursive Queries', () => {
 
     try {
       const query = '(ttl:(apple OR banana AND orange NEAR2 ball))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -1107,7 +1131,7 @@ describe('Left Recursive Queries', () => {
 
     try {
       const query = '(ttl:(apple NOT orange PRE2 ball))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -1121,7 +1145,7 @@ describe('Left Recursive Queries', () => {
 
     try {
       const query = '(ttl:(NOT orange PRE2 ball))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -1132,7 +1156,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "PRE" when left is a bool should query', () => {
     const query = '(ttl:(apple OR oran* PRE2 bal*))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1176,7 +1200,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "PRE" when left is a bool should query containing span_near clause', () => {
     const query = '(ttl:(apple PRE2 banana OR orange PRE2 ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1217,7 +1241,7 @@ describe('Left Recursive Queries', () => {
 
     try {
       const query = '(ttl:(apple AND banana OR orange PRE2 ball))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -1228,7 +1252,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "PRE" when left is a bool must query', () => {
     const query = '(ttl:(apple AND oran* NEAR2 ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1258,7 +1282,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "PRE" when left is a bool must query containing span_near clause', () => {
     const query = '(ttl:(apple PRE2 orange PRE2 ball))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1292,7 +1316,7 @@ describe('Left Recursive Queries', () => {
 
     try {
       const query = '(ttl:(apple OR banana AND orange PRE2 ball))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -1303,7 +1327,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "OR" Compound Query including Phrase with one term', () => {
     const query = '(ttl: (electr* OR "AC") NEAR3 vehicle*)'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1348,7 +1372,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "OR" Compound Query including Phrase with multiple terms', () => {
     const query = '(ttl: (electr* OR "AC DC") NEAR3 vehicle*)'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1402,7 +1426,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "AND" Compound Query including Phrase with one term', () => {
     const query = '(ttl: (electr* AND "battery") NEAR3 vehicle*)'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1440,7 +1464,7 @@ describe('Left Recursive Queries', () => {
 
   it('Check "AND" Compound Query including Phrase with multiple terms', () => {
     const query = '(ttl: (electr* AND "battery charging") NEAR3 vehicle*)'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1488,7 +1512,7 @@ describe('Left Recursive Queries', () => {
 describe('Right Recursive Queries', () => {
   it('Check "AND" when right is a composite query', () => {
     const query = '(ttl:(ball AND (apple NOT banana)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1503,7 +1527,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "AND" when right is bool query other than must', () => {
     const query = '(ttl:(ball AND (apple OR banana)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1523,7 +1547,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "AND" when right is bool must query', () => {
     const query = '(ttl:(ball AND (apple AND banana)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1538,7 +1562,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "AND" when right is bool must query while ignoring duplicates', () => {
     const query = '(ttl:(ball AND (apple AND ball)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1549,7 +1573,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "OR" when right is a bool should query while ignoring duplicate phrases', () => {
     const query = '(pa:"coco" OR ("coco" OR powder))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1560,7 +1584,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "OR" when right is a composite query', () => {
     const query = '(ttl:(ball OR (apple NOT banana)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1579,7 +1603,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "OR" when right is a bool query other than should', () => {
     const query = '(ttl:(ball OR (apple AND banana)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1597,7 +1621,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "OR" when right is a bool should query', () => {
     const query = '(ttl:(ball OR (apple OR banana OR orange)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1610,7 +1634,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "OR" when right is a bool should query while ignoring duplicates', () => {
     const query = '(ttl:(ball OR (apple OR ball OR orange)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1623,7 +1647,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "NOT"', () => {
     const query = '(ttl:((apple NOT tree) NOT (orange OR banana)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1672,7 +1696,7 @@ describe('Right Recursive Queries', () => {
 
     try {
       const query = '(ttl:((ball NEAR2 (apple NOT orange))))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -1686,7 +1710,7 @@ describe('Right Recursive Queries', () => {
 
     try {
       const query = '(ttl:((ball NEAR2 (NOT orange))))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -1697,7 +1721,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "NEAR" when right is a bool should query', () => {
     const query = '(ttl:((bal* NEAR2 (apple OR oran*))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1740,7 +1764,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "NEAR" when right is a bool should query containing span_near clause', () => {
     const query = '(ttl:((ball NEAR2 (apple NEAR2 banana OR orange))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1781,7 +1805,7 @@ describe('Right Recursive Queries', () => {
 
     try {
       const query = '(ttl:((bal* NEAR2 (apple AND banana OR orange))))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -1792,7 +1816,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "NEAR" when right is a bool must query', () => {
     const query = '(ttl:((ball NEAR2 (apple AND oran*))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1821,7 +1845,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "NEAR" when right is a bool must query containing span_near clause', () => {
     const query = '(ttl:((ball NEAR2 (apple NEAR2 orange))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1855,7 +1879,7 @@ describe('Right Recursive Queries', () => {
 
     try {
       const query = '(ttl:((ball NEAR2 (apple OR banana AND orange))))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -1869,7 +1893,7 @@ describe('Right Recursive Queries', () => {
 
     try {
       const query = '(ttl:((ball PRE2 (apple NOT orange))))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -1883,7 +1907,7 @@ describe('Right Recursive Queries', () => {
 
     try {
       const query = '(ttl:((ball PRE2 (NOT orange))))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -1894,7 +1918,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "PRE" when right is a bool should query', () => {
     const query = '(ttl:((bal* PRE2 (apple OR oran*))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1937,7 +1961,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "PRE" when right is a bool should query containing span_near clause', () => {
     const query = '(ttl:((ball PRE2 (apple PRE2 banana OR orange))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -1994,7 +2018,7 @@ describe('Right Recursive Queries', () => {
 
     try {
       const query = '(ttl:((bal* PRE2 (apple AND banana OR orange))))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -2005,7 +2029,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "PRE" when right is a bool must query', () => {
     const query = '(ttl:((ball PRE2 (apple AND oran*))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2034,7 +2058,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "PRE" when right is a bool must query containing span_near clause', () => {
     const query = '(ttl:((ball PRE2 (apple PRE2 orange))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2068,7 +2092,7 @@ describe('Right Recursive Queries', () => {
 
     try {
       const query = '(ttl:((ball PRE2 (apple OR banana AND orange))))'
-      elasticBuilder(query)
+      parse(query, false, { eql: true })
     } catch (error) {
       expect(error).toHaveProperty(
         'message',
@@ -2079,7 +2103,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "OR" Compound Query including Phrase with one term', () => {
     const query = '(ttl: vehicle* NEAR3 (electr* OR "AC"))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2124,7 +2148,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "OR" Compound Query including Phrase with multiple terms', () => {
     const query = '(ttl: vehicle* NEAR3 (electr* OR "AC DC"))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2178,7 +2202,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "AND" Compound Query including Phrase with one term', () => {
     const query = '(ttl: vehicle* NEAR3 (electr* AND "battery"))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2215,7 +2239,7 @@ describe('Right Recursive Queries', () => {
 
   it('Check "AND" Compound Query including Phrase with multiple terms', () => {
     const query = '(ttl: vehicle* NEAR3 (electr* AND "battery charging"))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2263,7 +2287,7 @@ describe('Right Recursive Queries', () => {
 describe('"AND", "OR", "NOT" query combinations', () => {
   it('Check combination of "AND", "OR", "NOT"', () => {
     const query = '(ttl:((mobile AND phone) OR screen NOT aluminum))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2305,7 +2329,7 @@ describe('"AND", "OR", "NOT" query combinations', () => {
 describe('Wildcard with "AND", "OR", "NOT" Queries', () => {
   it('Check Wildcard with "AND" Query', () => {
     const query = '(ttl:(wireles? AND communicatio*))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2335,7 +2359,7 @@ describe('Wildcard with "AND", "OR", "NOT" Queries', () => {
 
   it('Check Wildcard with "AND" and "OR" Query', () => {
     const query = '(ttl:(wireles? AND communicatio?) OR (ttl:(netwo* AND sign*)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2395,7 +2419,7 @@ describe('Wildcard with "AND", "OR", "NOT" Queries', () => {
 
   it('Check Wildcard with "AND" and "NOT" Query', () => {
     const query = '(ttl:(wireles? AND communicatio?) NOT (ttl:(netwo* AND sign*)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2456,7 +2480,7 @@ describe('Wildcard with "AND", "OR", "NOT" Queries', () => {
 
   it('Check Wildcard with "AND", "OR" and "NOT" Queries', () => {
     const query = '(((ttl:(wireles? AND communicatio?)) NOT (ttl:(netwo* AND sign*)) OR (ttl:(car AND wash))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2541,7 +2565,7 @@ describe('Wildcard with "AND", "OR", "NOT" Queries', () => {
 describe('Range Queries', () => {
   it('Check Range with Wildcard, "AND", "OR" and "NOT" Queries', () => {
     const query = '((((ttl:(wireles? AND communicatio?)) NOT ttl:(netwo* AND sign*)) OR ttl:(car AND wash)) AND pd:[20220101 TO 20220105])'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2639,7 +2663,7 @@ describe('Range Queries', () => {
 
   it('Check Range with unspecified lower bound', () => {
     const query = '(pd:([* TO 20201027]))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2650,7 +2674,7 @@ describe('Range Queries', () => {
 
   it('Check Range with unspecified upper bound', () => {
     const query = '(pd:([20200825 TO *]))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2661,7 +2685,7 @@ describe('Range Queries', () => {
 
   it('Check Range with unspecified lower bound and upper bound', () => {
     const query = '(pd:([* TO *]))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: { must: [{ range: { pd: {} } }] }
@@ -2672,7 +2696,7 @@ describe('Range Queries', () => {
 describe('Miscellaneous Queries', () => {
   it('#1', () => {
     const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) NEAR3 (Fruit* OR Vegetable*))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2738,7 +2762,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#2', () => {
     const query = '(ttl:(((Fruit* OR Vegetable*) NEAR3 ((Carrot OR juice) OR (banana NEAR3 shake)))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2805,7 +2829,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#3', () => {
     const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2852,7 +2876,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#4', () => {
     const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*)) NOT (papaya OR melon OR lemon OR plant*)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -2916,7 +2940,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#5', () => {
     const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*)) NOT ((papaya OR melon OR lemon) NEAR4 (plant*))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3003,7 +3027,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#6', () => {
     const query = '((ttl:(smart NEAR2 (watch OR watches))) AND ttl:(heart NEAR2 rate))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3042,7 +3066,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#7', () => {
     const query = '(((ttl:(smart NEAR2 (watch OR watches))) NOT ttl:(heart AND (rate OR pulse* OR oxygen))) AND pd: [20220101 TO 20220307])'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3097,7 +3121,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#8', () => {
     const query = '(ttl:(((vegetable*) NEAR15 (juice*)) NEARP ((Fruit* OR Vegetable*) NEARS (plant*))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3196,7 +3220,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#9', () => {
     const query = '((ttl:(patent NEAR5 (artificial NEAR2 intelligen*))) OR ttl:(patent NEAR5 (machine NEAR2 learn*)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3282,7 +3306,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#10', () => {
     const query = '(((ttl:(patent NEARS (artificial PRE2 intelligen*))) OR ttl:(patent NEARP (machine PRE2 learn*))) AND pd: [20150101 TO 20220307])'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3375,7 +3399,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#11', () => {
     const query = '(ttl:((A*) PRE10 ((veg*) NEAR15 (juice*) NEARP (Veg*) NEARS (plant*))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3477,7 +3501,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#12', () => {
     const query = '(ttl:((A) PRE10 ((veg*) NEAR15 (juice*) NEARP (Veg*) NEARS (plant*))))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3571,7 +3595,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#13', () => {
     const query = '(ttl:("c" NEARP engine*))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3599,7 +3623,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#14', () => {
     const query = '(xlpat-prob.stat:(efficiency NEAR5 cost NEAR5 time))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3631,7 +3655,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#15', () => {
     const query = '((inv:(Michael OR Jonas)) AND ttl:(wheel PRE1 loader*))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3667,7 +3691,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#16', () => {
     const query = '((inv:(Michael OR Jonas)) AND pa:(caterpillar OR Komatsu OR CNH))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3693,7 +3717,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#17', () => {
     const query = '((inv:(Michael AND Jonas)) AND pa:(caterpillar OR Komatsu OR CNH))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3714,7 +3738,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#18', () => {
     const query = '((inv:(Michael AND Jonas)) NOT pa:(caterpillar OR Komatsu OR CNH))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3734,7 +3758,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#19', () => {
     const query = '((inv:(Michael OR Jonas)) NOT pa:(caterpillar OR Komatsu OR CNH))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3760,7 +3784,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#20', () => {
     const query = '((inv:(Michael AND Jonas)) OR cited.pn:(KR-101275147-B1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3778,7 +3802,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#21', () => {
     const query = '(xlpat-litig.defs.name:(caterpillar OR Komatsu OR CNH))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3795,7 +3819,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#22', () => {
     const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND (cpc:(a61b5) OR ic:(a61b5)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3829,7 +3853,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#23', () => {
     const query = '(((cpc:(a61b5) OR ic:(a61b5))) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3863,7 +3887,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#24', () => {
     const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3916,7 +3940,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#25', () => {
     const query = '(((cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -3969,7 +3993,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#26', () => {
     const query = '(((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) AND ttl:(energ*))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4031,7 +4055,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#27', () => {
     const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4090,7 +4114,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#28', () => {
     const query = '(((cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4150,7 +4174,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#29', () => {
     const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND casgs:(boe))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4180,7 +4204,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#30', () => {
     const query = '((casgs:(boe)) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4210,7 +4234,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#31', () => {
     const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT casgs:(boe))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4240,7 +4264,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#32', () => {
     const query = '((casgs:(FINNOVATE NEAR2 GROUP)) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4292,7 +4316,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#33', () => {
     const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR casgs:(FINNOVATE NEAR2 GROUP))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4343,7 +4367,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#34', () => {
     const query = '((casgs:(FINNOVATE NEAR2 GROUP)) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4394,7 +4418,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#35', () => {
     const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND pn:(US20200069200A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4424,7 +4448,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#36', () => {
     const query = '((pn:(US20200069200A1)) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4454,7 +4478,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#37', () => {
     const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR pn:(US20210403048A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4490,7 +4514,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#38', () => {
     const query = '((pn:(US20200069200A1)) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4526,7 +4550,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#39', () => {
     const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT pn:(US20210403048A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4577,7 +4601,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#40', () => {
     const query = '((pn:(US20210403048A1)) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4613,7 +4637,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#41', () => {
     const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND epridate: [20000101 TO 20220308])'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4643,7 +4667,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#42', () => {
     const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND pd: [20000101 TO 20220308])'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4673,7 +4697,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#43', () => {
     const query = '((pd: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4703,7 +4727,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#44', () => {
     const query = '((ad: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4733,7 +4757,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#45', () => {
     const query = '((epridate: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4763,7 +4787,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#46', () => {
     const query = '((epridate: [20220201 TO 20220308]) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4799,7 +4823,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#47', () => {
     const query = '((epridate: [20220201 TO 20220308]) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4837,7 +4861,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#48', () => {
     const query = '((epridate: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4857,7 +4881,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#49', () => {
     const query = '((epridate: [20220201 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4878,7 +4902,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#50', () => {
     const query = '((epridate: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4904,7 +4928,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#51', () => {
     const query = '((ad: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4930,7 +4954,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#52', () => {
     const query = '((ad: [20220201 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4950,7 +4974,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#53', () => {
     const query = '((ad: [20220201 TO 20220308]) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -4978,7 +5002,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#54', () => {
     const query = '((casgs:(FINNOVATE NEAR2 GROUP)) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5030,7 +5054,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#55', () => {
     const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) NOT casgs:(FINNOVATE NEAR2 GROUP))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5084,7 +5108,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#56', () => {
     const query = '((casgs:(FINNOVATE NEAR2 GROUP)) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5122,7 +5146,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#57', () => {
     const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND casgs:(FINNOVATE NEAR2 GROUP))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5160,7 +5184,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#58', () => {
     const query = '((casgs:(FINNOVATE NEAR2 GROUP)) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5199,7 +5223,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#59', () => {
     const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND casgs:(FINNOVATE NEAR2 GROUP))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5238,7 +5262,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#60', () => {
     const query = '((an:(16845016)) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5267,7 +5291,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#61', () => {
     const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND an:(16845016))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5296,7 +5320,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#62', () => {
     const query = '((an:(16845016)) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5319,7 +5343,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#63', () => {
     const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) OR an:(16845016))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5342,7 +5366,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#64', () => {
     const query = '((an:(16845016)) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5371,7 +5395,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#65', () => {
     const query = '((pd: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5400,7 +5424,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#66', () => {
     const query = '((ad: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5429,7 +5453,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#67', () => {
     const query = '((epridate: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5458,7 +5482,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#68', () => {
     const query = '((epridate: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5481,7 +5505,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#69', () => {
     const query = '((ad: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5504,7 +5528,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#70', () => {
     const query = '((pd: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5527,7 +5551,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#71', () => {
     const query = '((pd: [20220304 TO 20220308]) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5558,7 +5582,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#72', () => {
     const query = '((pd: [20200101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5587,7 +5611,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#73', () => {
     const query = '(((cpc:(A47B53) OR ic:(A47B53))) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5620,7 +5644,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#74', () => {
     const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND (cpc:(A47B53) OR ic:(A47B53)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5653,7 +5677,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#75', () => {
     const query = '(((cpc:(A47B53 AND B60R25/01) OR ic:(A47B53 AND B60R25/01))) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5688,7 +5712,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#76', () => {
     const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) OR (cpc:(A47B53 AND B60R25/01) OR ic:(A47B53 AND B60R25/01)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5724,7 +5748,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#77', () => {
     const query = '(((cpc:(A47B53 AND A47B63) OR ic:(A47B53 AND A47B63))) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1 OR GB2454544A))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5793,7 +5817,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#78', () => {
     const query = '(ttl: (apple NOT banana NOT pineapple) AND (apple NOT banana NOT grapes))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5827,7 +5851,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#79', () => {
     const query = '(ttl: (apple AND apple) AND (apple NOT banana NOT grapes))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5856,7 +5880,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#80', () => {
     const query = '(ttl: (apple AND apple AND (mango OR pineapple)) AND (mango OR pineapple))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5887,7 +5911,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#81', () => {
     const query = '(ttl: (apple AND apple) AND (NOT mango NOT pineapple))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5916,7 +5940,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#82', () => {
     const query = '(ttl: (apple AND apple NOT mango NOT rainbow) AND (NOT mango NOT pineapple))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5950,7 +5974,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#83', () => {
     const query = '(ttl: (NOT mango NOT pineapple) AND (apple AND apple NOT mango NOT rainbow))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -5984,7 +6008,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#84', () => {
     const query = '(ttl: (NOT mango NOT pineapple) AND (apple AND apple))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -6013,7 +6037,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#85', () => {
     const query = '(ttl: (mango OR pineapple) AND (apple AND apple AND (mango OR pineapple)))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -6044,7 +6068,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#86', () => {
     const query = '(ttl: (NOT mango NOT pineapple) AND (NOT apple NOT mango))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -6071,7 +6095,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#87', () => {
     const query = '(ttl: (NOT mango NOT pineapple) AND (apple))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -6100,7 +6124,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#88', () => {
     const query = '(ttl: (apple) AND (NOT mango NOT pineapple))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -6129,7 +6153,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#89', () => {
     const query = '(ttl: (NOT apple) OR (mango OR NOT apple))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -6157,7 +6181,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#90', () => {
     const query = '(ttl: (mango OR NOT apple) OR (NOT apple))'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -6185,7 +6209,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#91', () => {
     const query = '(((ttl:(mango)) OR (pa:(mango))) OR text:pineapple OR pineapple)'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -6212,7 +6236,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#92', () => {
     const query = '(((ttl:(mango)) OR (pa:(mango))) OR pa:pineapple OR apple)'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -6238,7 +6262,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#93', () => {
     const query = '(((ttl:(mango)) OR (pa:(mango OR rainbow))) OR pa:pineapple OR apple)'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
@@ -6265,7 +6289,7 @@ describe('Miscellaneous Queries', () => {
 
   it('#94', () => {
     const query = '(((ttl:(mango)) OR (pa:(rainbow))) OR pa:pineapple OR pineapple)'
-    const pq = elasticBuilder(query)
+    const pq = parse(query, false, { eql: true })
 
     expect(pq).toEqual({
       bool: {
