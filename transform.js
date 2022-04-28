@@ -484,16 +484,16 @@ function transform (root, opt = { children: true, eql: false, transformFn: null 
     if (opt.children) {
       if (root.type === DATE_TYPE) {
         return { key: root.field, val: { from: root.from, to: root.to } }
-      } else {
-        return { key: root.field, val: root.value }
       }
-    } else {
-      if (root.type === DATE_TYPE) {
-        return { data: { key: root.field, val: { from: root.from, to: root.to } }, left: null, right: null }
-      } else {
-        return { data: { key: root.field, val: root.value }, left: null, right: null }
-      }
+
+      return { key: root.field, val: root.value }
     }
+
+    if (root.type === DATE_TYPE) {
+      return { data: { key: root.field, val: { from: root.from, to: root.to } }, left: null, right: null }
+    }
+
+    return { data: { key: root.field, val: root.value }, left: null, right: null }
   }
 
   const dummyNode = { leftOperand: root, rightOperand: null }
@@ -502,7 +502,7 @@ function transform (root, opt = { children: true, eql: false, transformFn: null 
   let middle = null
   let auxiliary = null
   let back = null
-  let last = null
+  let fin = null
 
   while (current != null) {
     if (current.leftOperand == null) {
@@ -536,9 +536,9 @@ function transform (root, opt = { children: true, eql: false, transformFn: null 
 
           if (middle.leftOperand === null) {
             if (opt.eql) {
-              last = createEQL({}, middle.parsed[0], middle.operator)
+              fin = createEQL({}, middle.parsed[0], middle.operator)
             } else {
-              last = _transform(
+              fin = _transform(
                 null,
                 middle.parsed[0],
                 middle.operator,
@@ -546,7 +546,7 @@ function transform (root, opt = { children: true, eql: false, transformFn: null 
               )
             }
 
-            middle.rightOperand.parsed.push(last)
+            middle.rightOperand.parsed.push(fin)
 
             delete middle.parsed
           } else if (middle.leftOperand == null) {
@@ -579,9 +579,9 @@ function transform (root, opt = { children: true, eql: false, transformFn: null 
             }
           } else {
             if (opt.eql) {
-              last = createEQL(middle.parsed[0], middle.parsed[1], middle.operator, middle.span)
+              fin = createEQL(middle.parsed[0], middle.parsed[1], middle.operator, middle.span)
             } else {
-              last = _transform(
+              fin = _transform(
                 middle.parsed[0],
                 middle.parsed[1],
                 middle.operator,
@@ -590,7 +590,7 @@ function transform (root, opt = { children: true, eql: false, transformFn: null 
               )
             }
 
-            middle.rightOperand.parsed.push(last)
+            middle.rightOperand.parsed.push(fin)
 
             delete middle.parsed
           }
@@ -607,7 +607,7 @@ function transform (root, opt = { children: true, eql: false, transformFn: null 
     }
   }
 
-  return last
+  return fin
 }
 
 // function transform (root, opt = { children: true }) {
