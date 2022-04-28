@@ -1,4 +1,5 @@
 const Queue = require('./util/Queue')
+const createEQL = require('./xql-eql-v3/create')
 
 const DATE_TYPE = 'DATE'
 
@@ -464,74 +465,219 @@ function _transform (
   return output
 }
 
-function transform (root, opt = { children: true }) {
-  let node = root
+function transform (root, opt = { children: true, eql: false, transformFn: null }) {
+  if (root.leftOperand == null && root.rightOperand == null) {
+    if (opt.eql) {
+      let node
 
-  if (node.leftOperand == null && node.rightOperand == null) {
+      if (root.type === DATE_TYPE) {
+        node = { key: root.field, val: { from: root.from, to: root.to } }
+      } else {
+        node = { key: root.field, val: root.value }
+      }
+
+      if (opt.transformFn) opt.transformFn(node)
+
+      return createEQL(node, {}, 'AND')
+    }
+
     if (opt.children) {
-      if (node.type === DATE_TYPE) {
-        return { key: node.field, val: { from: node.from, to: node.to } }
+      if (root.type === DATE_TYPE) {
+        return { key: root.field, val: { from: root.from, to: root.to } }
       } else {
-        return { key: node.field, val: node.value }
+        return { key: root.field, val: root.value }
       }
     } else {
-      if (node.type === DATE_TYPE) {
-        return { data: { key: node.field, val: { from: node.from, to: node.to } }, left: null, right: null }
+      if (root.type === DATE_TYPE) {
+        return { data: { key: root.field, val: { from: root.from, to: root.to } }, left: null, right: null }
       } else {
-        return { data: { key: node.field, val: node.value }, left: null, right: null }
+        return { data: { key: root.field, val: root.value }, left: null, right: null }
       }
     }
   }
 
-  while (node != null && !node.visited) {
-    if (node.leftOperand != null && !node.leftOperand.visited) {
-      node = node.leftOperand
-    } else if (node.rightOperand != null && !node.rightOperand.visited) {
-      node = node.rightOperand
+  const dummyNode = { leftOperand: root, rightOperand: null }
+  let current = dummyNode
+  let parent = null
+  let middle = null
+  let auxiliary = null
+  let back = null
+  let last = null
+
+  while (current != null) {
+    if (current.leftOperand == null) {
+      current = current.rightOperand
     } else {
-      if (node.leftOperand == null && node.rightOperand == null) {
-        if (opt.children) {
-          if (node.type === DATE_TYPE) {
-            node.parsed = { field: node.field, value: { from: node.from, to: node.to } }
-          } else {
-            node.parsed = { field: node.field, value: node.value }
-          }
-        } else {
-          if (node.type === DATE_TYPE) {
-            node.parsed = { data: { key: node.field, val: { from: node.from, to: node.to } }, left: null, right: null }
-          } else {
-            node.parsed = { data: { key: node.field, val: node.value }, left: null, right: null }
-          }
+      auxiliary = current.leftOperand
+
+      while (auxiliary.rightOperand != null && auxiliary.rightOperand != current) {
+        auxiliary = auxiliary.rightOperand
+      }
+
+      if (auxiliary.rightOperand != current) {
+        auxiliary.rightOperand = current
+        current = current.leftOperand
+      } else {
+        parent = current
+        middle = current.leftOperand
+
+        while (middle != current) {
+          back = middle.rightOperand
+          middle.rightOperand = parent
+          parent = middle
+          middle = back
         }
-      } else if (node.leftOperand == null) {
-        node.parsed = _transform(
-          null,
-          node.rightOperand.parsed,
-          node.operator,
-          opt
-        )
 
-        delete node.rightOperand
-      } else {
-        node.parsed = _transform(
-          node.leftOperand.parsed,
-          node.rightOperand.parsed,
-          node.operator,
-          opt,
-          node.span && { span: node.span }
-        )
+        parent = current
+        middle = auxiliary
 
-        delete node.leftOperand
-        delete node.rightOperand
+        while (middle != current) {
+          middle.rightOperand.parsed = middle.rightOperand.parsed || []
+
+          if (middle.leftOperand === null) {
+            if (opt.eql) {
+              last = createEQL({}, middle.parsed[0], middle.operator)
+            } else {
+              last = _transform(
+                null,
+                middle.parsed[0],
+                middle.operator,
+                opt
+              )
+            }
+
+            middle.rightOperand.parsed.push(last)
+
+            delete middle.parsed
+          } else if (middle.leftOperand == null) {
+            if (opt.eql) {
+              let node
+
+              if (middle.type === DATE_TYPE) {
+                node = { key: middle.field, val: { from: middle.from, to: middle.to } }
+              } else {
+                node = { key: middle.field, val: middle.value }
+              }
+
+              if (opt.transformFn) opt.transformFn(node)
+
+              middle.rightOperand.parsed.push(node)
+            } else {
+              if (opt.children) {
+                if (middle.type === DATE_TYPE) {
+                  middle.rightOperand.parsed.push({ field: middle.field, value: { from: middle.from, to: middle.to } })
+                } else {
+                  middle.rightOperand.parsed.push({ field: middle.field, value: middle.value })
+                }
+              } else {
+                if (middle.type === DATE_TYPE) {
+                  middle.rightOperand.parsed.push({ data: { key: middle.field, val: { from: middle.from, to: middle.to } }, left: null, right: null })
+                } else {
+                  middle.rightOperand.parsed.push({ data: { key: middle.field, val: middle.value }, left: null, right: null })
+                }
+              }
+            }
+          } else {
+            if (opt.eql) {
+              last = createEQL(middle.parsed[0], middle.parsed[1], middle.operator, middle.span)
+            } else {
+              last = _transform(
+                middle.parsed[0],
+                middle.parsed[1],
+                middle.operator,
+                opt,
+                middle.span && { span: middle.span }
+              )
+            }
+
+            middle.rightOperand.parsed.push(last)
+
+            delete middle.parsed
+          }
+
+          back = middle.rightOperand
+          middle.rightOperand = parent
+          parent = middle
+          middle = back
+        }
+
+        delete auxiliary.rightOperand
+        current = current.rightOperand
       }
-
-      node.visited = true
-      node = root
     }
   }
 
-  return root.parsed
+  return last
 }
+
+// function transform (root, opt = { children: true }) {
+//   let node = root
+
+//   if (node.leftOperand == null && node.rightOperand == null) {
+//     if (opt.children) {
+//       if (node.type === DATE_TYPE) {
+//         return { key: node.field, val: { from: node.from, to: node.to } }
+//       } else {
+//         return { key: node.field, val: node.value }
+//       }
+//     } else {
+//       if (node.type === DATE_TYPE) {
+//         return { data: { key: node.field, val: { from: node.from, to: node.to } }, left: null, right: null }
+//       } else {
+//         return { data: { key: node.field, val: node.value }, left: null, right: null }
+//       }
+//     }
+//   }
+
+//   while (node != null && !node.visited) {
+//     if (node.leftOperand != null && !node.leftOperand.visited) {
+//       node = node.leftOperand
+//     } else if (node.rightOperand != null && !node.rightOperand.visited) {
+//       node = node.rightOperand
+//     } else {
+//       if (node.leftOperand == null && node.rightOperand == null) {
+//         if (opt.children) {
+//           if (node.type === DATE_TYPE) {
+//             node.parsed = { field: node.field, value: { from: node.from, to: node.to } }
+//           } else {
+//             node.parsed = { field: node.field, value: node.value }
+//           }
+//         } else {
+//           if (node.type === DATE_TYPE) {
+//             node.parsed = { data: { key: node.field, val: { from: node.from, to: node.to } }, left: null, right: null }
+//           } else {
+//             node.parsed = { data: { key: node.field, val: node.value }, left: null, right: null }
+//           }
+//         }
+//       } else if (node.leftOperand == null) {
+//         node.parsed = _transform(
+//           null,
+//           node.rightOperand.parsed,
+//           node.operator,
+//           opt
+//         )
+
+//         delete node.rightOperand
+//       } else {
+//         node.parsed = _transform(
+//           node.leftOperand.parsed,
+//           node.rightOperand.parsed,
+//           node.operator,
+//           opt,
+//           node.span && { span: node.span }
+//         )
+
+//         delete node.leftOperand
+//         delete node.rightOperand
+//       }
+
+//       node.visited = true
+//       node = root
+//     }
+//   }
+
+//   return root.parsed
+// }
 
 module.exports = {
   transform,

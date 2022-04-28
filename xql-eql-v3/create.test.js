@@ -1,11 +1,10 @@
-// const { genEqlIter, genEqlRec } = require('./gen-eql')
-const genEqlIter = require('./dfs')
+const { elasticBuilder } = require('..')
 
 describe('Iterative Implementation', () => {
   describe('Proximity Queries', () => {
     it('Check Sentence Slop', () => {
       const query = '(ttl:(apple NEARS banana))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -27,7 +26,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Paragraph Slop', () => {
       const query = '(ttl:(apple PREP banana))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -49,7 +48,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Phrase with multiple terms', () => {
       const query = '(ttl:("app* tree" NEAR2 de*))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -86,7 +85,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Phrase with single term', () => {
       const query = '(ttl:("tree" NEAR2 "de*"))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -110,7 +109,7 @@ describe('Iterative Implementation', () => {
   describe('Terms Queries', () => {
     it('Check Terms Query while ignore duplicates on creation with non left-right recursion', () => {
       const query = '(pn:(US9774086 OR US9774086))'
-      const pq = genEqlIter(query, (node) => {
+      const pq = elasticBuilder(query, (node) => {
         if (node.key === 'pn') {
           node.key = 'pn-nok.keyword'
         }
@@ -125,7 +124,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Terms Query on left recursive duplicate query with duplicate non-recursive right term', () => {
       const query = '(pa:(coco OR coco) OR coco)'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -136,7 +135,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Terms Query on right recursive duplicate query with duplicate non-recursive left term', () => {
       const query = '(pa:(coco OR (coco OR coco)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -147,7 +146,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Terms Query on left recursive duplicate query with non-recursive right term', () => {
       const query = '(pa:(coco OR coco) OR milk)'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -160,7 +159,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Terms Query on right recursive duplicate query with non-recursive left term', () => {
       const query = '(pa:(milk OR (coco OR coco)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -173,7 +172,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Terms Query if left and right both are compound queries', () => {
       const query = '(pa:(coco OR powder) OR (milk OR cream))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -186,7 +185,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Terms Query if left is compound query and right is a duplicate compound query', () => {
       const query = '(pa:((milk OR powder) OR (coco OR coco)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -199,7 +198,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Terms Query if left is compound query and right is a duplicate compound query with duplicate values between them', () => {
       const query = '(pa:((milk OR coco) OR (coco OR coco)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -212,7 +211,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Terms Query if left and right both are compound queries with duplicate values between them', () => {
       const query = '(pa:(coco OR mocha) OR (coco OR powder))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -227,7 +226,7 @@ describe('Iterative Implementation', () => {
   describe('PN Queries', () => {
     it('Check PN search query', () => {
       const query = '(pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845))'
-      const pq = genEqlIter(query, (node) => {
+      const pq = elasticBuilder(query, (node) => {
         if (node.key === 'pn') {
           node.key = 'pn-nok.keyword'
         }
@@ -255,7 +254,7 @@ describe('Iterative Implementation', () => {
 
     it('Check PN search query with succeeding "NOT" operator', () => {
       const query = '((pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845)) NOT (ttl:(wireless)))'
-      const pq = genEqlIter(query, (node) => {
+      const pq = elasticBuilder(query, (node) => {
         if (node.key === 'pn') {
           node.key = 'pn-nok.keyword'
         }
@@ -290,7 +289,7 @@ describe('Iterative Implementation', () => {
 
     it('Check PN search query with preceding "NOT" operator', () => {
       const query = '((ttl:(wireless)) NOT (pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845)))'
-      const pq = genEqlIter(query, (node) => {
+      const pq = elasticBuilder(query, (node) => {
         if (node.key === 'pn') {
           node.key = 'pn-nok.keyword'
         }
@@ -325,7 +324,7 @@ describe('Iterative Implementation', () => {
 
     it('Check PN search query with succeeding "AND" operator', () => {
       const query = '((pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845)) AND (ttl:(wireless)))'
-      const pq = genEqlIter(query, (node) => {
+      const pq = elasticBuilder(query, (node) => {
         if (node.key === 'pn') {
           node.key = 'pn-nok.keyword'
         }
@@ -360,7 +359,7 @@ describe('Iterative Implementation', () => {
 
     it('Check PN search query with preceding "AND" operator', () => {
       const query = '((ttl:(wireless)) AND (pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845)))'
-      const pq = genEqlIter(query, (node) => {
+      const pq = elasticBuilder(query, (node) => {
         if (node.key === 'pn') {
           node.key = 'pn-nok.keyword'
         }
@@ -395,7 +394,7 @@ describe('Iterative Implementation', () => {
 
     it('Check PN search query with succeeding "OR" operator', () => {
       const query = '((pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845)) OR (ttl:(wireless)))'
-      const pq = genEqlIter(query, (node) => {
+      const pq = elasticBuilder(query, (node) => {
         if (node.key === 'pn') {
           node.key = 'pn-nok.keyword'
         }
@@ -424,7 +423,7 @@ describe('Iterative Implementation', () => {
 
     it('Check PN search query with preceding "OR" operator', () => {
       const query = '((ttl:(wireless)) OR (pn:(US20200233814 OR US9774086 OR WO2020251708 OR EP3856098 OR WO2019165110 OR US7545845)))'
-      const pq = genEqlIter(query, (node) => {
+      const pq = elasticBuilder(query, (node) => {
         if (node.key === 'pn') {
           node.key = 'pn-nok.keyword'
         }
@@ -455,7 +454,7 @@ describe('Iterative Implementation', () => {
   describe('Singleton Queries', () => {
     it('Check Singleton Search Text Query', () => {
       const query = '(ttl:(mobile))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: { must: [{ term: { ttl: 'mobile' } }] }
@@ -464,7 +463,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Singleton Phrase Text Query in quotes', () => {
       const query = '(ttl:("apple grader"))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: { must: [{ match_phrase: { ttl: 'apple grader' } }] }
@@ -473,7 +472,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Singleton Search Text Wildcard Query', () => {
       const query = '(ttl:(mobi*))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -484,7 +483,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Singleton Search Date Query', () => {
       const query = '(pd:[20220218 TO 20220228])'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -497,7 +496,7 @@ describe('Iterative Implementation', () => {
   describe('"OR" Queries', () => {
     it('Check Phrase Text Query in quotes', () => {
       const query = '(ttl:(apple OR "coconut jam"))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -511,7 +510,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Combination with Range Query', () => {
       const query = '(ttl:("dragon ball") OR pd:([20200825 TO 20201027]))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -525,7 +524,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Combination with Range Query with unspecified bounds', () => {
       const query = '(ttl:("dragon ball") OR pd:([* TO *]))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -541,7 +540,7 @@ describe('Iterative Implementation', () => {
   describe('"AND" Queries', () => {
     it('Check Phrase Text Query in quotes', () => {
       const query = '(ttl:(banana AND "stuffed bunny"))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -555,7 +554,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Combination with Range Query', () => {
       const query = '(ttl:("dragon ball") AND pd:([* TO *]))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -571,7 +570,7 @@ describe('Iterative Implementation', () => {
   describe('"NOT" Queries', () => {
     it('Check Phrase Text Query in quotes', () => {
       const query = '(ttl:(apple NOT "apple tree"))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -583,7 +582,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Combination with Range Query', () => {
       const query = '(ttl:("dragon ball") NOT pd:([20200825 TO 20201027]))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -597,7 +596,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Combination with Range Query with unspecified bounds', () => {
       const query = '(ttl:("dragon ball") NOT pd:([* TO *]))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -611,7 +610,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Combination with Wildcard Query', () => {
       const query = '(ttl:("dragon ball" NOT game*))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -625,7 +624,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Wrapping of Terms with leading "NOT"', () => {
       const query = 'ttl: NOT apple NOT banana NOT orange'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -652,7 +651,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Wrapping of Terms with leading "NOT" containing duplicate', () => {
       const query = 'ttl: NOT apple NOT banana NOT banana'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -674,7 +673,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Wrapping of Terms without leading "NOT"', () => {
       const query = 'ttl: apple NOT banana NOT orange'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -703,7 +702,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Wrapping of Terms without leading "NOT" containing duplicate', () => {
       const query = 'ttl: apple NOT banana NOT banana'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -718,7 +717,7 @@ describe('Iterative Implementation', () => {
   describe('Left Recursive Queries', () => {
     it('Check "AND" when left is a composite query', () => {
       const query = '(ttl:((apple NOT banana) AND ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -747,7 +746,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "AND" when left is bool query other than must', () => {
       const query = '(ttl:((apple OR banana) AND ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -767,7 +766,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "AND" when left is bool must query', () => {
       const query = '(ttl:((apple AND banana) AND ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -782,7 +781,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "AND" when left is bool must query while ignoring duplicates', () => {
       const query = '(ttl:((apple AND ball) AND ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -793,7 +792,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "OR" when left is a composite query', () => {
       const query = '(ttl:((apple NOT banana) OR ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -812,7 +811,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "OR" when left is a bool query other than should', () => {
       const query = '(ttl:((apple AND banana) OR ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -830,7 +829,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "OR" when left is a bool should query', () => {
       const query = '(ttl:((apple OR banana OR orange) OR ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -843,7 +842,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "OR" when left is a bool should query while ignoring duplicates', () => {
       const query = '(ttl:((apple OR ball OR orange) OR ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -856,7 +855,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "OR" when left is a bool should query while ignoring duplicate phrases', () => {
       const query = '(pa:("coco" OR powder) OR "coco")'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -867,7 +866,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "NOT" when left has bool must_not query', () => {
       const query = '(ttl:(apple NOT orange NOT ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -896,7 +895,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "NOT" when left has bool must_not query while ignoring duplicates', () => {
       const query = '(ttl:(apple NOT orange NOT orange))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -911,7 +910,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:(apple NOT orange NEAR2 ball))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -925,7 +924,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:(NOT orange NEAR2 ball))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -936,7 +935,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "NEAR" when left is a bool should query', () => {
       const query = '(ttl:(apple OR oran* NEAR2 bal*))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -980,7 +979,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "NEAR" when left is a bool should query containing span_near clause', () => {
       const query = '(ttl:(apple NEAR2 banana OR orange NEAR2 ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1021,7 +1020,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:(apple AND banana OR orange NEAR2 ball))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -1032,7 +1031,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "NEAR" when left is a bool must query', () => {
       const query = '(ttl:(apple AND oran* NEAR2 ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1061,7 +1060,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "NEAR" when left is a bool must query containing span_near clause', () => {
       const query = '(ttl:(apple NEAR2 orange NEAR2 ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1095,7 +1094,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:(apple OR banana AND orange NEAR2 ball))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -1109,7 +1108,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:(apple NOT orange PRE2 ball))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -1123,7 +1122,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:(NOT orange PRE2 ball))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -1134,7 +1133,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "PRE" when left is a bool should query', () => {
       const query = '(ttl:(apple OR oran* PRE2 bal*))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1178,7 +1177,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "PRE" when left is a bool should query containing span_near clause', () => {
       const query = '(ttl:(apple PRE2 banana OR orange PRE2 ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1219,7 +1218,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:(apple AND banana OR orange PRE2 ball))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -1230,7 +1229,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "PRE" when left is a bool must query', () => {
       const query = '(ttl:(apple AND oran* NEAR2 ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1260,7 +1259,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "PRE" when left is a bool must query containing span_near clause', () => {
       const query = '(ttl:(apple PRE2 orange PRE2 ball))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1294,7 +1293,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:(apple OR banana AND orange PRE2 ball))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -1305,7 +1304,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "OR" Compound Query including Phrase with one term', () => {
       const query = '(ttl: (electr* OR "AC") NEAR3 vehicle*)'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1350,7 +1349,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "OR" Compound Query including Phrase with multiple terms', () => {
       const query = '(ttl: (electr* OR "AC DC") NEAR3 vehicle*)'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1404,7 +1403,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "AND" Compound Query including Phrase with one term', () => {
       const query = '(ttl: (electr* AND "battery") NEAR3 vehicle*)'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1442,7 +1441,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "AND" Compound Query including Phrase with multiple terms', () => {
       const query = '(ttl: (electr* AND "battery charging") NEAR3 vehicle*)'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1490,7 +1489,7 @@ describe('Iterative Implementation', () => {
   describe('Right Recursive Queries', () => {
     it('Check "AND" when right is a composite query', () => {
       const query = '(ttl:(ball AND (apple NOT banana)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1505,7 +1504,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "AND" when right is bool query other than must', () => {
       const query = '(ttl:(ball AND (apple OR banana)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1525,7 +1524,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "AND" when right is bool must query', () => {
       const query = '(ttl:(ball AND (apple AND banana)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1540,7 +1539,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "AND" when right is bool must query while ignoring duplicates', () => {
       const query = '(ttl:(ball AND (apple AND ball)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1551,7 +1550,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "OR" when right is a bool should query while ignoring duplicate phrases', () => {
       const query = '(pa:"coco" OR ("coco" OR powder))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1562,7 +1561,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "OR" when right is a composite query', () => {
       const query = '(ttl:(ball OR (apple NOT banana)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1581,7 +1580,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "OR" when right is a bool query other than should', () => {
       const query = '(ttl:(ball OR (apple AND banana)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1599,7 +1598,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "OR" when right is a bool should query', () => {
       const query = '(ttl:(ball OR (apple OR banana OR orange)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1612,7 +1611,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "OR" when right is a bool should query while ignoring duplicates', () => {
       const query = '(ttl:(ball OR (apple OR ball OR orange)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1625,7 +1624,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "NOT"', () => {
       const query = '(ttl:((apple NOT tree) NOT (orange OR banana)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1674,7 +1673,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:((ball NEAR2 (apple NOT orange))))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -1688,7 +1687,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:((ball NEAR2 (NOT orange))))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -1699,7 +1698,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "NEAR" when right is a bool should query', () => {
       const query = '(ttl:((bal* NEAR2 (apple OR oran*))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1742,7 +1741,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "NEAR" when right is a bool should query containing span_near clause', () => {
       const query = '(ttl:((ball NEAR2 (apple NEAR2 banana OR orange))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1783,7 +1782,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:((bal* NEAR2 (apple AND banana OR orange))))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -1794,7 +1793,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "NEAR" when right is a bool must query', () => {
       const query = '(ttl:((ball NEAR2 (apple AND oran*))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1823,7 +1822,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "NEAR" when right is a bool must query containing span_near clause', () => {
       const query = '(ttl:((ball NEAR2 (apple NEAR2 orange))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1857,7 +1856,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:((ball NEAR2 (apple OR banana AND orange))))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -1871,7 +1870,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:((ball PRE2 (apple NOT orange))))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -1885,7 +1884,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:((ball PRE2 (NOT orange))))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -1896,7 +1895,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "PRE" when right is a bool should query', () => {
       const query = '(ttl:((bal* PRE2 (apple OR oran*))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1939,7 +1938,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "PRE" when right is a bool should query containing span_near clause', () => {
       const query = '(ttl:((ball PRE2 (apple PRE2 banana OR orange))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -1996,7 +1995,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:((bal* PRE2 (apple AND banana OR orange))))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -2007,7 +2006,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "PRE" when right is a bool must query', () => {
       const query = '(ttl:((ball PRE2 (apple AND oran*))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2036,7 +2035,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "PRE" when right is a bool must query containing span_near clause', () => {
       const query = '(ttl:((ball PRE2 (apple PRE2 orange))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2070,7 +2069,7 @@ describe('Iterative Implementation', () => {
 
       try {
         const query = '(ttl:((ball PRE2 (apple OR banana AND orange))))'
-        genEqlIter(query)
+        elasticBuilder(query)
       } catch (error) {
         expect(error).toHaveProperty(
           'message',
@@ -2081,7 +2080,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "OR" Compound Query including Phrase with one term', () => {
       const query = '(ttl: vehicle* NEAR3 (electr* OR "AC"))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2126,7 +2125,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "OR" Compound Query including Phrase with multiple terms', () => {
       const query = '(ttl: vehicle* NEAR3 (electr* OR "AC DC"))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2180,7 +2179,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "AND" Compound Query including Phrase with one term', () => {
       const query = '(ttl: vehicle* NEAR3 (electr* AND "battery"))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2217,7 +2216,7 @@ describe('Iterative Implementation', () => {
 
     it('Check "AND" Compound Query including Phrase with multiple terms', () => {
       const query = '(ttl: vehicle* NEAR3 (electr* AND "battery charging"))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2265,7 +2264,7 @@ describe('Iterative Implementation', () => {
   describe('"AND", "OR", "NOT" query combinations', () => {
     it('Check combination of "AND", "OR", "NOT"', () => {
       const query = '(ttl:((mobile AND phone) OR screen NOT aluminum))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2307,7 +2306,7 @@ describe('Iterative Implementation', () => {
   describe('Wildcard with "AND", "OR", "NOT" Queries', () => {
     it('Check Wildcard with "AND" Query', () => {
       const query = '(ttl:(wireles? AND communicatio*))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2337,7 +2336,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Wildcard with "AND" and "OR" Query', () => {
       const query = '(ttl:(wireles? AND communicatio?) OR (ttl:(netwo* AND sign*)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2397,7 +2396,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Wildcard with "AND" and "NOT" Query', () => {
       const query = '(ttl:(wireles? AND communicatio?) NOT (ttl:(netwo* AND sign*)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2458,7 +2457,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Wildcard with "AND", "OR" and "NOT" Queries', () => {
       const query = '(((ttl:(wireles? AND communicatio?)) NOT (ttl:(netwo* AND sign*)) OR (ttl:(car AND wash))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2543,7 +2542,7 @@ describe('Iterative Implementation', () => {
   describe('Range Queries', () => {
     it('Check Range with Wildcard, "AND", "OR" and "NOT" Queries', () => {
       const query = '((((ttl:(wireles? AND communicatio?)) NOT ttl:(netwo* AND sign*)) OR ttl:(car AND wash)) AND pd:[20220101 TO 20220105])'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2641,7 +2640,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Range with unspecified lower bound', () => {
       const query = '(pd:([* TO 20201027]))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2652,7 +2651,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Range with unspecified upper bound', () => {
       const query = '(pd:([20200825 TO *]))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2663,7 +2662,7 @@ describe('Iterative Implementation', () => {
 
     it('Check Range with unspecified lower bound and upper bound', () => {
       const query = '(pd:([* TO *]))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: { must: [{ range: { pd: {} } }] }
@@ -2674,7 +2673,7 @@ describe('Iterative Implementation', () => {
   describe('Miscellaneous Queries', () => {
     it('#1', () => {
       const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) NEAR3 (Fruit* OR Vegetable*))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2740,7 +2739,7 @@ describe('Iterative Implementation', () => {
 
     it('#2', () => {
       const query = '(ttl:(((Fruit* OR Vegetable*) NEAR3 ((Carrot OR juice) OR (banana NEAR3 shake)))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2807,7 +2806,7 @@ describe('Iterative Implementation', () => {
 
     it('#3', () => {
       const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2854,7 +2853,7 @@ describe('Iterative Implementation', () => {
 
     it('#4', () => {
       const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*)) NOT (papaya OR melon OR lemon OR plant*)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -2918,7 +2917,7 @@ describe('Iterative Implementation', () => {
 
     it('#5', () => {
       const query = '(ttl:((((Carrot OR juice) OR (banana NEAR3 shake)) AND (Fruit* OR Vegetable*)) NOT ((papaya OR melon OR lemon) NEAR4 (plant*))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3005,7 +3004,7 @@ describe('Iterative Implementation', () => {
 
     it('#6', () => {
       const query = '((ttl:(smart NEAR2 (watch OR watches))) AND ttl:(heart NEAR2 rate))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3044,7 +3043,7 @@ describe('Iterative Implementation', () => {
 
     it('#7', () => {
       const query = '(((ttl:(smart NEAR2 (watch OR watches))) NOT ttl:(heart AND (rate OR pulse* OR oxygen))) AND pd: [20220101 TO 20220307])'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3099,7 +3098,7 @@ describe('Iterative Implementation', () => {
 
     it('#8', () => {
       const query = '(ttl:(((vegetable*) NEAR15 (juice*)) NEARP ((Fruit* OR Vegetable*) NEARS (plant*))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3198,7 +3197,7 @@ describe('Iterative Implementation', () => {
 
     it('#9', () => {
       const query = '((ttl:(patent NEAR5 (artificial NEAR2 intelligen*))) OR ttl:(patent NEAR5 (machine NEAR2 learn*)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3284,7 +3283,7 @@ describe('Iterative Implementation', () => {
 
     it('#10', () => {
       const query = '(((ttl:(patent NEARS (artificial PRE2 intelligen*))) OR ttl:(patent NEARP (machine PRE2 learn*))) AND pd: [20150101 TO 20220307])'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3377,7 +3376,7 @@ describe('Iterative Implementation', () => {
 
     it('#11', () => {
       const query = '(ttl:((A*) PRE10 ((veg*) NEAR15 (juice*) NEARP (Veg*) NEARS (plant*))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3479,7 +3478,7 @@ describe('Iterative Implementation', () => {
 
     it('#12', () => {
       const query = '(ttl:((A) PRE10 ((veg*) NEAR15 (juice*) NEARP (Veg*) NEARS (plant*))))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3573,7 +3572,7 @@ describe('Iterative Implementation', () => {
 
     it('#13', () => {
       const query = '(ttl:("c" NEARP engine*))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3601,7 +3600,7 @@ describe('Iterative Implementation', () => {
 
     it('#14', () => {
       const query = '(xlpat-prob.stat:(efficiency NEAR5 cost NEAR5 time))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3633,7 +3632,7 @@ describe('Iterative Implementation', () => {
 
     it('#15', () => {
       const query = '((inv:(Michael OR Jonas)) AND ttl:(wheel PRE1 loader*))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3669,7 +3668,7 @@ describe('Iterative Implementation', () => {
 
     it('#16', () => {
       const query = '((inv:(Michael OR Jonas)) AND pa:(caterpillar OR Komatsu OR CNH))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3695,7 +3694,7 @@ describe('Iterative Implementation', () => {
 
     it('#17', () => {
       const query = '((inv:(Michael AND Jonas)) AND pa:(caterpillar OR Komatsu OR CNH))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3716,7 +3715,7 @@ describe('Iterative Implementation', () => {
 
     it('#18', () => {
       const query = '((inv:(Michael AND Jonas)) NOT pa:(caterpillar OR Komatsu OR CNH))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3736,7 +3735,7 @@ describe('Iterative Implementation', () => {
 
     it('#19', () => {
       const query = '((inv:(Michael OR Jonas)) NOT pa:(caterpillar OR Komatsu OR CNH))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3762,7 +3761,7 @@ describe('Iterative Implementation', () => {
 
     it('#20', () => {
       const query = '((inv:(Michael AND Jonas)) OR cited.pn:(KR-101275147-B1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3780,7 +3779,7 @@ describe('Iterative Implementation', () => {
 
     it('#21', () => {
       const query = '(xlpat-litig.defs.name:(caterpillar OR Komatsu OR CNH))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3797,7 +3796,7 @@ describe('Iterative Implementation', () => {
 
     it('#22', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND (cpc:(a61b5) OR ic:(a61b5)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3831,7 +3830,7 @@ describe('Iterative Implementation', () => {
 
     it('#23', () => {
       const query = '(((cpc:(a61b5) OR ic:(a61b5))) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3865,7 +3864,7 @@ describe('Iterative Implementation', () => {
 
     it('#24', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3918,7 +3917,7 @@ describe('Iterative Implementation', () => {
 
     it('#25', () => {
       const query = '(((cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -3971,7 +3970,7 @@ describe('Iterative Implementation', () => {
 
     it('#26', () => {
       const query = '(((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) AND ttl:(energ*))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4033,7 +4032,7 @@ describe('Iterative Implementation', () => {
 
     it('#27', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT (cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4092,7 +4091,7 @@ describe('Iterative Implementation', () => {
 
     it('#28', () => {
       const query = '(((cpc:(a61b5/02 AND G04B47/06 AND G04G21/02) OR ic:(a61b5/02 AND G04B47/06 AND G04G21/02))) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4152,7 +4151,7 @@ describe('Iterative Implementation', () => {
 
     it('#29', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND casgs:(boe))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4182,7 +4181,7 @@ describe('Iterative Implementation', () => {
 
     it('#30', () => {
       const query = '((casgs:(boe)) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4212,7 +4211,7 @@ describe('Iterative Implementation', () => {
 
     it('#31', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT casgs:(boe))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4242,7 +4241,7 @@ describe('Iterative Implementation', () => {
 
     it('#32', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4294,7 +4293,7 @@ describe('Iterative Implementation', () => {
 
     it('#33', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR casgs:(FINNOVATE NEAR2 GROUP))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4345,7 +4344,7 @@ describe('Iterative Implementation', () => {
 
     it('#34', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4396,7 +4395,7 @@ describe('Iterative Implementation', () => {
 
     it('#35', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND pn:(US20200069200A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4426,7 +4425,7 @@ describe('Iterative Implementation', () => {
 
     it('#36', () => {
       const query = '((pn:(US20200069200A1)) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4456,7 +4455,7 @@ describe('Iterative Implementation', () => {
 
     it('#37', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) OR pn:(US20210403048A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4492,7 +4491,7 @@ describe('Iterative Implementation', () => {
 
     it('#38', () => {
       const query = '((pn:(US20200069200A1)) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4528,7 +4527,7 @@ describe('Iterative Implementation', () => {
 
     it('#39', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) NOT pn:(US20210403048A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4579,7 +4578,7 @@ describe('Iterative Implementation', () => {
 
     it('#40', () => {
       const query = '((pn:(US20210403048A1)) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4615,7 +4614,7 @@ describe('Iterative Implementation', () => {
 
     it('#41', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND epridate: [20000101 TO 20220308])'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4645,7 +4644,7 @@ describe('Iterative Implementation', () => {
 
     it('#42', () => {
       const query = '((ttl:((smart NEAR2 watch) AND (pulse OR rate))) AND pd: [20000101 TO 20220308])'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4675,7 +4674,7 @@ describe('Iterative Implementation', () => {
 
     it('#43', () => {
       const query = '((pd: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4705,7 +4704,7 @@ describe('Iterative Implementation', () => {
 
     it('#44', () => {
       const query = '((ad: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4735,7 +4734,7 @@ describe('Iterative Implementation', () => {
 
     it('#45', () => {
       const query = '((epridate: [20000101 TO 20220308]) AND ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4765,7 +4764,7 @@ describe('Iterative Implementation', () => {
 
     it('#46', () => {
       const query = '((epridate: [20220201 TO 20220308]) OR ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4801,7 +4800,7 @@ describe('Iterative Implementation', () => {
 
     it('#47', () => {
       const query = '((epridate: [20220201 TO 20220308]) NOT ttl:((smart NEAR2 watch) AND (pulse OR rate)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4839,7 +4838,7 @@ describe('Iterative Implementation', () => {
 
     it('#48', () => {
       const query = '((epridate: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4859,7 +4858,7 @@ describe('Iterative Implementation', () => {
 
     it('#49', () => {
       const query = '((epridate: [20220201 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4880,7 +4879,7 @@ describe('Iterative Implementation', () => {
 
     it('#50', () => {
       const query = '((epridate: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4906,7 +4905,7 @@ describe('Iterative Implementation', () => {
 
     it('#51', () => {
       const query = '((ad: [20220201 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4932,7 +4931,7 @@ describe('Iterative Implementation', () => {
 
     it('#52', () => {
       const query = '((ad: [20220201 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4952,7 +4951,7 @@ describe('Iterative Implementation', () => {
 
     it('#53', () => {
       const query = '((ad: [20220201 TO 20220308]) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -4980,7 +4979,7 @@ describe('Iterative Implementation', () => {
 
     it('#54', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5032,7 +5031,7 @@ describe('Iterative Implementation', () => {
 
     it('#55', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) NOT casgs:(FINNOVATE NEAR2 GROUP))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5086,7 +5085,7 @@ describe('Iterative Implementation', () => {
 
     it('#56', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5124,7 +5123,7 @@ describe('Iterative Implementation', () => {
 
     it('#57', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND casgs:(FINNOVATE NEAR2 GROUP))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5162,7 +5161,7 @@ describe('Iterative Implementation', () => {
 
     it('#58', () => {
       const query = '((casgs:(FINNOVATE NEAR2 GROUP)) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5201,7 +5200,7 @@ describe('Iterative Implementation', () => {
 
     it('#59', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND casgs:(FINNOVATE NEAR2 GROUP))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5240,7 +5239,7 @@ describe('Iterative Implementation', () => {
 
     it('#60', () => {
       const query = '((an:(16845016)) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5269,7 +5268,7 @@ describe('Iterative Implementation', () => {
 
     it('#61', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND an:(16845016))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5298,7 +5297,7 @@ describe('Iterative Implementation', () => {
 
     it('#62', () => {
       const query = '((an:(16845016)) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5321,7 +5320,7 @@ describe('Iterative Implementation', () => {
 
     it('#63', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) OR an:(16845016))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5344,7 +5343,7 @@ describe('Iterative Implementation', () => {
 
     it('#64', () => {
       const query = '((an:(16845016)) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5373,7 +5372,7 @@ describe('Iterative Implementation', () => {
 
     it('#65', () => {
       const query = '((pd: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5402,7 +5401,7 @@ describe('Iterative Implementation', () => {
 
     it('#66', () => {
       const query = '((ad: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5431,7 +5430,7 @@ describe('Iterative Implementation', () => {
 
     it('#67', () => {
       const query = '((epridate: [20210101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5460,7 +5459,7 @@ describe('Iterative Implementation', () => {
 
     it('#68', () => {
       const query = '((epridate: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5483,7 +5482,7 @@ describe('Iterative Implementation', () => {
 
     it('#69', () => {
       const query = '((ad: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5506,7 +5505,7 @@ describe('Iterative Implementation', () => {
 
     it('#70', () => {
       const query = '((pd: [20220304 TO 20220308]) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5529,7 +5528,7 @@ describe('Iterative Implementation', () => {
 
     it('#71', () => {
       const query = '((pd: [20220304 TO 20220308]) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5560,7 +5559,7 @@ describe('Iterative Implementation', () => {
 
     it('#72', () => {
       const query = '((pd: [20200101 TO 20220308]) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5589,7 +5588,7 @@ describe('Iterative Implementation', () => {
 
     it('#73', () => {
       const query = '(((cpc:(A47B53) OR ic:(A47B53))) AND pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5622,7 +5621,7 @@ describe('Iterative Implementation', () => {
 
     it('#74', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) AND (cpc:(A47B53) OR ic:(A47B53)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5655,7 +5654,7 @@ describe('Iterative Implementation', () => {
 
     it('#75', () => {
       const query = '(((cpc:(A47B53 AND B60R25/01) OR ic:(A47B53 AND B60R25/01))) OR pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5690,7 +5689,7 @@ describe('Iterative Implementation', () => {
 
     it('#76', () => {
       const query = '((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1)) OR (cpc:(A47B53 AND B60R25/01) OR ic:(A47B53 AND B60R25/01)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5726,7 +5725,7 @@ describe('Iterative Implementation', () => {
 
     it('#77', () => {
       const query = '(((cpc:(A47B53 AND A47B63) OR ic:(A47B53 AND A47B63))) NOT pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1 OR GB2454544A))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5795,7 +5794,7 @@ describe('Iterative Implementation', () => {
 
     it('#78', () => {
       const query = '(ttl: (apple NOT banana NOT pineapple) AND (apple NOT banana NOT grapes))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5829,7 +5828,7 @@ describe('Iterative Implementation', () => {
 
     it('#79', () => {
       const query = '(ttl: (apple AND apple) AND (apple NOT banana NOT grapes))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5858,7 +5857,7 @@ describe('Iterative Implementation', () => {
 
     it('#80', () => {
       const query = '(ttl: (apple AND apple AND (mango OR pineapple)) AND (mango OR pineapple))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5889,7 +5888,7 @@ describe('Iterative Implementation', () => {
 
     it('#81', () => {
       const query = '(ttl: (apple AND apple) AND (NOT mango NOT pineapple))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5918,7 +5917,7 @@ describe('Iterative Implementation', () => {
 
     it('#82', () => {
       const query = '(ttl: (apple AND apple NOT mango NOT rainbow) AND (NOT mango NOT pineapple))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5952,7 +5951,7 @@ describe('Iterative Implementation', () => {
 
     it('#83', () => {
       const query = '(ttl: (NOT mango NOT pineapple) AND (apple AND apple NOT mango NOT rainbow))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -5986,7 +5985,7 @@ describe('Iterative Implementation', () => {
 
     it('#84', () => {
       const query = '(ttl: (NOT mango NOT pineapple) AND (apple AND apple))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -6015,7 +6014,7 @@ describe('Iterative Implementation', () => {
 
     it('#85', () => {
       const query = '(ttl: (mango OR pineapple) AND (apple AND apple AND (mango OR pineapple)))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -6046,7 +6045,7 @@ describe('Iterative Implementation', () => {
 
     it('#86', () => {
       const query = '(ttl: (NOT mango NOT pineapple) AND (NOT apple NOT mango))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -6073,7 +6072,7 @@ describe('Iterative Implementation', () => {
 
     it('#87', () => {
       const query = '(ttl: (NOT mango NOT pineapple) AND (apple))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -6102,7 +6101,7 @@ describe('Iterative Implementation', () => {
 
     it('#88', () => {
       const query = '(ttl: (apple) AND (NOT mango NOT pineapple))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -6131,7 +6130,7 @@ describe('Iterative Implementation', () => {
 
     it('#89', () => {
       const query = '(ttl: (NOT apple) OR (mango OR NOT apple))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -6159,7 +6158,7 @@ describe('Iterative Implementation', () => {
 
     it('#90', () => {
       const query = '(ttl: (mango OR NOT apple) OR (NOT apple))'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -6187,7 +6186,7 @@ describe('Iterative Implementation', () => {
 
     it('#91', () => {
       const query = '(((ttl:(mango)) OR (pa:(mango))) OR text:pineapple OR pineapple)'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -6214,7 +6213,7 @@ describe('Iterative Implementation', () => {
 
     it('#92', () => {
       const query = '(((ttl:(mango)) OR (pa:(mango))) OR pa:pineapple OR apple)'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -6240,7 +6239,7 @@ describe('Iterative Implementation', () => {
 
     it('#93', () => {
       const query = '(((ttl:(mango)) OR (pa:(mango OR rainbow))) OR pa:pineapple OR apple)'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
@@ -6267,7 +6266,7 @@ describe('Iterative Implementation', () => {
 
     it('#94', () => {
       const query = '(((ttl:(mango)) OR (pa:(rainbow))) OR pa:pineapple OR pineapple)'
-      const pq = genEqlIter(query)
+      const pq = elasticBuilder(query)
 
       expect(pq).toEqual({
         bool: {
