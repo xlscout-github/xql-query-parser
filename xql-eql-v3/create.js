@@ -364,6 +364,8 @@ function create (left, right, operator, slop) {
       } else if (left.bool) {
         const clause = makeClause(right.key, right.val)
 
+        if (!clause) return left
+
         if (left.bool.must) {
           const jsonClause = JSON.stringify(clause)
 
@@ -704,6 +706,14 @@ function create (left, right, operator, slop) {
         }
       } else if (right.bool) {
         const clause = makeClause(left.key, left.val)
+
+        if (!clause) {
+          return {
+            bool: {
+              must_not: [right]
+            }
+          }
+        }
 
         return {
           bool: {
