@@ -1,6 +1,6 @@
 const { parse } = require('../parser')
 
-const SPAN_MULTI_WILDCARD_REWRITE = 'top_terms_1000'
+const SPAN_MULTI_WILDCARD_REWRITE = 'top_terms_2500'
 const WILDCARD_REWRITE = 'top_terms_10000'
 
 const genIter = (node, nodeTransformer) => {

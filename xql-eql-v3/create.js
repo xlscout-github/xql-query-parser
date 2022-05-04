@@ -1,5 +1,5 @@
 const REWRITE = 'top_terms_10000'
-const SPAN_MULTI_WILDCARD_REWRITE = 'top_terms_1000'
+const SPAN_MULTI_WILDCARD_REWRITE = 'top_terms_2500'
 
 function makeClause (field, value) {
   if (typeof value === 'string') {
