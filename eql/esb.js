@@ -2,7 +2,7 @@ const { parse } = require("../parser");
 
 const COMBINE_CRITERION = "OR";
 const WILDCARD_REWRITE = "top_terms_10000";
-const SPAN_MULTI_WILDCARD_REWRITE = "top_terms_1000";
+const SPAN_MULTI_WILDCARD_REWRITE = "top_terms_2500";
 
 function main(q, cb) {
   const tree = parse(q);

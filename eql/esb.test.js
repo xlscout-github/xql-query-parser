@@ -224,7 +224,7 @@ describe('"NEAR" Queries', () => {
                         ttl: {
                           value: "mobi*",
                           case_insensitive: true,
-                          rewrite: "top_terms_1000",
+                          rewrite: "top_terms_2500",
                         },
                       },
                     },
@@ -486,7 +486,7 @@ describe('"PRE" Queries', () => {
                         ttl: {
                           value: "mobi*",
                           case_insensitive: true,
-                          rewrite: "top_terms_1000",
+                          rewrite: "top_terms_2500",
                         },
                       },
                     },
@@ -713,7 +713,7 @@ describe("Miscellaneous Queries", () => {
                               ttl: {
                                 value: "Fruit*",
                                 case_insensitive: true,
-                                rewrite: "top_terms_1000",
+                                rewrite: "top_terms_2500",
                               },
                             },
                           },
@@ -726,7 +726,7 @@ describe("Miscellaneous Queries", () => {
                               ttl: {
                                 value: "Vegetable*",
                                 case_insensitive: true,
-                                rewrite: "top_terms_1000",
+                                rewrite: "top_terms_2500",
                               },
                             },
                           },
@@ -766,7 +766,7 @@ describe("Miscellaneous Queries", () => {
                               ttl: {
                                 value: "Fruit*",
                                 case_insensitive: true,
-                                rewrite: "top_terms_1000",
+                                rewrite: "top_terms_2500",
                               },
                             },
                           },
@@ -779,7 +779,7 @@ describe("Miscellaneous Queries", () => {
                               ttl: {
                                 value: "Vegetable*",
                                 case_insensitive: true,
-                                rewrite: "top_terms_1000",
+                                rewrite: "top_terms_2500",
                               },
                             },
                           },
@@ -1073,7 +1073,7 @@ describe("Miscellaneous Queries", () => {
                               ttl: {
                                 value: "plant*",
                                 case_insensitive: true,
-                                rewrite: "top_terms_1000",
+                                rewrite: "top_terms_2500",
                               },
                             },
                           },
@@ -1238,7 +1238,7 @@ describe("Miscellaneous Queries", () => {
                               ttl: {
                                 value: "vegetable*",
                                 case_insensitive: true,
-                                rewrite: "top_terms_1000",
+                                rewrite: "top_terms_2500",
                               },
                             },
                           },
@@ -1251,7 +1251,7 @@ describe("Miscellaneous Queries", () => {
                               ttl: {
                                 value: "juice*",
                                 case_insensitive: true,
-                                rewrite: "top_terms_1000",
+                                rewrite: "top_terms_2500",
                               },
                             },
                           },
@@ -1275,7 +1275,7 @@ describe("Miscellaneous Queries", () => {
                                     ttl: {
                                       value: "Fruit*",
                                       case_insensitive: true,
-                                      rewrite: "top_terms_1000",
+                                      rewrite: "top_terms_2500",
                                     },
                                   },
                                 },
@@ -1288,7 +1288,7 @@ describe("Miscellaneous Queries", () => {
                                     ttl: {
                                       value: "Vegetable*",
                                       case_insensitive: true,
-                                      rewrite: "top_terms_1000",
+                                      rewrite: "top_terms_2500",
                                     },
                                   },
                                 },
@@ -1304,7 +1304,7 @@ describe("Miscellaneous Queries", () => {
                               ttl: {
                                 value: "plant*",
                                 case_insensitive: true,
-                                rewrite: "top_terms_1000",
+                                rewrite: "top_terms_2500",
                               },
                             },
                           },
@@ -1351,7 +1351,7 @@ describe("Miscellaneous Queries", () => {
                                     ttl: {
                                       value: "intelligen*",
                                       case_insensitive: true,
-                                      rewrite: "top_terms_1000",
+                                      rewrite: "top_terms_2500",
                                     },
                                   },
                                 },
@@ -1388,7 +1388,7 @@ describe("Miscellaneous Queries", () => {
                                     ttl: {
                                       value: "learn*",
                                       case_insensitive: true,
-                                      rewrite: "top_terms_1000",
+                                      rewrite: "top_terms_2500",
                                     },
                                   },
                                 },
@@ -1441,7 +1441,7 @@ describe("Miscellaneous Queries", () => {
                                           ttl: {
                                             value: "intelligen*",
                                             case_insensitive: true,
-                                            rewrite: "top_terms_1000",
+                                            rewrite: "top_terms_2500",
                                           },
                                         },
                                       },
@@ -1478,7 +1478,7 @@ describe("Miscellaneous Queries", () => {
                                           ttl: {
                                             value: "learn*",
                                             case_insensitive: true,
-                                            rewrite: "top_terms_1000",
+                                            rewrite: "top_terms_2500",
                                           },
                                         },
                                       },
@@ -1524,7 +1524,7 @@ describe("Miscellaneous Queries", () => {
                         ttl: {
                           value: "A*",
                           case_insensitive: true,
-                          rewrite: "top_terms_1000",
+                          rewrite: "top_terms_2500",
                         },
                       },
                     },
@@ -1546,7 +1546,7 @@ describe("Miscellaneous Queries", () => {
                                           ttl: {
                                             value: "veg*",
                                             case_insensitive: true,
-                                            rewrite: "top_terms_1000",
+                                            rewrite: "top_terms_2500",
                                           },
                                         },
                                       },
@@ -1559,7 +1559,7 @@ describe("Miscellaneous Queries", () => {
                                           ttl: {
                                             value: "juice*",
                                             case_insensitive: true,
-                                            rewrite: "top_terms_1000",
+                                            rewrite: "top_terms_2500",
                                           },
                                         },
                                       },
@@ -1577,7 +1577,7 @@ describe("Miscellaneous Queries", () => {
                                     ttl: {
                                       value: "Veg*",
                                       case_insensitive: true,
-                                      rewrite: "top_terms_1000",
+                                      rewrite: "top_terms_2500",
                                     },
                                   },
                                 },
@@ -1595,7 +1595,7 @@ describe("Miscellaneous Queries", () => {
                               ttl: {
                                 value: "plant*",
                                 case_insensitive: true,
-                                rewrite: "top_terms_1000",
+                                rewrite: "top_terms_2500",
                               },
                             },
                           },
@@ -1644,7 +1644,7 @@ describe("Miscellaneous Queries", () => {
                                           ttl: {
                                             value: "veg*",
                                             case_insensitive: true,
-                                            rewrite: "top_terms_1000",
+                                            rewrite: "top_terms_2500",
                                           },
                                         },
                                       },
@@ -1657,7 +1657,7 @@ describe("Miscellaneous Queries", () => {
                                           ttl: {
                                             value: "juice*",
                                             case_insensitive: true,
-                                            rewrite: "top_terms_1000",
+                                            rewrite: "top_terms_2500",
                                           },
                                         },
                                       },
@@ -1675,7 +1675,7 @@ describe("Miscellaneous Queries", () => {
                                     ttl: {
                                       value: "Veg*",
                                       case_insensitive: true,
-                                      rewrite: "top_terms_1000",
+                                      rewrite: "top_terms_2500",
                                     },
                                   },
                                 },
@@ -1693,7 +1693,7 @@ describe("Miscellaneous Queries", () => {
                               ttl: {
                                 value: "plant*",
                                 case_insensitive: true,
-                                rewrite: "top_terms_1000",
+                                rewrite: "top_terms_2500",
                               },
                             },
                           },
@@ -1729,7 +1729,7 @@ describe("Miscellaneous Queries", () => {
                         ttl: {
                           value: "engine*",
                           case_insensitive: true,
-                          rewrite: "top_terms_1000",
+                          rewrite: "top_terms_2500",
                         },
                       },
                     },
@@ -1800,7 +1800,7 @@ describe("Miscellaneous Queries", () => {
                               ttl: {
                                 value: "loader*",
                                 case_insensitive: true,
-                                rewrite: "top_terms_1000",
+                                rewrite: "top_terms_2500",
                               },
                             },
                           },
