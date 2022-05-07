@@ -2,19 +2,30 @@
 
 @{%
 
-function setField(field, value) {
-  if (value.leftOperand || value.rightOperand) {
-    if (value.leftOperand) {
-      value.leftOperand = setField(field, value.leftOperand)
+function setField (field, head) {
+  let temp = head
+
+  while ((temp != null && !temp.visited)) {
+    // Visited left subtree
+    if (temp.leftOperand != null && !temp.leftOperand.visited) {
+      temp = temp.leftOperand
     }
-    if (value.rightOperand) {
-      value.rightOperand = setField(field, value.rightOperand)
+    // Visited right subtree
+    else if (temp.rightOperand != null && !temp.rightOperand.visited) {
+      temp = temp.rightOperand
     }
-  } else {
-    return { ...value, field }
+    // Perform operation on node
+    else {
+      if (temp.field && temp.field !== '') {
+        temp.field = field
+      }
+
+      temp.visited = true
+      temp = head
+    }
   }
 
-  return value
+  return head
 }
 
 function setDefaultField(value, field = "text") {
