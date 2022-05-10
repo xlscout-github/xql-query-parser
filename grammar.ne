@@ -2,30 +2,26 @@
 
 @{%
 
-function setField (field, head) {
-  let temp = head
+function setField (field, node) {
+  const stack = [node]
 
-  while ((temp != null && !temp.visited)) {
-    // Visited left subtree
-    if (temp.leftOperand != null && !temp.leftOperand.visited) {
-      temp = temp.leftOperand
-    }
-    // Visited right subtree
-    else if (temp.rightOperand != null && !temp.rightOperand.visited) {
-      temp = temp.rightOperand
-    }
-    // Perform operation on node
-    else {
-      if (temp.field && temp.field !== '') {
-        temp.field = field
+  while (stack.length) {
+    const item = stack.pop()
+
+    if (!item.leftOperand && !item.rightOperand) {
+      item.field = field
+    } else {
+      if (item.rightOperand) {
+        stack.push(item.rightOperand)
       }
 
-      temp.visited = true
-      temp = head
+      if (item.leftOperand) {
+        stack.push(item.leftOperand)
+      }
     }
   }
 
-  return head
+  return node
 }
 
 function setDefaultField(value, field = "text") {
