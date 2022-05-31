@@ -311,7 +311,7 @@ function pickKey(q, field) {
     if (foundwords[i].trimEnd().slice(0, -1) === field) {
       startEnd.push({
         field: field,
-        value: query.substring(startValIndices[i], endValIndices[i] + 1),
+        value: query.slice(startValIndices[i], endValIndices[i] + 1),
         start: startFieldIndices[i] - (2 * i + 2),
         end: endValIndices[i] - (2 * i + 2),
       });
@@ -321,10 +321,10 @@ function pickKey(q, field) {
   return startEnd;
 }
 
-function prepare(q) {
+function prepare(q, {defOpt = 'AND'} = {}) {
   const { q: query, startValIndices, endValIndices } = _prepare(q);
 
-  return transform(query, startValIndices, endValIndices);
+  return transform(query, startValIndices, endValIndices, {defOpt});
 }
 
 function collectRemainingParts(s, i) {
@@ -390,14 +390,18 @@ function transformProximitySearch(s, q, start) {
   };
 }
 
-function transform(q, startIndices, endIndices) {
+function transform(q, startIndices, endIndices, {defOpt}) {
+  if (!isOperator(defOpt)) {
+    defOpt = "AND";
+  }
+
   if (q.length > 0 && startIndices.length === 0 && endIndices.length === 0) {
     startIndices.push(0);
     endIndices.push(q.length - 1);
   }
 
   for (let i = 0; i < startIndices.length; i++) {
-    let inter = q.substring(startIndices[i], endIndices[i] + 1);
+    let inter = q.slice(startIndices[i], endIndices[i] + 1);
 
     let k = inter.length - 1;
     let noSpaces = 0;
@@ -466,7 +470,6 @@ function transform(q, startIndices, endIndices) {
     let construct = "";
     let prevConstruct = "";
     let onlyBracket = false;
-    let sQuote = false;
     let quote = false;
 
     for (let ch = 0; ch < inter.length; ch++) {
@@ -494,23 +497,25 @@ function transform(q, startIndices, endIndices) {
       } else if (inter[ch] === " ") {
         if (!quote && !onlyBracket) {
           const { remain, char } = collectRemainingParts(inter, ch);
-          if (remain === " " && char === ch + 1) {
+
+          if (remain === " ") {
             const { s, frontCount } = trimBrackets(construct);
 
             construct = s;
 
             if (toggle && !isOperator(construct)) {
-              inter = [inter.slice(0, index), "AND ", inter.slice(index)].join(
+              inter = [inter.slice(0, index), `${defOpt} `, inter.slice(index)].join(
                 ""
               );
               noOperator++;
-              ch += "AND".length + " ".length;
+              ch += defOpt.length + " ".length;
+              index += defOpt.length + " ".length;
 
               if (isProximitySearch(construct)) {
                 const { result, increment } = transformProximitySearch(
                   construct,
                   inter,
-                  index + "AND".length + " ".length + frontCount
+                  index + frontCount
                 );
 
                 inter = result;
@@ -569,14 +574,14 @@ function transform(q, startIndices, endIndices) {
 
     if (toggle) {
       if (!isOperator(construct)) {
-        inter = [inter.slice(0, index), "AND ", inter.slice(index)].join("");
+        inter = [inter.slice(0, index), `${defOpt} `, inter.slice(index)].join("");
         noOperator++;
 
         if (isProximitySearch(construct)) {
           const { result, increment } = transformProximitySearch(
             construct,
             inter,
-            index + "AND".length + " ".length + frontCount
+            index + defOpt.length + " ".length + frontCount
           );
 
           inter = result;

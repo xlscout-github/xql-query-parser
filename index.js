@@ -2,10 +2,10 @@ const { parse } = require('./parser')
 const { pickKey, getFields } = require('./prepare')
 const { EQLgenerator } = require('./EQLgenerator')
 
-function pickKeyParsed (q, field) {
+function pickKeyParsed (q, field, condense, props) {
   return pickKey(q, field).map((val) => ({
     ...val,
-    parsed: parse(q.substring(val.start, val.end + 1))
+    parsed: parse(q.slice(val.start, val.end + 1), condense, props)
   }))
 }
 
@@ -18,8 +18,8 @@ function convertXQLtoEQL (strQry) {
   return EQLgenerator(parse(strQry))
 }
 
-function elasticBuilder (q, transformFn) {
-  return parse(q, false, { eql: true, transformFn })
+function elasticBuilder (q, transformFn, { defOpt } = {}) {
+  return parse(q, false, { defOpt, eql: true, transformFn })
 }
 
 module.exports = {

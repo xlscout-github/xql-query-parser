@@ -184,3 +184,19 @@ test('should convert tilde proximity searches, if phrase is in the middle and th
     '(((text:(FRANZ AND ((FRANZ NEAR3 KOHLER)) OR KOHLER))))'
   )
 })
+
+test('configure default operator as OR', () => {
+  const query = '(pn:(ES1286585U ES1286629U US20210403048A1 US20200328824A1))'
+
+  expect(prepare(query, { defOpt: 'OR' })).toBe(
+    '(((pn:(ES1286585U OR ES1286629U OR US20210403048A1 OR US20200328824A1))))'
+  )
+})
+
+test('configure default operator to unknown value', () => {
+  const query = '(pn:(ES1286585U ES1286629U US20210403048A1 US20200328824A1))'
+
+  expect(prepare(query, { defOpt: 'DNA' })).toBe(
+    '(((pn:(ES1286585U AND ES1286629U AND US20210403048A1 AND US20200328824A1))))'
+  )
+})
