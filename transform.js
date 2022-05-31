@@ -1,4 +1,4 @@
-const Queue = require('./util/Queue')
+const Queue = require('./utils/Queue')
 const createEQL = require('./xql-eql-v3/create')
 
 const DATE_TYPE = 'DATE'
