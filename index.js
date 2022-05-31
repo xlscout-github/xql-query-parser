@@ -2,16 +2,16 @@ const { parse } = require('./parser')
 const { pickKey, getFields } = require('./prepare')
 const { EQLgenerator } = require('./EQLgenerator')
 
-function pickKeyParsed (q, field, condense, props) {
+function pickKeyParsed (q, field, { condense, defOpt, children, eql, transformFn } = {}) {
   return pickKey(q, field).map((val) => ({
     ...val,
-    parsed: parse(q.slice(val.start, val.end + 1), condense, props)
+    parsed: parse(q.slice(val.start, val.end + 1), condense, { defOpt, children, eql, transformFn })
   }))
 }
 
 function getUniqueFields (q) {
   const { foundwords } = getFields(q)
-  return Array.from(new Set(foundwords.map((word) => word.slice(0, -1))))
+  return [...new Set(foundwords.map((word) => word.slice(0, -1)))]
 }
 
 function convertXQLtoEQL (strQry) {
