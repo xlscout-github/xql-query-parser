@@ -1,285 +1,277 @@
-function isMatchingBrackets(q) {
-  const stack = [];
+function isMatchingBrackets (q) {
+  const stack = []
   const map = {
-    "(": ")",
-    "[": "]",
-  };
-  let quote = false;
+    '(': ')',
+    '[': ']'
+  }
+  let quote = false
 
   for (let i = 0; i < q.length; i++) {
     if (q[i] === '"') {
-      quote = !quote;
-    } else if (!quote && (q[i] === "(" || q[i] === "[")) {
-      stack.push(q[i]);
-    } else if (!quote && (q[i] === ")" || q[i] === "]")) {
-      const last = stack.pop();
+      quote = !quote
+    } else if (!quote && (q[i] === '(' || q[i] === '[')) {
+      stack.push(q[i])
+    } else if (!quote && (q[i] === ')' || q[i] === ']')) {
+      const last = stack.pop()
 
       if (q[i] !== map[last]) {
-        return false;
+        return false
       }
     }
   }
 
   if (stack.length !== 0) {
-    return false;
+    return false
   }
 
-  return true;
+  return true
 }
 
-function todeduct(q, start, end) {
-  const original = start;
+function todeduct (q, start, end) {
+  const original = start
 
-  while (q[start - 1] === "(" || q[start - 1] === " ") {
-    start--;
+  while (q[start - 1] === '(' || q[start - 1] === ' ') {
+    start--
   }
 
-  let countBefore = 0;
-  let count = 0;
+  let countBefore = 0
+  let count = 0
   for (let i = start; i <= end; i++) {
-    if (q[i] === "(") {
-      count++;
+    if (q[i] === '(') {
+      count++
       if (i < original) {
-        countBefore++;
+        countBefore++
       }
-    } else if (q[i] === ")") {
-      count--;
+    } else if (q[i] === ')') {
+      count--
     }
   }
 
-  return countBefore - count;
+  return countBefore - count
 }
 
-function evalDeduction(q, start, end) {
-  const deduction = todeduct(q, start, end);
+function evalDeduction (q, start, end) {
+  const deduction = todeduct(q, start, end)
 
-  let i = end;
-  let foundClose = 0;
-  let count = 0;
+  let i = end
+  let foundClose = 0
+  let count = 0
 
   while (deduction !== foundClose) {
-    if (q[i] === ")") foundClose++;
+    if (q[i] === ')') foundClose++
 
-    count++;
-    i--;
+    count++
+    i--
   }
 
-  return count;
+  return count
 }
 
-function evalSpaces(q, i) {
-  let count = 0;
+function evalSpaces (q, i) {
+  let count = 0
   for (let ch = i; ch < q.length; ch++) {
-    if (q[ch] === " ") count++;
-    else break;
+    if (q[ch] === ' ') count++
+    else break
   }
 
-  return " ".repeat(count);
+  return ' '.repeat(count)
 }
 
-function getFields(q) {
-  const foundwords = [];
-  const startFieldIndices = [];
+function getFields (q) {
+  const foundwords = []
+  const startFieldIndices = []
 
-  let construct = "";
-  let start = false;
-  let index = 0;
-  let quote = false;
+  let construct = ''
+  let start = false
+  let index = 0
+  let quote = false
 
   for (let ch = 0; ch < q.length; ch++) {
     if (q[ch] === '"') {
-      quote = !quote;
-    } else if (q[ch] !== " " && q[ch] !== "(" && q[ch] !== ")") {
+      quote = !quote
+    } else if (q[ch] !== ' ' && q[ch] !== '(' && q[ch] !== ')') {
       if (!quote) {
-        if (q[ch] === ":" && construct !== "") {
-          construct += q[ch];
-          construct += evalSpaces(q, ch + 1);
-          foundwords.push(construct);
-          startFieldIndices.push(index);
-          construct = "";
-          start = false;
-          index = 0;
+        if (q[ch] === ':' && construct !== '') {
+          construct += q[ch]
+          construct += evalSpaces(q, ch + 1)
+          foundwords.push(construct)
+          startFieldIndices.push(index)
+          construct = ''
+          start = false
+          index = 0
         } else {
-          construct += q[ch];
+          construct += q[ch]
           if (!start) {
-            index = ch;
-            start = true;
+            index = ch
+            start = true
           }
         }
       }
-    } else if (q[ch] === " ") {
+    } else if (q[ch] === ' ') {
       if (!quote) {
-        construct = "";
-        start = false;
-        index = 0;
+        construct = ''
+        start = false
+        index = 0
       }
     }
   }
 
   return {
     foundwords,
-    startFieldIndices,
-  };
+    startFieldIndices
+  }
 }
 
-function isNear(s) {
-  const parts = s.split("near");
+function isNear (s) {
+  const parts = s.split('near')
 
-  return parts.length === 2 &&
-    parts[0] === "" &&
-    parts[1] !== "" &&
-    (Number(parts[1]) > -1 ? true : false)
-    ? true
-    : false;
+  return !!(parts.length === 2 &&
+    parts[0] === '' &&
+    parts[1] !== '' &&
+    (Number(parts[1]) > -1))
 }
 
-function _isNear(s) {
-  const parts = s.split("raen");
+function _isNear (s) {
+  const parts = s.split('raen')
 
-  return parts.length === 2 &&
-    parts[1] === "" &&
-    parts[0] !== "" &&
-    (Number(parts[0]) > -1 ? true : false)
-    ? true
-    : false;
+  return !!(parts.length === 2 &&
+    parts[1] === '' &&
+    parts[0] !== '' &&
+    (Number(parts[0]) > -1))
 }
 
-function isPre(s) {
-  const parts = s.split("pre");
+function isPre (s) {
+  const parts = s.split('pre')
 
-  return parts.length === 2 &&
-    parts[0] === "" &&
-    parts[1] !== "" &&
-    (Number(parts[1]) > -1 ? true : false)
-    ? true
-    : false;
+  return !!(parts.length === 2 &&
+    parts[0] === '' &&
+    parts[1] !== '' &&
+    (Number(parts[1]) > -1))
 }
 
-function _isPre(s) {
-  const parts = s.split("erp");
+function _isPre (s) {
+  const parts = s.split('erp')
 
-  return parts.length === 2 &&
-    parts[1] === "" &&
-    parts[0] !== "" &&
-    (Number(parts[0]) > -1 ? true : false)
-    ? true
-    : false;
+  return !!(parts.length === 2 &&
+    parts[1] === '' &&
+    parts[0] !== '' &&
+    (Number(parts[0]) > -1))
 }
 
-function isOperator(s) {
-  s = s.toLowerCase();
+function isOperator (s) {
+  s = s.toLowerCase()
 
   return (
-    s === "and" ||
-    s === "or" ||
-    s === "not" ||
-    s === "nearp" ||
-    s === "nears" ||
-    s === "prep" ||
-    s === "pres" ||
+    s === 'and' ||
+    s === 'or' ||
+    s === 'not' ||
+    s === 'nearp' ||
+    s === 'nears' ||
+    s === 'prep' ||
+    s === 'pres' ||
     isNear(s) ||
     isPre(s)
-  );
+  )
 }
 
-function _isOperator(s) {
-  s = s.toLowerCase();
+function _isOperator (s) {
+  s = s.toLowerCase()
 
   return (
-    s === "dna" ||
-    s === "ro" ||
-    s === "ton" ||
-    s === "praen" ||
-    s === "sraen" ||
-    s === "perp" ||
-    s === "serp" ||
+    s === 'dna' ||
+    s === 'ro' ||
+    s === 'ton' ||
+    s === 'praen' ||
+    s === 'sraen' ||
+    s === 'perp' ||
+    s === 'serp' ||
     _isNear(s) ||
     _isPre(s)
-  );
+  )
 }
 
-function _prepare(q) {
+function _prepare (q) {
   if (!isMatchingBrackets(q)) {
-    throw new Error("Unbalanced Brackets");
+    throw new Error('Unbalanced Brackets')
   }
 
-  q = `(${q})`;
+  q = `(${q})`
 
-  const fields = getFields(q);
+  const fields = getFields(q)
 
-  const { foundwords } = fields;
-  let { startFieldIndices } = fields;
+  const { foundwords } = fields
+  let { startFieldIndices } = fields
 
-  let startValIndices = [];
-  let endValIndices = [];
+  const startValIndices = []
+  const endValIndices = []
 
   if (startFieldIndices.length) {
-    let k;
+    let k
     for (k = 0; k < startFieldIndices.length - 1; k++) {
-      const currentFieldIndex = startFieldIndices[k];
-      const nextFieldIndex = startFieldIndices[k + 1];
+      const currentFieldIndex = startFieldIndices[k]
+      const nextFieldIndex = startFieldIndices[k + 1]
 
-      let operator = "";
-      let operatorIndex;
+      let operator = ''
+      let operatorIndex
 
       for (let j = nextFieldIndex - 1; j > currentFieldIndex; j--) {
         if (_isOperator(operator)) {
-          break;
+          break
         }
 
-        if (q[j] === " " || q[j] === "(") {
-          operator = "";
-          continue;
+        if (q[j] === ' ' || q[j] === '(') {
+          operator = ''
+          continue
         }
 
-        operator += q[j];
-        operatorIndex = j;
+        operator += q[j]
+        operatorIndex = j
       }
 
-      const posInsertClose = operatorIndex - 1;
+      const posInsertClose = operatorIndex - 1
 
-      q = [q.slice(0, currentFieldIndex), "(", q.slice(currentFieldIndex)].join(
-        ""
-      );
+      q = [q.slice(0, currentFieldIndex), '(', q.slice(currentFieldIndex)].join(
+        ''
+      )
 
       q = [
         q.slice(0, posInsertClose + 1),
-        ")",
-        q.slice(posInsertClose + 1),
-      ].join("");
+        ')',
+        q.slice(posInsertClose + 1)
+      ].join('')
 
       startFieldIndices = startFieldIndices.map((val, idx) => {
-        if (idx < k) return val;
-        else if (idx === k) return val + 1;
-        else return val + 2;
-      });
+        if (idx < k) return val
+        else if (idx === k) return val + 1
+        else return val + 2
+      })
 
       const deduction = evalDeduction(
         q,
         currentFieldIndex + 1,
         posInsertClose + 1
-      );
+      )
 
-      endValIndices.push(posInsertClose + 1 - deduction);
+      endValIndices.push(posInsertClose + 1 - deduction)
     }
 
     q = [
       q.slice(0, startFieldIndices[k]),
-      "(",
-      q.slice(startFieldIndices[k]),
-    ].join("");
+      '(',
+      q.slice(startFieldIndices[k])
+    ].join('')
 
-    q = [q.slice(0, q.length), ")"].join("");
+    q = [q.slice(0, q.length), ')'].join('')
 
-    startFieldIndices[k] = startFieldIndices[k] + 1;
+    startFieldIndices[k] = startFieldIndices[k] + 1
 
-    const deduction = evalDeduction(q, startFieldIndices[k], q.length - 1);
+    const deduction = evalDeduction(q, startFieldIndices[k], q.length - 1)
 
-    endValIndices.push(q.length - 1 - deduction);
+    endValIndices.push(q.length - 1 - deduction)
   }
 
   for (let i = 0; i < startFieldIndices.length; i++) {
-    startValIndices.push(startFieldIndices[i] + foundwords[i].length);
+    startValIndices.push(startFieldIndices[i] + foundwords[i].length)
   }
 
   // console.log("Query", q);
@@ -293,157 +285,157 @@ function _prepare(q) {
     foundwords,
     startFieldIndices,
     startValIndices,
-    endValIndices,
-  };
+    endValIndices
+  }
 }
 
-function pickKey(q, field) {
+function pickKey (q, field) {
   const {
     q: query,
     foundwords,
     startFieldIndices,
     startValIndices,
-    endValIndices,
-  } = _prepare(q);
+    endValIndices
+  } = _prepare(q)
 
-  const startEnd = [];
+  const startEnd = []
   for (let i = 0; i < foundwords.length; i++) {
     if (foundwords[i].trimEnd().slice(0, -1) === field) {
       startEnd.push({
         field: field,
         value: query.slice(startValIndices[i], endValIndices[i] + 1),
         start: startFieldIndices[i] - (2 * i + 2),
-        end: endValIndices[i] - (2 * i + 2),
-      });
+        end: endValIndices[i] - (2 * i + 2)
+      })
     }
   }
 
-  return startEnd;
+  return startEnd
 }
 
-function prepare(q, {defOpt = 'AND'} = {}) {
-  const { q: query, startValIndices, endValIndices } = _prepare(q);
+function prepare (q, { defOpt = 'AND' } = {}) {
+  const { q: query, startValIndices, endValIndices } = _prepare(q)
 
-  return transform(query, startValIndices, endValIndices, {defOpt});
+  return transform(query, startValIndices, endValIndices, { defOpt })
 }
 
-function collectRemainingParts(s, i) {
-  let remain = "";
-  let char;
+function collectRemainingParts (s, i) {
+  let remain = ''
+  let char
   for (char = i; char < s.length; char++) {
-    if (s[char] === " " || s[char] === ")") {
-      remain += s[char];
-    } else break;
+    if (s[char] === ' ' || s[char] === ')') {
+      remain += s[char]
+    } else break
   }
 
-  return { remain, char };
+  return { remain, char }
 }
 
-function trimBrackets(s) {
-  let frontCount = 0;
+function trimBrackets (s) {
+  let frontCount = 0
 
-  while (s.startsWith("(")) {
-    s = s.slice(1);
-    if (s.startsWith(" ")) frontCount++;
-    s = s.trim();
-    frontCount++;
+  while (s.startsWith('(')) {
+    s = s.slice(1)
+    if (s.startsWith(' ')) frontCount++
+    s = s.trim()
+    frontCount++
   }
 
-  while (s.endsWith(")")) {
-    s = s.slice(0, -1).trim();
+  while (s.endsWith(')')) {
+    s = s.slice(0, -1).trim()
   }
 
-  return { s, frontCount };
+  return { s, frontCount }
 }
 
-function isProximitySearch(s) {
-  const parts = s.split("~");
+function isProximitySearch (s) {
+  const parts = s.split('~')
 
   return (
     parts.length === 2 &&
     (parts[0].startsWith('"') && parts[0].endsWith('"')) &&
-    (Number(parts[1]) > -1 ? true : false)
-  );
+    (Number(parts[1]) > -1)
+  )
 }
 
-function transformProximitySearch(s, q, start) {
-  const [searchPhrase, distance] = s.split("~");
-  const terms = searchPhrase.slice(1, -1).split(" ");
+function transformProximitySearch (s, q, start) {
+  const [searchPhrase, distance] = s.split('~')
+  const terms = searchPhrase.slice(1, -1).split(' ')
 
   if (terms.length < 2) {
-    throw new Error("Proximity search requires at least 2 terms");
+    throw new Error('Proximity search requires at least 2 terms')
   }
 
   const result = [
     q.slice(0, start),
     `(${terms.join(` NEAR${distance} `)})`,
-    q.slice(start + s.length),
-  ].join("");
+    q.slice(start + s.length)
+  ].join('')
 
   const increment =
-    (terms.length - 1) * ("NEAR".length + distance.length + " ".length) -
-    ("~".length + distance.length);
+    (terms.length - 1) * ('NEAR'.length + distance.length + ' '.length) -
+    ('~'.length + distance.length)
 
   return {
     result,
-    increment,
-  };
+    increment
+  }
 }
 
-function transform(q, startIndices, endIndices, {defOpt}) {
+function transform (q, startIndices, endIndices, { defOpt }) {
   if (!isOperator(defOpt)) {
-    defOpt = "AND";
+    defOpt = 'AND'
   }
 
   if (q.length > 0 && startIndices.length === 0 && endIndices.length === 0) {
-    startIndices.push(0);
-    endIndices.push(q.length - 1);
+    startIndices.push(0)
+    endIndices.push(q.length - 1)
   }
 
   for (let i = 0; i < startIndices.length; i++) {
-    let inter = q.slice(startIndices[i], endIndices[i] + 1);
+    let inter = q.slice(startIndices[i], endIndices[i] + 1)
 
-    let k = inter.length - 1;
-    let noSpaces = 0;
+    let k = inter.length - 1
+    let noSpaces = 0
 
-    while (inter[k] === " ") {
-      noSpaces++;
-      k--;
+    while (inter[k] === ' ') {
+      noSpaces++
+      k--
     }
 
-    inter = inter.trimEnd();
+    inter = inter.trimEnd()
 
-    let isDate = true;
-    let datePart = "";
-    let dateParams = [];
-    let beginIndex = 0;
+    let isDate = true
+    let datePart = ''
+    const dateParams = []
+    let beginIndex = 0
 
     for (let ch = 0; ch < inter.length; ch++) {
-      if (inter[ch] === "(" || inter[ch] === ")") {
-        dateParams.push(inter[ch]);
-      } else if (inter[ch] === "[") {
-        beginIndex = dateParams.push(inter[ch]) - 1;
-      } else if (inter[ch] === "]") {
-        if (isNaN(Number(datePart)) && datePart !== "*") {
-          isDate = false;
-          break;
+      if (inter[ch] === '(' || inter[ch] === ')') {
+        dateParams.push(inter[ch])
+      } else if (inter[ch] === '[') {
+        beginIndex = dateParams.push(inter[ch]) - 1
+      } else if (inter[ch] === ']') {
+        if (isNaN(Number(datePart)) && datePart !== '*') {
+          isDate = false
+          break
         }
-        if (datePart !== "") dateParams.push(datePart);
-        datePart = "";
-        dateParams.push(inter[ch]);
-      } else if (inter[ch] !== " ") {
-        datePart += inter[ch];
-      } else if (inter[ch] === " " && datePart !== "") {
+        if (datePart !== '') dateParams.push(datePart)
+        datePart = ''
+        dateParams.push(inter[ch])
+      } else if (inter[ch] !== ' ') {
+        datePart += inter[ch]
+      } else if (inter[ch] === ' ' && datePart !== '') {
         if (
           isNaN(Number(datePart)) &&
-          datePart !== "*" &&
-          datePart.toLowerCase() !== "to"
+          datePart !== '*' &&
+          datePart.toLowerCase() !== 'to'
         ) {
-          isDate = false;
-          break;
+          isDate = false
+          break
         }
-        dateParams.push(datePart);
-        datePart = "";
+        dateParams.push(datePart)
+        datePart = ''
       }
     }
 
@@ -451,182 +443,182 @@ function transform(q, startIndices, endIndices, {defOpt}) {
     if (
       isDate &&
       dateParams.length === 2 * beginIndex + 5 &&
-      dateParams[beginIndex] === "[" &&
-      (dateParams[beginIndex + 1] === "*" ||
+      dateParams[beginIndex] === '[' &&
+      (dateParams[beginIndex + 1] === '*' ||
         !isNaN(dateParams[beginIndex + 1])) &&
-      dateParams[beginIndex + 2].toLowerCase() === "to" &&
-      (dateParams[beginIndex + 3] === "*" ||
+      dateParams[beginIndex + 2].toLowerCase() === 'to' &&
+      (dateParams[beginIndex + 3] === '*' ||
         !isNaN(dateParams[beginIndex + 3])) &&
-      dateParams[beginIndex + 4] === "]"
+      dateParams[beginIndex + 4] === ']'
     ) {
-      continue;
+      continue
     }
 
-    let toggle = false;
-    let noOperator = 0;
-    let noProximity = 0;
-    let start = false;
-    let index = 0;
-    let construct = "";
-    let prevConstruct = "";
-    let onlyBracket = false;
-    let quote = false;
+    let toggle = false
+    let noOperator = 0
+    let noProximity = 0
+    let start = false
+    let index = 0
+    let construct = ''
+    let prevConstruct = ''
+    let onlyBracket = false
+    let quote = false
 
     for (let ch = 0; ch < inter.length; ch++) {
       if (inter[ch] === '"') {
-        quote = !quote;
-        construct += inter[ch];
+        quote = !quote
+        construct += inter[ch]
         if (!start) {
-          index = ch;
-          start = true;
+          index = ch
+          start = true
         }
-      } else if (!quote && inter[ch] === "(") {
-        onlyBracket = true;
-        construct += inter[ch];
+      } else if (!quote && inter[ch] === '(') {
+        onlyBracket = true
+        construct += inter[ch]
         if (!start) {
-          index = ch;
-          start = true;
+          index = ch
+          start = true
         }
-      } else if (inter[ch] !== " ") {
-        onlyBracket = false;
-        construct += inter[ch];
+      } else if (inter[ch] !== ' ') {
+        onlyBracket = false
+        construct += inter[ch]
         if (!start) {
-          index = ch;
-          start = true;
+          index = ch
+          start = true
         }
-      } else if (inter[ch] === " ") {
+      } else if (inter[ch] === ' ') {
         if (!quote && !onlyBracket) {
-          const { remain, char } = collectRemainingParts(inter, ch);
+          const { remain, char } = collectRemainingParts(inter, ch)
 
-          if (remain === " ") {
-            const { s, frontCount } = trimBrackets(construct);
+          if (remain === ' ') {
+            const { s, frontCount } = trimBrackets(construct)
 
-            construct = s;
+            construct = s
 
             if (toggle && !isOperator(construct)) {
               inter = [inter.slice(0, index), `${defOpt} `, inter.slice(index)].join(
-                ""
-              );
-              noOperator++;
-              ch += defOpt.length + " ".length;
-              index += defOpt.length + " ".length;
+                ''
+              )
+              noOperator++
+              ch += defOpt.length + ' '.length
+              index += defOpt.length + ' '.length
 
               if (isProximitySearch(construct)) {
                 const { result, increment } = transformProximitySearch(
                   construct,
                   inter,
                   index + frontCount
-                );
+                )
 
-                inter = result;
-                noProximity += increment;
-                ch += increment;
+                inter = result
+                noProximity += increment
+                ch += increment
               }
             } else if (!toggle) {
               if (isOperator(construct)) {
-                if (construct.toUpperCase() !== "NOT") {
-                  throw new Error("consecutive operators are not allowed");
+                if (construct.toUpperCase() !== 'NOT') {
+                  throw new Error('consecutive operators are not allowed')
                 }
-                if (prevConstruct.toUpperCase() === "NOT") {
-                  throw new Error("consecutive operators are not allowed");
+                if (prevConstruct.toUpperCase() === 'NOT') {
+                  throw new Error('consecutive operators are not allowed')
                 }
               } else if (isProximitySearch(construct)) {
                 const { result, increment } = transformProximitySearch(
                   construct,
                   inter,
                   index + frontCount
-                );
+                )
 
-                inter = result;
-                noProximity += increment;
-                ch += increment;
+                inter = result
+                noProximity += increment
+                ch += increment
 
-                toggle = !toggle;
+                toggle = !toggle
               } else {
-                toggle = !toggle;
+                toggle = !toggle
               }
             } else {
-              toggle = !toggle;
+              toggle = !toggle
             }
 
-            prevConstruct = construct;
-            construct = "";
-            start = false;
-            index = 0;
+            prevConstruct = construct
+            construct = ''
+            start = false
+            index = 0
           } else {
-            construct += remain.trimEnd();
+            construct += remain.trimEnd()
 
             if (inter.length === char) {
-              break;
+              break
             } else {
-              ch = char - 2;
+              ch = char - 2
             }
           }
         } else {
-          construct += inter[ch];
+          construct += inter[ch]
         }
       }
     }
 
-    const { s, frontCount } = trimBrackets(construct);
+    const { s, frontCount } = trimBrackets(construct)
 
-    construct = s;
+    construct = s
 
     if (toggle) {
       if (!isOperator(construct)) {
-        inter = [inter.slice(0, index), `${defOpt} `, inter.slice(index)].join("");
-        noOperator++;
+        inter = [inter.slice(0, index), `${defOpt} `, inter.slice(index)].join('')
+        noOperator++
 
         if (isProximitySearch(construct)) {
           const { result, increment } = transformProximitySearch(
             construct,
             inter,
-            index + defOpt.length + " ".length + frontCount
-          );
+            index + defOpt.length + ' '.length + frontCount
+          )
 
-          inter = result;
-          noProximity += increment;
+          inter = result
+          noProximity += increment
         }
       } else {
-        throw new Error("trailing operators are not allowed");
+        throw new Error('trailing operators are not allowed')
       }
     } else {
       if (isOperator(construct)) {
-        throw new Error("consecutive operators are not allowed");
+        throw new Error('consecutive operators are not allowed')
       } else {
         if (isProximitySearch(construct)) {
           const { result, increment } = transformProximitySearch(
             construct,
             inter,
             index + frontCount
-          );
+          )
 
-          inter = result;
-          noProximity += increment;
+          inter = result
+          noProximity += increment
         }
       }
     }
 
     q = [q.slice(0, startIndices[i]), inter, q.slice(endIndices[i] + 1)].join(
-      ""
-    );
+      ''
+    )
 
     startIndices = startIndices.map((val, idx) => {
-      if (idx <= i) return val;
-      else return val + 4 * noOperator - noSpaces + noProximity;
-    });
+      if (idx <= i) return val
+      else return val + 4 * noOperator - noSpaces + noProximity
+    })
 
     endIndices = endIndices.map((val, idx) => {
-      if (idx < i) return val;
-      else return val + 4 * noOperator - noSpaces + noProximity;
-    });
+      if (idx < i) return val
+      else return val + 4 * noOperator - noSpaces + noProximity
+    })
   }
 
-  return q;
+  return q
 }
 
 module.exports = {
   prepare,
   pickKey,
-  getFields,
-};
+  getFields
+}
