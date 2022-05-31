@@ -605,12 +605,12 @@ function transform (q, startIndices, endIndices, { defOpt }) {
 
     startIndices = startIndices.map((val, idx) => {
       if (idx <= i) return val
-      else return val + 4 * noOperator - noSpaces + noProximity
+      else return val + (defOpt.length + 1) * noOperator - noSpaces + noProximity
     })
 
     endIndices = endIndices.map((val, idx) => {
       if (idx < i) return val
-      else return val + 4 * noOperator - noSpaces + noProximity
+      else return val + (defOpt.length + 1) * noOperator - noSpaces + noProximity
     })
   }
 
