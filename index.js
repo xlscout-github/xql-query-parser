@@ -1,5 +1,5 @@
 const { parse } = require('./parser')
-const { pickKey, getFields } = require('./prepare')
+const { prepare, pickKey, getFields } = require('./prepare')
 const { EQLgenerator } = require('./EQLgenerator')
 
 function pickKeyParsed (q, field, { condense, defOpt, children, eql, transformFn } = {}) {
@@ -24,6 +24,7 @@ function elasticBuilder (q, transformFn, { defOpt } = {}) {
 
 module.exports = {
   parse,
+  prepare,
   pickKey,
   pickKeyParsed,
   getUniqueFields,
