@@ -313,10 +313,10 @@ function pickKey (q, field) {
   return startEnd
 }
 
-function prepare (q, { defOpt = 'AND' } = {}) {
-  const { q: query, startValIndices, endValIndices } = _prepare(q)
+function prepare (q, { defOpt = 'AND', defOptMap = {} } = {}) {
+  const { q: query, foundwords, startValIndices, endValIndices } = _prepare(q)
 
-  return transform(query, startValIndices, endValIndices, { defOpt })
+  return transform(query, foundwords, startValIndices, endValIndices, { defOpt, defOptMap })
 }
 
 function collectRemainingParts (s, i) {
@@ -382,19 +382,30 @@ function transformProximitySearch (s, q, start) {
   }
 }
 
-function transform (q, startIndices, endIndices, { defOpt }) {
-  if (!isOperator(defOpt)) {
-    defOpt = 'AND'
+function transform (q, fields, startIndices, endIndices, props) {
+  if (!isOperator(props.defOpt)) {
+    props.defOpt = 'AND'
   }
 
+  let { defOpt } = props
+  const { defOptMap } = props
+
   if (q.length > 0 && startIndices.length === 0 && endIndices.length === 0) {
+    fields.push('text:')
     startIndices.push(0)
     endIndices.push(q.length - 1)
   }
 
   for (let i = 0; i < startIndices.length; i++) {
-    let inter = q.slice(startIndices[i], endIndices[i] + 1)
+    const field = fields[i].trimEnd().slice(0, -1)
 
+    if (defOptMap[field]) {
+      defOpt = defOptMap[field]
+    } else {
+      defOpt = props.defOpt
+    }
+
+    let inter = q.slice(startIndices[i], endIndices[i] + 1)
     let k = inter.length - 1
     let noSpaces = 0
 
