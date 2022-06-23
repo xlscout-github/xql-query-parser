@@ -400,7 +400,7 @@ function transform (q, fields, startIndices, endIndices, props) {
     const field = fields[i].trimEnd().slice(0, -1)
 
     if (defOptMap[field]) {
-      defOpt = defOptMap[field]
+      defOpt = isOperator(defOptMap[field]) ? defOptMap[field] : 'AND'
     } else {
       defOpt = props.defOpt
     }
