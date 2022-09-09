@@ -6,7 +6,7 @@ const { transform, transform_condense } = require('./transform')
 function parse (q, condense = false, { defOpt = 'AND', defOptMap = {}, children = true, eql = false, transformFn = null } = {}) {
   const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar))
 
-  parser.feed(prepare(q, { defOpt, defOptMap }))
+  parser.feed(prepare(q, { defOpt, defOptMap }).q)
 
   const [tree] = parser.results
 

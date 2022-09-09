@@ -1,4 +1,4 @@
-function isMatchingBrackets (q) {
+function isBalanced (q) {
   const stack = []
   const map = {
     '(': ')',
@@ -20,7 +20,7 @@ function isMatchingBrackets (q) {
     }
   }
 
-  if (stack.length !== 0) {
+  if ((stack.length !== 0) || quote) {
     return false
   }
 
@@ -34,15 +34,18 @@ function todeduct (q, start, end) {
     start--
   }
 
+  let quote = false
   let countBefore = 0
   let count = 0
   for (let i = start; i <= end; i++) {
-    if (q[i] === '(') {
+    if (q[i] === '"') {
+      quote = !quote
+    } else if (!quote && q[i] === '(') {
       count++
       if (i < original) {
         countBefore++
       }
-    } else if (q[i] === ')') {
+    } else if (!quote && q[i] === ')') {
       count--
     }
   }
@@ -78,7 +81,7 @@ function evalSpaces (q, i) {
 }
 
 function getFields (q) {
-  const foundwords = []
+  const words = []
   const startFieldIndices = []
 
   let construct = ''
@@ -94,7 +97,7 @@ function getFields (q) {
         if (q[ch] === ':' && construct !== '') {
           construct += q[ch]
           construct += evalSpaces(q, ch + 1)
-          foundwords.push(construct)
+          words.push(construct)
           startFieldIndices.push(index)
           construct = ''
           start = false
@@ -117,7 +120,7 @@ function getFields (q) {
   }
 
   return {
-    foundwords,
+    words,
     startFieldIndices
   }
 }
@@ -191,15 +194,15 @@ function _isOperator (s) {
 }
 
 function _prepare (q) {
-  if (!isMatchingBrackets(q)) {
-    throw new Error('Unbalanced Brackets')
+  if (!isBalanced(q)) {
+    throw new Error('Unbalanced brackets or quotes')
   }
 
   q = `(${q})`
 
   const fields = getFields(q)
 
-  const { foundwords } = fields
+  const { words } = fields
   let { startFieldIndices } = fields
 
   const startValIndices = []
@@ -271,18 +274,18 @@ function _prepare (q) {
   }
 
   for (let i = 0; i < startFieldIndices.length; i++) {
-    startValIndices.push(startFieldIndices[i] + foundwords[i].length)
+    startValIndices.push(startFieldIndices[i] + words[i].length)
   }
 
   // console.log("Query", q);
-  // console.log("Found words", foundwords);
+  // console.log("Found words", words);
   // console.log("Start Field Index", startFieldIndices);
   // console.log("Start Val Index", startValIndices);
   // console.log("End Val Index", endValIndices);
 
   return {
     q,
-    foundwords,
+    words,
     startFieldIndices,
     startValIndices,
     endValIndices
@@ -292,17 +295,18 @@ function _prepare (q) {
 function pickKey (q, field) {
   const {
     q: query,
-    foundwords,
+    words,
     startFieldIndices,
     startValIndices,
     endValIndices
   } = _prepare(q)
 
-  const startEnd = []
-  for (let i = 0; i < foundwords.length; i++) {
-    if (foundwords[i].trimEnd().slice(0, -1) === field) {
-      startEnd.push({
-        field: field,
+  const indices = []
+
+  for (let i = 0; i < words.length; i++) {
+    if (words[i].trimEnd().slice(0, -1) === field) {
+      indices.push({
+        field,
         value: query.slice(startValIndices[i], endValIndices[i] + 1),
         start: startFieldIndices[i] - (2 * i + 2),
         end: endValIndices[i] - (2 * i + 2)
@@ -310,13 +314,13 @@ function pickKey (q, field) {
     }
   }
 
-  return startEnd
+  return indices
 }
 
 function prepare (q, { defOpt = 'AND', defOptMap = {} } = {}) {
-  const { q: query, foundwords, startValIndices, endValIndices } = _prepare(q)
+  const { q: query, words, startValIndices, endValIndices } = _prepare(q)
 
-  return transform(query, foundwords, startValIndices, endValIndices, { defOpt, defOptMap })
+  return transform(query, words, startValIndices, endValIndices, { defOpt, defOptMap })
 }
 
 function collectRemainingParts (s, i) {
@@ -383,6 +387,8 @@ function transformProximitySearch (s, q, start) {
 }
 
 function transform (q, fields, startIndices, endIndices, props) {
+  const operators = new Set()
+
   if (!isOperator(props.defOpt)) {
     props.defOpt = 'AND'
   }
@@ -473,10 +479,14 @@ function transform (q, fields, startIndices, endIndices, props) {
     let construct = ''
     let prevConstruct = ''
     let onlyBracket = false
+    let bracketClosed = false
     let quote = false
 
     for (let ch = 0; ch < inter.length; ch++) {
       if (inter[ch] === '"') {
+        if (bracketClosed) {
+          throw new Error('invalid query')
+        }
         quote = !quote
         construct += inter[ch]
         if (!start) {
@@ -484,13 +494,26 @@ function transform (q, fields, startIndices, endIndices, props) {
           start = true
         }
       } else if (!quote && inter[ch] === '(') {
+        if (construct && !onlyBracket) {
+          throw new Error('invalid query')
+        }
+
         onlyBracket = true
         construct += inter[ch]
         if (!start) {
           index = ch
           start = true
         }
+      } else if (!quote && inter[ch] === ')') {
+        if (onlyBracket) {
+          throw new Error('invalid query')
+        }
+        construct += inter[ch]
+        bracketClosed = true
       } else if (inter[ch] !== ' ') {
+        if (bracketClosed) {
+          throw new Error('invalid query')
+        }
         onlyBracket = false
         construct += inter[ch]
         if (!start) {
@@ -513,6 +536,7 @@ function transform (q, fields, startIndices, endIndices, props) {
               noOperator++
               ch += defOpt.length + ' '.length
               index += defOpt.length + ' '.length
+              operators.add(defOpt.toUpperCase())
 
               if (isProximitySearch(construct)) {
                 const { result, increment } = transformProximitySearch(
@@ -533,6 +557,8 @@ function transform (q, fields, startIndices, endIndices, props) {
                 if (prevConstruct.toUpperCase() === 'NOT') {
                   throw new Error('consecutive operators are not allowed')
                 }
+
+                operators.add('NOT')
               } else if (isProximitySearch(construct)) {
                 const { result, increment } = transformProximitySearch(
                   construct,
@@ -550,12 +576,14 @@ function transform (q, fields, startIndices, endIndices, props) {
               }
             } else {
               toggle = !toggle
+              operators.add(construct.toUpperCase())
             }
 
             prevConstruct = construct
             construct = ''
             start = false
             index = 0
+            bracketClosed = false
           } else {
             construct += remain.trimEnd()
 
@@ -579,6 +607,7 @@ function transform (q, fields, startIndices, endIndices, props) {
       if (!isOperator(construct)) {
         inter = [inter.slice(0, index), `${defOpt} `, inter.slice(index)].join('')
         noOperator++
+        operators.add(defOpt.toUpperCase())
 
         if (isProximitySearch(construct)) {
           const { result, increment } = transformProximitySearch(
@@ -625,7 +654,7 @@ function transform (q, fields, startIndices, endIndices, props) {
     })
   }
 
-  return q
+  return { q, fields, operators, startIndices, endIndices }
 }
 
 module.exports = {

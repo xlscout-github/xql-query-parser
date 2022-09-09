@@ -10,8 +10,8 @@ function pickKeyParsed (q, field, { condense, defOpt, defOptMap, children, eql, 
 }
 
 function getUniqueFields (q) {
-  const { foundwords } = getFields(q)
-  return [...new Set(foundwords.map((word) => word.slice(0, -1)))]
+  const { words } = getFields(q)
+  return [...new Set(words.map((word) => word.slice(0, -1)))]
 }
 
 function convertXQLtoEQL (strQry) {
