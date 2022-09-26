@@ -198,6 +198,8 @@ function _prepare (q) {
     throw new Error('Unbalanced brackets or quotes')
   }
 
+  const operators = new Set()
+
   q = `(${q})`
 
   const fields = getFields(q)
@@ -219,6 +221,7 @@ function _prepare (q) {
 
       for (let j = nextFieldIndex - 1; j > currentFieldIndex; j--) {
         if (_isOperator(operator)) {
+          operators.add(operator.split("").reverse().join(""))
           break
         }
 
@@ -286,6 +289,7 @@ function _prepare (q) {
   return {
     q,
     words,
+    operators,
     startFieldIndices,
     startValIndices,
     endValIndices
@@ -318,9 +322,9 @@ function pickKey (q, field) {
 }
 
 function prepare (q, { defOpt = 'AND', defOptMap = {} } = {}) {
-  const { q: query, words, startValIndices, endValIndices } = _prepare(q)
+  const { q: query, words, operators, startValIndices, endValIndices } = _prepare(q)
 
-  return transform(query, words, startValIndices, endValIndices, { defOpt, defOptMap })
+  return transform(query, words, operators, startValIndices, endValIndices, { defOpt, defOptMap })
 }
 
 function collectRemainingParts (s, i) {
@@ -386,9 +390,7 @@ function transformProximitySearch (s, q, start) {
   }
 }
 
-function transform (q, fields, startIndices, endIndices, props) {
-  const operators = new Set()
-
+function transform (q, fields, operators, startIndices, endIndices, props) {
   if (!isOperator(props.defOpt)) {
     props.defOpt = 'AND'
   }
