@@ -221,7 +221,7 @@ function _prepare (q) {
 
       for (let j = nextFieldIndex - 1; j > currentFieldIndex; j--) {
         if (_isOperator(operator)) {
-          operators.add(operator.split("").reverse().join(""))
+          operators.add(operator.toUpperCase().split("").reverse().join(""))
           break
         }
 
