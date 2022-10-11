@@ -1,5 +1,12 @@
 const { parse } = require("./parser");
-const { prepare: preProcess } = require("./");
+const { prepare: preProcess, elasticBuilder } = require("./");
+
+console.dir(
+  elasticBuilder(
+    `oasgs.name.keyword:(\"ＫＯＮＩＮＫＬＩＪＫＥ ＰＨＩＬＩＰＳ Ｎ．Ｖ．\" OR \"ＢＡＳＦ ＳＥ\" OR \"ＲＯＢＥＲＴ ＢＯＳＣＨ ＧＭＢＨ\" OR \"ＨＵＡＷＥＩ ＴＥＣＨＮＯＬＯＧＩＥＳ ＣＯ．，ＬＴＤ．\" OR \"Ｅ．Ｉ．ＤＵ ＰＯＮＴ ＤＥ ＮＥＭＯＵＲＳ ＡＮＤ ＣＯＭＰＡＮＹ\" OR \"Ｆ． ＨＯＦＦＭＡＮＮ−ＬＡ ＲＯＣＨＥ ＡＫＴＩＥＮＧＥＳＥＬＬＳＣＨＡＦＴ\" OR \"ＴＨＯＭＳＯＮ ＬＩＣＥＮＳＩＮＧ\" OR \"ＡＰＰＬＩＥＤ ＭＡＴＥＲＩＡＬＳ，ＩＮＣＯＲＰＯＲＡＴＥＤ\" OR \"ＩＮＴＥＲＮＡＴＩＯＮＡＬ ＢＵＳＩＮＥＳＳ ＭＡＣＨＩＮＥＳ ＣＯＲＰＯＲＡＴＩＯＮ\" OR \"ＭＥＲＣＫ ＰＡＴＥＮＴ ＧＥＳＥＬＬＳＣＨＡＦＴ ＭＩＴ ＢＥＳＣＨＲＡＥＮＫＴＥＲ ＨＡＦＴＵＮＧ\" OR \"ＩＮＴＥＲＮＡＴＩＯＮＡＬ ＢＵＳＩＮＥＳＳ ＭＡＳＣＨＩＮＥＳ ＣＯＲＰＯＲＡＴＩＯＮ\" OR \"ＴＨＥ ＢＯＥＩＮＧ ＣＯＭＰＡＮＹ\" OR \"日立ＡＳＴＥＭＯ株式会社\" OR \"ＢＥＣＴＯＮ， ＤＩＣＫＩＮＳＯＮ ＡＮＤ ＣＯＭＰＡＮＹ\" OR \"ＢＲＩＳＴＯＬ−ＭＹＥＲＳ ＳＱＵＩＢＢ ＣＯＭＰＡＮＹ\" OR \"ＡＬＩＢＡＢＡ ＧＲＯＵＰ ＨＯＬＤＩＮＧ ＬＩＭＩＴＥＤ\" OR \"ＯＳＲＡＭ ＯＰＴＯ ＳＥＭＩＣＯＮＤＵＣＴＯＲＳ ＧＭＢＨ\" OR \"ＺＴＥ ＣＯＲＰＯＲＡＴＩＯＮ\")`
+  ),
+  { depth: null }
+);
 
 // const query = "pn: (US-5652895-(A))";
 // const query = "pn: (US-5652895 ())";
@@ -9,7 +16,10 @@ const query = 'pn: (US-5652895-A (("()))  ") "uiuiu"))';
 
 console.time("MANUAL");
 
-const queryConfig = preProcess("(((pn:(EP-2137994-A4))) AND ((pn:US-9966065-B2)))", { defOpt: "OR" });
+const queryConfig = preProcess(
+  "(((pn:(EP-2137994-A4))) AND ((pn:US-9966065-B2)))",
+  { defOpt: "OR" }
+);
 
 console.log(queryConfig);
 
