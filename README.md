@@ -13,18 +13,18 @@ Common usage is to use the first result.
 
 # Installation instructions
 
-- Clone Repo.
+Clone Repo.
 > git clone repo directory
-- Go into project directory.
+Go into project directory.
 > cd directory
-- Install Dependencies.
+Install Dependencies.
 > npm i
-- Generates js module from nearley grammer (auto invoked after install).
+Generates js module from nearley grammer (auto invoked after install).
 > npm run gen
 
 # Essential scripts to keep in mind
 
-- Run all test cases identified by .test.js suffix written with Jest JavaScript Testing Framework.
+Run all test cases identified by .test.js suffix written with Jest JavaScript Testing Framework.
 > npm test
-- Generates js module from nearley grammer, must run after any alterations to the grammer.
+Generates js module from nearley grammer, must run after any alterations to the grammer.
 > npm run gen
