@@ -14,9 +14,9 @@ Common usage is to use the first result.
 # Installation instructions
 
 - Clone Repo.
-> git clone <repo> <directory>
+> git clone repo directory
 - Go into project directory.
-> cd <directory>
+> cd directory
 - Install Dependencies.
 > npm i
 - Generates js module from nearley grammer (auto invoked after install).
