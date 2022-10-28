@@ -15,10 +15,13 @@ Common usage is to use the first result.
 
 Clone Repo.
 > git clone repo directory
+
 Go into project directory.
 > cd directory
+
 Install Dependencies.
 > npm i
+
 Generates js module from nearley grammer (auto invoked after install).
 > npm run gen
 
@@ -26,5 +29,6 @@ Generates js module from nearley grammer (auto invoked after install).
 
 Run all test cases identified by .test.js suffix written with Jest JavaScript Testing Framework.
 > npm test
+
 Generates js module from nearley grammer, must run after any alterations to the grammer.
 > npm run gen
