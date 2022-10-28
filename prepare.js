@@ -32,7 +32,7 @@ function isBalanced (q) {
   return true
 }
 
-// todeduct is a helper func which determines the count of closing parenthesis
+// todeduct func is a helper func which determines the count of closing parenthesis
 // to skip from the end.
 function todeduct (q, start, end) {
   const original = start
@@ -61,7 +61,7 @@ function todeduct (q, start, end) {
   return countBefore - count
 }
 
-// evalDeduction is a helper function which determines the amount of places
+// evalDeduction func is a helper function which determines the amount of places
 // to skip from the end based on count of closing parenthesis.
 function evalDeduction (q, start, end) {
   const deduction = todeduct(q, start, end)
@@ -364,18 +364,23 @@ function prepare (q, { defOpt = 'AND', defOptMap = {} } = {}) {
   return transform(query, words, operators, startValIndices, endValIndices, { defOpt, defOptMap })
 }
 
-function collectRemainingParts (s, i) {
+// collectRemainingParts is a helper func which collects provided characters
+// within a string starting from the postion provided and return them
+// along with last looked into postion.
+function collectRemainingParts (s, i, chars) {
   let remain = ''
-  let char
-  for (char = i; char < s.length; char++) {
-    if (s[char] === ' ' || s[char] === ')') {
-      remain += s[char]
-    } else break
+  let char = i
+
+  for (; char < s.length; char++) {
+    if (!chars.includes(s[char])) break
+    remain += s[char]
   }
 
   return { remain, char }
 }
 
+// trimBrackets func trim brackets from front and back and returns the new string 
+// along with count of opening circular brackets and gaps in the begining.
 function trimBrackets (s) {
   let frontCount = 0
 
@@ -393,6 +398,8 @@ function trimBrackets (s) {
   return { s, frontCount }
 }
 
+// isProximitySearch func determines whether the provided string resonates with
+// proximity search criteria.
 function isProximitySearch (s) {
   const parts = s.split('~')
 
@@ -429,6 +436,7 @@ function transformProximitySearch (s, q, start) {
 
 // transform func inserts a default operator in the query as per the config provided.
 function transform (q, fields, operators, startIndices, endIndices, props) {
+  // set AND as default operator if any unindentified operator is provided.
   if (!isOperator(props.defOpt)) {
     props.defOpt = 'AND'
   }
@@ -437,21 +445,24 @@ function transform (q, fields, operators, startIndices, endIndices, props) {
   const { defOptMap } = props
 
   // if no field is provided text field is assumed.
-  if (q.length > 0 && startIndices.length === 0 && endIndices.length === 0) {
+  if (q.length > 0 && !startIndices.length && !endIndices.length) {
     fields.push('text:')
     startIndices.push(0)
     endIndices.push(q.length - 1)
   }
 
   for (let i = 0; i < startIndices.length; i++) {
+    // for getting field trim any spaces from the end and then removing ending colon.
     const field = fields[i].trimEnd().slice(0, -1)
 
+    // use the default operator if found in the map corresponding to the field.
     if (defOptMap[field]) {
       defOpt = isOperator(defOptMap[field]) ? defOptMap[field] : 'AND'
     } else {
       defOpt = props.defOpt
     }
 
+    // represents the current field's value
     let inter = q.slice(startIndices[i], endIndices[i] + 1)
     let k = inter.length - 1
     // keeps track of number of spaces appearing at the end of a value.
@@ -513,62 +524,86 @@ function transform (q, fields, operators, startIndices, endIndices, props) {
       continue
     }
 
+    // if true check for existence for a operator if not found insert one
+    // otherwise validate concrete value.
     let toggle = false
+    // number of operators added
     let noOperator = 0
     let noProximity = 0
     let start = false
+    // starting index of current value.
     let index = 0
+    // current term
     let construct = ''
+    // previous term
     let prevConstruct = ''
+    // whether encountered only opening circular brackets up until now.
     let onlyBracket = false
     let bracketClosed = false
     let quote = false
 
     for (let ch = 0; ch < inter.length; ch++) {
       if (inter[ch] === '"') {
+        // if a quote is encountered right after a closing circular bracket.
         if (bracketClosed) {
           throw new Error('invalid query')
         }
+
         quote = !quote
         construct += inter[ch]
+
         if (!start) {
           index = ch
           start = true
         }
       } else if (!quote && inter[ch] === '(') {
+        // if a opening circular bracket is encountered right after a concrete value.
         if (construct && !onlyBracket) {
           throw new Error('invalid query')
         }
 
         onlyBracket = true
         construct += inter[ch]
+
         if (!start) {
           index = ch
           start = true
         }
       } else if (!quote && inter[ch] === ')') {
+        // if closing circular bracket occurs right after opening circular bracket.
         if (onlyBracket) {
           throw new Error('invalid query')
         }
+
         construct += inter[ch]
         bracketClosed = true
       } else if (inter[ch] !== ' ') {
+        // if a concrete value is encountered right after closing circular bracket
         if (bracketClosed) {
           throw new Error('invalid query')
         }
+
         onlyBracket = false
         construct += inter[ch]
+
         if (!start) {
           index = ch
           start = true
         }
-      } else if (inter[ch] === ' ') {
+      } else {
+        // when space is encountered which indicates a seperation between terms,
+        // process current accumulated value only when space does not lie within a quotation
+        // or when concrete value exists with not just only brackets
+        // otherwise accumulate the space in current value.
         if (!quote && !onlyBracket) {
-          const { remain, char } = collectRemainingParts(inter, ch)
+          // collect remaining spaces and closing circular brackets after current space.
+          const { remain, char } = collectRemainingParts(inter, ch + 1, [' ', ')'])
 
-          if (remain === ' ') {
+          // process further if there is no remaining portion left.
+          if (!remain) {
             const { s, frontCount } = trimBrackets(construct)
 
+            // replace current value with trimmed value.
             construct = s
 
             if (toggle && !isOperator(construct)) {
@@ -621,19 +656,19 @@ function transform (q, fields, operators, startIndices, endIndices, props) {
               operators.add(construct.toUpperCase())
             }
 
+            // store current value in previous pointer.
             prevConstruct = construct
+            // reset variables.
             construct = ''
             start = false
             index = 0
             bracketClosed = false
           } else {
+            // collect remaining portion in current value.
             construct += remain.trimEnd()
 
-            if (inter.length === char) {
-              break
-            } else {
-              ch = char - 2
-            }
+            if (inter.length === char) break
+            else ch = char - 2 // get to location of next space to process current value.
           }
         } else {
           construct += inter[ch]

@@ -2,8 +2,7 @@
 
 xql-parser is a query parsing module which breaks down the input query 
 as per the grammer specified, utilizing a query parsing toolkit 
-[nearley.js](https://nearley.js.org/). 
-with nearley.js you have to specifiy your grammer (production rules) using the nearley syntax in a file with .ne extention once you are done with writting your grammer it needs to be compiled to a .js module utilizing nearleyc which is a nearley grammer compiler which comes with installing nearley.js it's syntax is as follows:
+[nearley.js](https://nearley.js.org/), with nearley.js you have to specifiy your grammer (production rules) using the nearley syntax in a file with .ne extention once you are done with writting your grammer it needs to be compiled to a .js module utilizing nearleyc which is a nearley grammer compiler which comes with installing nearley.js it's syntax is as follows:
 > nearleyc grammar.ne -o grammar.js
 
 Once the js module is generated you can then use nearley to instantiate a Parser object. 
@@ -25,7 +24,7 @@ Install Dependencies.
 Generates js module from nearley grammer (auto invoked after install).
 > npm run gen
 
-# Essential scripts to keep in mind
+# Essential scripts
 
 Run all test cases identified by .test.js suffix written with Jest JavaScript Testing Framework.
 > npm test

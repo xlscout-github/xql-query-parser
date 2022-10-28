@@ -441,8 +441,8 @@ function create (left, right, operator, slop) {
           const items = new Set()
           const records = new Map()
           const clauses = {
-            TERM: Symbol('term'),
-            TERMS: Symbol('terms')
+            TERM: 'term',
+            TERMS: 'terms'
           }
 
           for (let i = 0; i < left.bool.should.length; i++) {
