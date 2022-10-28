@@ -1,9 +1,12 @@
+// isBalanced func determines weather the circular and square brackets are balanced
+// in the query string.
 function isBalanced (q) {
   const stack = []
   const map = {
     '(': ')',
     '[': ']'
   }
+  // keep track of occurance of quotes for ignoring any brackets within it.
   let quote = false
 
   for (let i = 0; i < q.length; i++) {
@@ -20,6 +23,8 @@ function isBalanced (q) {
     }
   }
 
+  // unbalanced query if stack isn't empty or if quote is truthy
+  // after processing entire query.
   if ((stack.length !== 0) || quote) {
     return false
   }
@@ -27,6 +32,8 @@ function isBalanced (q) {
   return true
 }
 
+// todeduct is a helper func which determines the count of closing parenthesis
+// to skip from the end.
 function todeduct (q, start, end) {
   const original = start
 
@@ -37,6 +44,7 @@ function todeduct (q, start, end) {
   let quote = false
   let countBefore = 0
   let count = 0
+
   for (let i = start; i <= end; i++) {
     if (q[i] === '"') {
       quote = !quote
@@ -53,6 +61,8 @@ function todeduct (q, start, end) {
   return countBefore - count
 }
 
+// evalDeduction is a helper function which determines the amount of places
+// to skip from the end based on count of closing parenthesis.
 function evalDeduction (q, start, end) {
   const deduction = todeduct(q, start, end)
 
@@ -80,6 +90,8 @@ function evalSpaces (q, i) {
   return ' '.repeat(count)
 }
 
+// getFields is helper func which evaluates all of the fields in the query
+// along with their starting indices.
 function getFields (q) {
   const words = []
   const startFieldIndices = []
@@ -125,6 +137,7 @@ function getFields (q) {
   }
 }
 
+// isNear func return true if the input is a near operator and false otherwise.
 function isNear (s) {
   const parts = s.split('near')
 
@@ -134,6 +147,7 @@ function isNear (s) {
     (Number(parts[1]) > -1))
 }
 
+// _isNear func return true if the input is a inverted near operator and false otherwise.
 function _isNear (s) {
   const parts = s.split('raen')
 
@@ -143,6 +157,7 @@ function _isNear (s) {
     (Number(parts[0]) > -1))
 }
 
+// isPre func return true if the input is a pre operator and false otherwise.
 function isPre (s) {
   const parts = s.split('pre')
 
@@ -152,6 +167,7 @@ function isPre (s) {
     (Number(parts[1]) > -1))
 }
 
+// _isPre func return true if the input is a inverted pre operator and false otherwise.
 function _isPre (s) {
   const parts = s.split('erp')
 
@@ -161,6 +177,7 @@ function _isPre (s) {
     (Number(parts[0]) > -1))
 }
 
+// isOperator func determines weather the input string is an operator.
 function isOperator (s) {
   s = s.toLowerCase()
 
@@ -177,6 +194,7 @@ function isOperator (s) {
   )
 }
 
+// _isOperator func determines weather the input string is an inverted operator.
 function _isOperator (s) {
   s = s.toLowerCase()
 
@@ -193,15 +211,24 @@ function _isOperator (s) {
   )
 }
 
+// _prepare func alters the query so that the whole query and each subquery
+// is enclosed in a parentheses.
+// It returns the modified query, operators encountered in between fields,
+// all of the fields in the query along with their starting indices and
+// their starting and ending indices of inner value.
 function _prepare (q) {
   if (!isBalanced(q)) {
     throw new Error('Unbalanced brackets or quotes')
   }
 
+  // keeps track of operators encountered in between fields.
   const operators = new Set()
 
+  // enclose the entire query inside a parentheses as its the starting symbol
+  // of production rules.
   q = `(${q})`
 
+  // get all of the fields in the query along with their starting indices.
   const fields = getFields(q)
 
   const { words } = fields
@@ -212,6 +239,7 @@ function _prepare (q) {
 
   if (startFieldIndices.length) {
     let k
+
     for (k = 0; k < startFieldIndices.length - 1; k++) {
       const currentFieldIndex = startFieldIndices[k]
       const nextFieldIndex = startFieldIndices[k + 1]
@@ -219,9 +247,10 @@ function _prepare (q) {
       let operator = ''
       let operatorIndex
 
+      // identify operator in between 2 fields.
       for (let j = nextFieldIndex - 1; j > currentFieldIndex; j--) {
         if (_isOperator(operator)) {
-          operators.add(operator.toUpperCase().split("").reverse().join(""))
+          operators.add(operator.toUpperCase().split('').reverse().join(''))
           break
         }
 
@@ -236,22 +265,26 @@ function _prepare (q) {
 
       const posInsertClose = operatorIndex - 1
 
+      // insert opening parenthesis in place of current field position.
       q = [q.slice(0, currentFieldIndex), '(', q.slice(currentFieldIndex)].join(
         ''
       )
 
+      // insert closing parenthesis just before seperating operator.
       q = [
         q.slice(0, posInsertClose + 1),
         ')',
         q.slice(posInsertClose + 1)
       ].join('')
 
+      // update starting field indices array after instering parentheses.
       startFieldIndices = startFieldIndices.map((val, idx) => {
         if (idx < k) return val
         else if (idx === k) return val + 1
         else return val + 2
       })
 
+      // evaluate deduction to be made from the end to get to value's ending position.
       const deduction = evalDeduction(
         q,
         currentFieldIndex + 1,
@@ -276,6 +309,7 @@ function _prepare (q) {
     endValIndices.push(q.length - 1 - deduction)
   }
 
+  // populate starting value indices array.
   for (let i = 0; i < startFieldIndices.length; i++) {
     startValIndices.push(startFieldIndices[i] + words[i].length)
   }
@@ -296,6 +330,8 @@ function _prepare (q) {
   }
 }
 
+// pickKey func accpects a query and a field and returns the subject field, its value,
+// the start and end indices of the subquery.
 function pickKey (q, field) {
   const {
     q: query,
@@ -321,6 +357,7 @@ function pickKey (q, field) {
   return indices
 }
 
+// prepare func puts together a query for feeding into the parser.
 function prepare (q, { defOpt = 'AND', defOptMap = {} } = {}) {
   const { q: query, words, operators, startValIndices, endValIndices } = _prepare(q)
 
@@ -390,6 +427,7 @@ function transformProximitySearch (s, q, start) {
   }
 }
 
+// transform func inserts a default operator in the query as per the config provided.
 function transform (q, fields, operators, startIndices, endIndices, props) {
   if (!isOperator(props.defOpt)) {
     props.defOpt = 'AND'
@@ -398,6 +436,7 @@ function transform (q, fields, operators, startIndices, endIndices, props) {
   let { defOpt } = props
   const { defOptMap } = props
 
+  // if no field is provided text field is assumed.
   if (q.length > 0 && startIndices.length === 0 && endIndices.length === 0) {
     fields.push('text:')
     startIndices.push(0)
@@ -415,6 +454,7 @@ function transform (q, fields, operators, startIndices, endIndices, props) {
 
     let inter = q.slice(startIndices[i], endIndices[i] + 1)
     let k = inter.length - 1
+    // keeps track of number of spaces appearing at the end of a value.
     let noSpaces = 0
 
     while (inter[k] === ' ') {
@@ -458,7 +498,7 @@ function transform (q, fields, operators, startIndices, endIndices, props) {
       }
     }
 
-    // ignore for date
+    // identify whether it is a date and, if so, continue further.
     if (
       isDate &&
       dateParams.length === 2 * beginIndex + 5 &&

@@ -1,5 +1,5 @@
 const { parse } = require('../parser.js')
-const createEQL = require('../xql-eql-v3/create')
+const createEQL = require('./create')
 // var heapdump = require('heapdump');
 
 /* Helper function that allocates a new node with the
