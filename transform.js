@@ -3,6 +3,8 @@ const createEQL = require('./xql-eql-v3/create')
 
 const DATE_TYPE = 'DATE'
 
+// getSingularField func determines if a tree is composed of the same field and,
+// if so, returns that field.
 function getSingularField (tree) {
   let field = null
 
@@ -123,7 +125,10 @@ function getSingularField (tree) {
 //   }
 // }
 
-function transform_condense (tree) {
+// transformCondense func produces a condenced output where the value is grouped together
+// with the corresponding field.
+function transformCondense (tree) {
+  // both operands exists.
   if (tree.leftOperand && tree.rightOperand) {
     const res = {
       field: '',
@@ -134,28 +139,27 @@ function transform_condense (tree) {
 
     const key = getSingularField(tree)
 
+    // if same field combine nested nodes together, otherwise add both nodes
+    // as seperate entity.
     if (key) {
       res.field = key
-      if (tree.explicit) {
-        res.keyword = `(${transform_condense(tree.leftOperand).keyword} ${
+
+      // if circular brackets is provided at the time of query creation add it.
+      res.keyword = `${tree.explicit ? '(' : ''}${transformCondense(tree.leftOperand).keyword} ${
           tree.operator
-        }${tree.span || ''} ${transform_condense(tree.rightOperand).keyword})`
-      } else {
-        res.keyword = `${transform_condense(tree.leftOperand).keyword} ${
-          tree.operator
-        }${tree.span || ''} ${transform_condense(tree.rightOperand).keyword}`
-      }
+        }${tree.span || ''} ${transformCondense(tree.rightOperand).keyword}${tree.explicit ? ')' : ''}`
     } else {
       res.operator = tree.operator
       res.children = [
-        transform_condense(tree.leftOperand),
-        transform_condense(tree.rightOperand)
+        transformCondense(tree.leftOperand),
+        transformCondense(tree.rightOperand)
       ]
     }
 
     return res
   }
 
+  // right handside exists but left does not: independent NOT
   if (tree.rightOperand) {
     const res = {
       field: '',
@@ -168,55 +172,34 @@ function transform_condense (tree) {
 
     if (key) {
       res.field = key
-      if (tree.explicit) {
-        res.keyword = `(${tree.operator} ${
-          transform_condense(tree.rightOperand).keyword
-        })`
-      } else {
-        res.keyword = `${tree.operator} ${
-          transform_condense(tree.rightOperand).keyword
-        }`
-      }
+      res.keyword = `${tree.explicit ? '(' : ''}${tree.operator} ${
+          transformCondense(tree.rightOperand).keyword
+        }${tree.explicit ? ')' : ''}`
     } else {
       res.operator = tree.operator
-      res.children = [null, transform_condense(tree.rightOperand)]
+      // set 1st element as null in case of independent NOT.
+      res.children = [null, transformCondense(tree.rightOperand)]
     }
 
     return res
   }
 
+  // leaf node of date type.
   if (tree.type === 'DATE') {
-    if (tree.explicit) {
-      return {
-        field: tree.field,
-        keyword: `(from${tree.from} to${tree.to})`,
-        operator: '',
-        children: []
-      }
-    } else {
-      return {
-        field: tree.field,
-        keyword: `from${tree.from} to${tree.to}`,
-        operator: '',
-        children: []
-      }
+    return {
+      field: tree.field,
+      keyword: `${tree.explicit ? '(' : ''}from${tree.from} to${tree.to}${tree.explicit ? '(' : ''}`,
+      operator: '',
+      children: []
     }
   }
 
-  if (tree.explicit) {
-    return {
-      field: tree.field,
-      keyword: `(${tree.value})`,
-      operator: '',
-      children: []
-    }
-  } else {
-    return {
-      field: tree.field,
-      keyword: tree.value,
-      operator: '',
-      children: []
-    }
+  // leaf node of string type.
+  return {
+    field: tree.field,
+    keyword: `${tree.explicit ? '(' : ''}${tree.value}${tree.explicit ? '(' : ''}`,
+    operator: '',
+    children: []
   }
 }
 
@@ -681,5 +664,5 @@ function transform (root, opt = { children: true, eql: false, transformFn: null 
 
 module.exports = {
   transform,
-  transform_condense
+  transformCondense
 }

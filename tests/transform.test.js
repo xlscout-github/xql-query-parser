@@ -1,4 +1,4 @@
-const { transform, transform_condense } = require('../transform')
+const { transform, transformCondense } = require('../transform')
 
 test('should transform provided left-right object format to parent-child relationship format', () => {
   const tree = {
@@ -87,7 +87,7 @@ test('should produce a condensed ouput where values are merged and hide implicit
     rightOperand: { field: 'pn', value: 'US7420295B2' }
   }
 
-  expect(transform_condense(tree)).toEqual({
+  expect(transformCondense(tree)).toEqual({
     field: '',
     keyword: '',
     operator: 'OR',

@@ -2,28 +2,31 @@
 
 @{%
 
-function setField (field, node) {
-  const stack = [node]
+// set provided field within each leaf node of tree.
+function setField (field, tree) {
+  const stack = [tree]
 
   while (stack.length) {
-    const item = stack.pop()
+    const node = stack.pop()
 
-    if (!item.leftOperand && !item.rightOperand) {
-      item.field = field
+    // leaf node
+    if (!node.leftOperand && !node.rightOperand) {
+      node.field = field
     } else {
-      if (item.rightOperand) {
-        stack.push(item.rightOperand)
+      if (node.rightOperand) {
+        stack.push(node.rightOperand)
       }
 
-      if (item.leftOperand) {
-        stack.push(item.leftOperand)
+      if (node.leftOperand) {
+        stack.push(node.leftOperand)
       }
     }
   }
 
-  return node
+  return tree
 }
 
+// set default field as text for a value.
 function setDefaultField(value, field = "text") {
   // DATE VALUE
   if (typeof value === "object" && value.type === "DATE") {
@@ -36,11 +39,12 @@ function setDefaultField(value, field = "text") {
 
 %}
 
+# Starting symbol
 main -> P {% id %}
 
 # Parentheses
 P -> "(" _ F _ ")" {% ([, , f]) => f %} |
-     "(" _ V _ ")" {% ([, , val]) => ({ ...val, explicit: true }) %} |
+     "(" _ V _ ")" {% ([, , val]) => ({ ...val, explicit: true /* set explicit as true if the value is enclosed in a circular brackets */ }) %} |
      VAL {% ([v]) => setDefaultField(v) %}
 
 # Field
@@ -65,6 +69,8 @@ NEAR -> "near"i {% id %}
 
 PRE -> "pre"i {% id %}
 
+# p ≡ paragraph
+# s ≡ sentence
 PORS -> "p"i {% id %} |
         "s"i {% id %}
 
