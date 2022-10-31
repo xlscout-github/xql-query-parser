@@ -80,11 +80,14 @@ function evalDeduction (q, start, end) {
   return count
 }
 
+// evalSpaces func collects and returns spaces encountered starting from sepcified postion
+// in given string.
 function evalSpaces (q, i) {
   let count = 0
+
   for (let ch = i; ch < q.length; ch++) {
-    if (q[ch] === ' ') count++
-    else break
+    if (q[ch] !== ' ') break
+    count++
   }
 
   return ' '.repeat(count)
@@ -379,8 +382,8 @@ function collectRemainingParts (s, i, chars) {
   return { remain, char }
 }
 
-// trimBrackets func trim brackets from front and back and returns the new string 
-// along with count of opening circular brackets and gaps in the begining.
+// trimBrackets func trim brackets from front and back and returns the new string
+// along with the count of opening circular brackets and gaps in the beginning.
 function trimBrackets (s) {
   let frontCount = 0
 
@@ -410,6 +413,7 @@ function isProximitySearch (s) {
   )
 }
 
+// transformProximitySearch func spreads proximity search is known format.
 function transformProximitySearch (s, q, start) {
   const [searchPhrase, distance] = s.split('~')
   const terms = searchPhrase.slice(1, -1).split(' ')
@@ -434,7 +438,8 @@ function transformProximitySearch (s, q, start) {
   }
 }
 
-// transform func inserts a default operator in the query as per the config provided.
+// transform func inserts a default operator, transforms proximity search in a proper format,
+// in the query as per the config provided.
 function transform (q, fields, operators, startIndices, endIndices, props) {
   // set AND as default operator if any unindentified operator is provided.
   if (!isOperator(props.defOpt)) {
@@ -606,13 +611,18 @@ function transform (q, fields, operators, startIndices, endIndices, props) {
             // replace current value with trimmed value.
             construct = s
 
+            // if the current value must be an operator, but if it's not, insert one.
             if (toggle && !isOperator(construct)) {
               inter = [inter.slice(0, index), `${defOpt} `, inter.slice(index)].join(
                 ''
               )
+              // increment the count of default operators added.
               noOperator++
+              // move loop iterator and current value's starting index to correct position.
               ch += defOpt.length + ' '.length
               index += defOpt.length + ' '.length
+              // add operator inserted to operators set to keep track of all of the operators
+              // in the query.
               operators.add(defOpt.toUpperCase())
 
               if (isProximitySearch(construct)) {
@@ -627,14 +637,18 @@ function transform (q, fields, operators, startIndices, endIndices, props) {
                 ch += increment
               }
             } else if (!toggle) {
+              // current value is an operator.
               if (isOperator(construct)) {
+                // current value is any operator other than NOT.
                 if (construct.toUpperCase() !== 'NOT') {
                   throw new Error('consecutive operators are not allowed')
                 }
+                // if previous value was NOT as well as current value is also NOT.
                 if (prevConstruct.toUpperCase() === 'NOT') {
                   throw new Error('consecutive operators are not allowed')
                 }
 
+                // add NOT to operators set
                 operators.add('NOT')
               } else if (isProximitySearch(construct)) {
                 const { result, increment } = transformProximitySearch(
@@ -649,9 +663,11 @@ function transform (q, fields, operators, startIndices, endIndices, props) {
 
                 toggle = !toggle
               } else {
+                // ideal case.
                 toggle = !toggle
               }
             } else {
+              // current value is an operator.
               toggle = !toggle
               operators.add(construct.toUpperCase())
             }
@@ -716,15 +732,17 @@ function transform (q, fields, operators, startIndices, endIndices, props) {
       }
     }
 
+    // set final modified sub query.
     q = [q.slice(0, startIndices[i]), inter, q.slice(endIndices[i] + 1)].join(
       ''
     )
 
+    // update starting value indices array.
     startIndices = startIndices.map((val, idx) => {
       if (idx <= i) return val
       else return val + (defOpt.length + 1) * noOperator - noSpaces + noProximity
     })
-
+    // update ending value indices array.
     endIndices = endIndices.map((val, idx) => {
       if (idx < i) return val
       else return val + (defOpt.length + 1) * noOperator - noSpaces + noProximity
