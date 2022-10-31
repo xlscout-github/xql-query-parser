@@ -742,6 +742,7 @@ function transform (q, fields, operators, startIndices, endIndices, props) {
       if (idx <= i) return val
       else return val + (defOpt.length + 1) * noOperator - noSpaces + noProximity
     })
+
     // update ending value indices array.
     endIndices = endIndices.map((val, idx) => {
       if (idx < i) return val

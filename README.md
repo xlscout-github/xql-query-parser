@@ -21,7 +21,7 @@ Go into project directory.
 Install Dependencies.
 > npm i
 
-Generates js module from nearley grammer (auto invoked after install).
+Generates js module from nearley grammer (auto invoked after npm install).
 > npm run gen
 
 # Essential scripts

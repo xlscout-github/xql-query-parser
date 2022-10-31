@@ -203,6 +203,8 @@ function transformCondense (tree) {
   }
 }
 
+// _transform func combines left and right operands provided into a single structure
+// as pre data format provided identified by children property.
 function _transform (
   left,
   right,
@@ -217,12 +219,16 @@ function _transform (
       child: []
     }
 
+    // left node is null: independent NOT
     if (left == null) {
       output.child.push(null)
 
+      // right is a non-leaf node.
       if (right.child) {
         output.child.push(right)
 
+        // if right node's value potion does not exist, it means that inner nodes belong to
+        // different keys.
         if (!right.val) {
           output.key = 'multi'
         } else {
@@ -230,6 +236,7 @@ function _transform (
           output.val = 'multi'
         }
       } else {
+        // right is a leaf node.
         if (right.type === DATE_TYPE) {
           output.child.push({
             key: right.field,
@@ -246,6 +253,8 @@ function _transform (
       output.child.push(left)
       output.child.push(right)
 
+      // if either nodes consists different keys within or
+      // their keys does not match with one another.
       if (!left.val || !right.val || left.key !== right.key) {
         output.key = 'multi'
       } else {
@@ -253,6 +262,7 @@ function _transform (
         output.val = 'multi'
       }
     } else if (left.child) {
+      // right is a leaf node.
       output.child.push(left)
 
       if (right.type === DATE_TYPE) {
@@ -264,6 +274,7 @@ function _transform (
         output.child.push({ key: right.field, val: right.value })
       }
 
+      // if left node has different keys within or keys does not match between both nodes.
       if (!left.val || right.field !== left.key) {
         output.key = 'multi'
       } else {
@@ -271,6 +282,7 @@ function _transform (
         output.val = 'multi'
       }
     } else if (right.child) {
+      // left is a leaf node.
       if (left.type === DATE_TYPE) {
         output.child.push({
           key: left.field,
@@ -282,6 +294,7 @@ function _transform (
 
       output.child.push(right)
 
+      // if right node has different keys within or keys does not match between both nodes.
       if (!right.val || left.field !== right.key) {
         output.key = 'multi'
       } else {
@@ -289,6 +302,7 @@ function _transform (
         output.val = 'multi'
       }
     } else {
+      // both nodes are leaf nodes.
       if (left.type === DATE_TYPE) {
         output.child.push({
           key: left.field,
@@ -307,6 +321,8 @@ function _transform (
         output.child.push({ key: right.field, val: right.value })
       }
 
+      // if both nodes belong to the same field set value portion as multi,
+      // otherwise set key as multi.
       if (left.field === right.field) {
         output.key = left.field
         output.val = 'multi'
