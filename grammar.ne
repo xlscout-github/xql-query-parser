@@ -12,14 +12,15 @@ function setField (field, tree) {
     // leaf node
     if (!node.leftOperand && !node.rightOperand) {
       node.field = field
-    } else {
-      if (node.rightOperand) {
-        stack.push(node.rightOperand)
-      }
+      continue
+    }
 
-      if (node.leftOperand) {
-        stack.push(node.leftOperand)
-      }
+    if (node.rightOperand) {
+      stack.push(node.rightOperand)
+    }
+
+    if (node.leftOperand) {
+      stack.push(node.leftOperand)
     }
   }
 
@@ -28,12 +29,12 @@ function setField (field, tree) {
 
 // set default field as text for a value.
 function setDefaultField(value, field = "text") {
-  // DATE VALUE
+  // Date
   if (typeof value === "object" && value.type === "DATE") {
     return { ...value, field }
   }
 
-  // STRING VALUE
+  // String
   return { field, value }
 }
 
@@ -44,7 +45,7 @@ main -> P {% id %}
 
 # Parentheses
 P -> "(" _ F _ ")" {% ([, , f]) => f %} |
-     "(" _ V _ ")" {% ([, , val]) => ({ ...val, explicit: true /* set explicit as true if the value is enclosed in a circular brackets */ }) %} |
+     "(" _ V _ ")" {% ([, , val]) => ({ ...val, explicit: true /* set explicit as true, if the value is enclosed in circular brackets. */ }) %} |
      VAL {% ([v]) => setDefaultField(v) %}
 
 # Field
@@ -59,6 +60,7 @@ OP -> AND {% id %} |
       PRE NUM {% ([type, span]) => ({ type, span }) %} |
       PRE PORS {% ([type, span]) => ({ type, span: span.toUpperCase() }) %}
 
+# case insensitive terminal operators
 AND -> "and"i {% id %}
 
 OR -> "or"i {% id %}
