@@ -1,5 +1,5 @@
 const Queue = require('./utils/Queue')
-const createEQL = require('./xql-eql-v3/create')
+const createEQL = require('./v3/create')
 
 const DATE_TYPE = 'DATE'
 
@@ -334,6 +334,7 @@ function _transform (
     return output
   }
 
+  // same logic as above for non-children format.
   const output = {
     data: { ...props, opt: operator }
   }

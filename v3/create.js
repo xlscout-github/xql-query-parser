@@ -1,6 +1,7 @@
 const REWRITE = 'top_terms_10000'
 const SPAN_MULTI_WILDCARD_REWRITE = 'top_terms_2500'
 
+// makeClause func
 function makeClause (field, value) {
   if (typeof value === 'string') {
     if (value.startsWith('"') && value.endsWith('"')) {
@@ -44,6 +45,7 @@ function makeClause (field, value) {
   }
 }
 
+// makeProximityClause func
 function makeProximityClause (field, value) {
   if (value.startsWith('"') && value.endsWith('"')) {
     value = value.slice(1, -1).trim()
@@ -97,6 +99,7 @@ function makeProximityClause (field, value) {
   }
 }
 
+// adaptMust func
 function adaptMust (must) {
   for (const iterator of must) {
     if (iterator.term) {
@@ -152,6 +155,7 @@ function adaptMust (must) {
   return must
 }
 
+// adaptShould func
 function adaptShould (should) {
   return should.reduce(
     (previousValue, currentValue) => {
@@ -231,6 +235,7 @@ function adaptShould (should) {
   )
 }
 
+// create func
 function create (left, right, operator, slop) {
   switch (operator) {
     case 'AND': {
