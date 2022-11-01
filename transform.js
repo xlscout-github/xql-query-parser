@@ -203,8 +203,8 @@ function transformCondense (tree) {
   }
 }
 
-// _transform func combines left and right operands provided into a single structure
-// as pre data format provided identified by children property.
+// _transform func combines both operands provided into a single structure
+// as per data format provided identified by children property.
 function _transform (
   left,
   right,
@@ -464,149 +464,171 @@ function _transform (
   return output
 }
 
+// transform func takes the data structure formulated by parser and
+// transforms that into required format.
+// output can be a elasticsearch boolean query or a parse tree as per the format requested.
 function transform (root, opt = { children: true, eql: false, transformFn: null }) {
+  // leaf node.
   if (root.leftOperand == null && root.rightOperand == null) {
     if (opt.eql) {
-      let node
-
-      if (root.type === DATE_TYPE) {
-        node = { key: root.field, val: { from: root.from, to: root.to } }
-      } else {
-        node = { key: root.field, val: root.value }
+      const node = {
+        key: root.field,
+        val: root.type === DATE_TYPE ? { from: root.from, to: root.to } : root.value
       }
 
+      // invoke the transformer func before formulating the query.
       if (opt.transformFn) opt.transformFn(node)
 
       return createEQL(node, {}, 'AND')
     }
 
+    // children format.
     if (opt.children) {
-      if (root.type === DATE_TYPE) {
-        return { key: root.field, val: { from: root.from, to: root.to } }
+      return {
+        key: root.field,
+        val: root.type === DATE_TYPE ? { from: root.from, to: root.to } : root.value
       }
-
-      return { key: root.field, val: root.value }
     }
 
-    if (root.type === DATE_TYPE) {
-      return { data: { key: root.field, val: { from: root.from, to: root.to } }, left: null, right: null }
+    // non-children format.
+    return {
+      data: {
+        key: root.field,
+        val: root.type === DATE_TYPE ? { from: root.from, to: root.to } : root.value
+      },
+      left: null,
+      right: null
     }
-
-    return { data: { key: root.field, val: root.value }, left: null, right: null }
   }
 
+  // make our tree left subtree of a dummy node.
   const dummyNode = { leftOperand: root, rightOperand: null }
-  let current = dummyNode
-  let parent = null
+  let curr = dummyNode
+  let pred = null
+  let first = null
   let middle = null
-  let auxiliary = null
-  let back = null
-  let fin = null
+  let last = null
+  let output = null
 
-  while (current != null) {
-    if (current.leftOperand == null) {
-      current = current.rightOperand
-    } else {
-      auxiliary = current.leftOperand
+  while (curr != null) {
+    if (curr.leftOperand == null) {
+      curr = curr.rightOperand
+      continue
+    }
 
-      while (auxiliary.rightOperand != null && auxiliary.rightOperand != current) {
-        auxiliary = auxiliary.rightOperand
-      }
+    // current node has a left child, trace its predecessor.
+    pred = curr.leftOperand
 
-      if (auxiliary.rightOperand != current) {
-        auxiliary.rightOperand = current
-        current = current.leftOperand
-      } else {
-        parent = current
-        middle = current.leftOperand
+    while (pred.rightOperand != null && pred.rightOperand !== curr) {
+      pred = pred.rightOperand
+    }
 
-        while (middle != current) {
-          back = middle.rightOperand
-          middle.rightOperand = parent
-          parent = middle
-          middle = back
+    // if predeccessor is found for the first time,
+    // set the right child of its predecessor to itself.
+    if (pred.rightOperand == null) {
+      pred.rightOperand = curr
+      curr = curr.leftOperand
+      continue
+    }
+
+    // predeccessor is found for the second time,
+    // reverse the right references in chain from predeccessor to current.
+    first = curr
+    middle = curr.leftOperand
+
+    while (middle !== curr) {
+      last = middle.rightOperand
+      middle.rightOperand = first
+      first = middle
+      middle = last
+    }
+
+    // visit the nodes from predeccessor to current,
+    // again reverse the right references from predeccessor to current.
+    first = curr
+    middle = pred
+
+    while (middle !== curr) {
+      // parsed output to be collected in the right pointer for each node.
+      middle.rightOperand.parsed = middle.rightOperand.parsed || []
+
+      // left node is null: independent NOT
+      if (middle.leftOperand === null) {
+        if (opt.eql) {
+          output = createEQL({}, middle.parsed[0], middle.operator)
+        } else {
+          output = _transform(
+            null,
+            middle.parsed[0],
+            middle.operator,
+            opt
+          )
         }
 
-        parent = current
-        middle = auxiliary
+        middle.rightOperand.parsed.push(output)
 
-        while (middle != current) {
-          middle.rightOperand.parsed = middle.rightOperand.parsed || []
-
-          if (middle.leftOperand === null) {
-            if (opt.eql) {
-              fin = createEQL({}, middle.parsed[0], middle.operator)
-            } else {
-              fin = _transform(
-                null,
-                middle.parsed[0],
-                middle.operator,
-                opt
-              )
-            }
-
-            middle.rightOperand.parsed.push(fin)
-
-            delete middle.parsed
-          } else if (middle.leftOperand == null) {
-            if (opt.eql) {
-              let node
-
-              if (middle.type === DATE_TYPE) {
-                node = { key: middle.field, val: { from: middle.from, to: middle.to } }
-              } else {
-                node = { key: middle.field, val: middle.value }
-              }
-
-              if (opt.transformFn) opt.transformFn(node)
-
-              middle.rightOperand.parsed.push(node)
-            } else {
-              if (opt.children) {
-                if (middle.type === DATE_TYPE) {
-                  middle.rightOperand.parsed.push({ field: middle.field, value: { from: middle.from, to: middle.to } })
-                } else {
-                  middle.rightOperand.parsed.push({ field: middle.field, value: middle.value })
-                }
-              } else {
-                if (middle.type === DATE_TYPE) {
-                  middle.rightOperand.parsed.push({ data: { key: middle.field, val: { from: middle.from, to: middle.to } }, left: null, right: null })
-                } else {
-                  middle.rightOperand.parsed.push({ data: { key: middle.field, val: middle.value }, left: null, right: null })
-                }
-              }
-            }
-          } else {
-            if (opt.eql) {
-              fin = createEQL(middle.parsed[0], middle.parsed[1], middle.operator, middle.span)
-            } else {
-              fin = _transform(
-                middle.parsed[0],
-                middle.parsed[1],
-                middle.operator,
-                opt,
-                middle.span && { span: middle.span }
-              )
-            }
-
-            middle.rightOperand.parsed.push(fin)
-
-            delete middle.parsed
+        // clearing the intermediate output.
+        delete middle.parsed
+      } else if (middle.leftOperand == null) {
+        // processing leaf node.
+        if (opt.eql) {
+          const node = {
+            key: middle.field,
+            val: middle.type === DATE_TYPE ? { from: middle.from, to: middle.to } : middle.value
           }
 
-          back = middle.rightOperand
-          middle.rightOperand = parent
-          parent = middle
-          middle = back
+          if (opt.transformFn) opt.transformFn(node)
+
+          middle.rightOperand.parsed.push(node)
+        } else {
+          if (opt.children) {
+            middle.rightOperand.parsed.push({
+              field: middle.field,
+              value: middle.type === DATE_TYPE ? { from: middle.from, to: middle.to } : middle.value
+            })
+          } else {
+            middle.rightOperand.parsed.push({
+              data: {
+                key: middle.field,
+                val: middle.type === DATE_TYPE ? { from: middle.from, to: middle.to } : middle.value
+              },
+              left: null,
+              right: null
+            })
+          }
+        }
+      } else {
+        // combining both parsed outputs.
+        if (opt.eql) {
+          output = createEQL(middle.parsed[0], middle.parsed[1], middle.operator, middle.span)
+        } else {
+          output = _transform(
+            middle.parsed[0],
+            middle.parsed[1],
+            middle.operator,
+            opt,
+            middle.span && { span: middle.span }
+          )
         }
 
-        delete auxiliary.rightOperand
-        current = current.rightOperand
+        middle.rightOperand.parsed.push(output)
+
+        // clearing the intermediate output.
+        delete middle.parsed
       }
+
+      last = middle.rightOperand
+      middle.rightOperand = first
+      first = middle
+      middle = last
     }
+
+    // remove the predeccessor to node reference to restore the tree structure.
+    delete pred.rightOperand
+    curr = curr.rightOperand
   }
 
-  return fin
+  return output
 }
 
 // function transform (root, opt = { children: true }) {
