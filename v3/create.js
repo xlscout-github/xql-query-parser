@@ -25,7 +25,7 @@ function makeClause (field, value) {
         }
       }
     } else {
-      // otherwise term query.
+      // otherwise form term query.
       return { term: { [field]: value } }
     }
   } else if (
@@ -54,18 +54,20 @@ function makeClause (field, value) {
 // makeProximityClause func creates a span query for a field by assessing its value.
 function makeProximityClause (field, value) {
   if (value.startsWith('"') && value.endsWith('"')) {
+    // form multiple span_term elements which are in order and at 0 distance from one another
+    // if value is enclosed in quotations.
     value = value.slice(1, -1).trim()
     const terms = value.split(/ +/)
 
     if (terms.length > 1) {
-      const clauses = terms.reduce((previousValue, currentValue) => {
-        previousValue.push({
+      const clauses = terms.reduce((acc, currentValue) => {
+        acc.push({
           span_term: {
             [field]: currentValue
           }
         })
 
-        return previousValue
+        return acc
       }, [])
 
       return {
@@ -83,6 +85,7 @@ function makeProximityClause (field, value) {
       }
     }
   } else if (value.includes('*') || value.includes('?')) {
+    // form a wildcard query wrapped in span_multi if wildcard operators exists.
     return {
       span_multi: {
         match: {
@@ -97,6 +100,7 @@ function makeProximityClause (field, value) {
       }
     }
   } else {
+    // otherwise form a span_term.
     return {
       span_term: {
         [field]: value
@@ -105,7 +109,7 @@ function makeProximityClause (field, value) {
   }
 }
 
-// adaptMust func
+// adaptMust func converts a must clause in accordance with span query.
 function adaptMust (must) {
   for (const iterator of must) {
     if (iterator.term) {
@@ -113,6 +117,7 @@ function adaptMust (must) {
       delete iterator.term
     } else if (iterator.wildcard) {
       const [wc] = Object.keys(iterator.wildcard)
+
       iterator.span_multi = {
         match: {
           wildcard: {
@@ -161,19 +166,19 @@ function adaptMust (must) {
   return must
 }
 
-// adaptShould func
+// adaptShould func converts a should clause in accordance with span query.
 function adaptShould (should) {
   return should.reduce(
-    (previousValue, currentValue) => {
+    (acc, currentValue) => {
       if (currentValue.term) {
-        previousValue.push({
+        acc.push({
           span_term: currentValue.term
         })
       } else if (currentValue.terms) {
         for (const key in currentValue.terms) {
           currentValue.terms[key].forEach(
             (term) => {
-              previousValue.push({
+              acc.push({
                 span_term: { [key]: term }
               })
             }
@@ -181,7 +186,8 @@ function adaptShould (should) {
         }
       } else if (currentValue.wildcard) {
         const [wc] = Object.keys(currentValue.wildcard)
-        previousValue.push({
+
+        acc.push({
           span_multi: {
             match: {
               wildcard: {
@@ -196,22 +202,21 @@ function adaptShould (should) {
         })
       } else if (currentValue.match_phrase) {
         const [mp] = Object.keys(currentValue.match_phrase)
-        const phrase =
-            currentValue.match_phrase[mp]
+        const phrase = currentValue.match_phrase[mp]
         const terms = phrase.split(/ +/)
 
         if (terms.length > 1) {
-          previousValue.push({
+          acc.push({
             span_near: {
               clauses: terms.reduce(
-                (previousValue, currentValue) => {
-                  previousValue.push({
+                (acc, currentValue) => {
+                  acc.push({
                     span_term: {
                       [mp]: currentValue
                     }
                   })
 
-                  return previousValue
+                  return acc
                 },
                 []
               ),
@@ -220,7 +225,7 @@ function adaptShould (should) {
             }
           })
         } else {
-          previousValue.push({
+          acc.push({
             span_term: { [mp]: phrase }
           })
         }
@@ -228,14 +233,14 @@ function adaptShould (should) {
         currentValue.bool.must &&
         currentValue.bool.must[0].span_near
       ) {
-        previousValue.push(
+        acc.push(
           currentValue.bool.must[0]
         )
       } else {
         throw new Error('malformed query')
       }
 
-      return previousValue
+      return acc
     },
     []
   )
@@ -796,24 +801,29 @@ function create (left, right, operator, slop) {
     }
     case 'NEAR':
     case 'PRE': {
+      // in_order will be true for PRE operator otherwise false.
+      const inOrder = operator === 'PRE'
+
+      // NEARS corresponds to NEAR15.
+      // NEARP corresponds to NEAR50.
+      switch (slop) {
+        case 'S':
+          slop = '15'
+          break
+        case 'P':
+          slop = '50'
+      }
+
       if (left.bool && right.bool) {
+        // if both operands are boolean queries.
+        // error if multiple clauses exist in operands.
+        if (Object.keys(left.bool).length > 1 || Object.keys(right.bool).length > 1) throw new Error('malformed query')
+
         let clause
-        const inOrder = operator === 'PRE'
-
-        if (Object.keys(left.bool).length > 1 || Object.keys(right.bool).length > 1) {
-          throw new Error('malformed query')
-        }
-
-        switch (slop) {
-          case 'S':
-            slop = '15'
-            break
-          case 'P':
-            slop = '50'
-        }
 
         const [cl] = Object.keys(left.bool)
 
+        // form query by converting left operand in accordance with span query.
         switch (cl) {
           case 'must': {
             clause = adaptMust(left.bool.must)
@@ -836,6 +846,7 @@ function create (left, right, operator, slop) {
 
         const [clm] = Object.keys(right.bool)
 
+        // form query by converting right operand in accordance with span query.
         switch (clm) {
           case 'must': {
             return {
@@ -879,22 +890,15 @@ function create (left, right, operator, slop) {
           }
         }
       } else if (left.bool) {
-        const inOrder = operator === 'PRE'
-
-        switch (slop) {
-          case 'S':
-            slop = '15'
-            break
-          case 'P':
-            slop = '50'
-        }
-
+        // if only left operand is a boolean query.
+        // error if multiple clauses exist.
         if (Object.keys(left.bool).length > 1) throw new Error('malformed query')
 
         const clause = makeProximityClause(right.key, right.val)
 
         const [cl] = Object.keys(left.bool)
 
+        // form query by converting left operand in accordance with span query.
         switch (cl) {
           case 'must': {
             return {
@@ -938,22 +942,15 @@ function create (left, right, operator, slop) {
           }
         }
       } else if (right.bool) {
-        const inOrder = operator === 'PRE'
-
-        switch (slop) {
-          case 'S':
-            slop = '15'
-            break
-          case 'P':
-            slop = '50'
-        }
-
+        // if only right operand is a boolean query.
+        // error if multiple clauses exist.
         if (Object.keys(right.bool).length > 1) throw new Error('malformed query')
 
         const clause = makeProximityClause(left.key, left.val)
 
         const [cl] = Object.keys(right.bool)
 
+        // form query by converting right operand in accordance with span query.
         switch (cl) {
           case 'must': {
             return {
@@ -997,25 +994,20 @@ function create (left, right, operator, slop) {
           }
         }
       } else {
-        const inOrder = operator === 'PRE'
-
-        switch (slop) {
-          case 'S':
-            slop = '15'
-            break
-          case 'P':
-            slop = '50'
-        }
-
-        const booleanQuery = {
+        // if none operands are yet part of a boolean query.
+        return {
           bool: {
-            must: [{ span_near: { clauses: [], slop, in_order: inOrder } }]
+            must: [{
+              span_near: {
+                clauses: [
+                  makeProximityClause(left.key, left.val),
+                  makeProximityClause(right.key, right.val)],
+                slop,
+                in_order: inOrder
+              }
+            }]
           }
         }
-
-        booleanQuery.bool.must[0].span_near.clauses.push(makeProximityClause(left.key, left.val), makeProximityClause(right.key, right.val))
-
-        return booleanQuery
       }
     }
   }

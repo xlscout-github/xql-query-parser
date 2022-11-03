@@ -71,8 +71,8 @@ NEAR -> "near"i {% id %}
 
 PRE -> "pre"i {% id %}
 
-# p ≡ paragraph
-# s ≡ sentence
+# p corresponds to paragraph
+# s corresponds to sentence
 PORS -> "p"i {% id %} |
         "s"i {% id %}
 
