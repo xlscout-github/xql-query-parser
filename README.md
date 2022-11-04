@@ -1,4 +1,4 @@
-# xql-query-parser
+# XQL Query Parser
 
 xql-query-parser is a query parsing module which breaks down the input query 
 as per the grammer specified, utilizing a query parsing toolkit 
